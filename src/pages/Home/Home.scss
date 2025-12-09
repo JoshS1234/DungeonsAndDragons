@@ -37,6 +37,9 @@
       border-radius: 12px;
       padding: 2rem;
       transition: all 0.3s ease;
+      text-decoration: none;
+      display: block;
+      cursor: pointer;
 
       &:hover {
         transform: translateY(-5px);

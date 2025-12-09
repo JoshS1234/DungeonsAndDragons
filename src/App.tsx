@@ -1,6 +1,9 @@
 import { Routes, Route } from "react-router-dom";
 import Home from "./pages/Home/Home";
 import Account from "./pages/Account/Account";
+import Campaigns from "./pages/Campaigns/Campaigns";
+import Characters from "./pages/Characters/Characters";
+import Rules from "./pages/Rules/Rules";
 import "./App.scss";
 
 const App = () => {
@@ -8,6 +11,9 @@ const App = () => {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/account" element={<Account />} />
+      <Route path="/campaigns" element={<Campaigns />} />
+      <Route path="/characters" element={<Characters />} />
+      <Route path="/rules" element={<Rules />} />
     </Routes>
   );
 };
