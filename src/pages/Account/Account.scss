@@ -1,0 +1,163 @@
+.account-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 4rem 2rem;
+  min-height: 90vh;
+  width: 100%;
+
+  .account-page__container {
+    max-width: 600px;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 215, 0, 0.3);
+    border-radius: 12px;
+    padding: 2rem;
+
+    h2 {
+      font-size: 2.5em;
+      color: #ffd700;
+      margin-bottom: 2rem;
+      text-align: center;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+      font-family: "Cinzel", "Times New Roman", serif;
+    }
+
+    .account-page__message {
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+
+      &--success {
+        background-color: rgba(0, 128, 0, 0.3);
+        border: 2px solid #00ff00;
+        color: #90ee90;
+      }
+
+      &--error {
+        background-color: rgba(128, 0, 0, 0.3);
+        border: 2px solid #ff4444;
+        color: #ffaaaa;
+      }
+    }
+
+    .account-page__section {
+      margin-bottom: 3rem;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      h3 {
+        font-size: 1.8em;
+        color: #ffd700;
+        margin-bottom: 1.5rem;
+        font-family: "Cinzel", "Times New Roman", serif;
+        border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+        padding-bottom: 0.5rem;
+      }
+    }
+
+    .account-page__form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .account-page__form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+
+      label {
+        font-size: 1.1em;
+        color: #ffd700;
+        font-weight: 600;
+      }
+
+      input {
+        padding: 0.75rem;
+        font-size: 1em;
+        background-color: rgba(0, 0, 0, 0.5);
+        border: 2px solid rgba(255, 215, 0, 0.3);
+        border-radius: 8px;
+        color: #f0f0f0;
+        transition: all 0.3s ease;
+
+        &:focus {
+          outline: none;
+          border-color: #ffd700;
+          box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        &::placeholder {
+          color: rgba(255, 255, 255, 0.5);
+        }
+
+        &.account-page__input--disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      }
+
+      small {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9em;
+        font-style: italic;
+      }
+    }
+
+    .account-page__button {
+      padding: 0.75rem 2rem;
+      font-size: 1.1em;
+      font-weight: 600;
+      background-color: #8b0000;
+      color: white;
+      border: 2px solid #ffd700;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+      align-self: flex-start;
+
+      &:hover:not(:disabled) {
+        background-color: #a00000;
+        border-color: #ffed4e;
+        transform: translateY(-2px);
+        box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.7);
+      }
+
+      &:active:not(:disabled) {
+        transform: translateY(0);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .account-page {
+    padding: 2rem 1rem;
+
+    .account-page__container {
+      padding: 1.5rem;
+
+      h2 {
+        font-size: 2em;
+      }
+
+      .account-page__section {
+        h3 {
+          font-size: 1.5em;
+        }
+      }
+    }
+  }
+}
