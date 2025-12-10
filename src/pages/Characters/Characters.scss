@@ -96,6 +96,13 @@
       padding: 1.5rem;
       transition: all 0.3s ease;
 
+      &--clickable {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        cursor: pointer;
+      }
+
       &:hover {
         transform: translateY(-5px);
         border-color: rgba(255, 215, 0, 0.6);

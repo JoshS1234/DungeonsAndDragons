@@ -120,7 +120,11 @@ const Characters = () => {
               <h3>Your Characters ({characters.length})</h3>
               <div className="characters-grid">
                 {characters.map((character) => (
-                  <div key={character.id} className="character-card">
+                  <Link
+                    key={character.id}
+                    to={`/characters/${character.id}`}
+                    className="character-card character-card--clickable"
+                  >
                     <h4>{character.characterName || "Unnamed Character"}</h4>
                     <div className="character-card__details">
                       <p>
@@ -152,7 +156,7 @@ const Characters = () => {
                         </p>
                       )}
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </div>

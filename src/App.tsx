@@ -4,6 +4,7 @@ import Account from "./pages/Account/Account";
 import Campaigns from "./pages/Campaigns/Campaigns";
 import Characters from "./pages/Characters/Characters";
 import CreateCharacter from "./pages/Characters/CreateCharacter";
+import ViewEditCharacter from "./pages/Characters/ViewEditCharacter";
 import Rules from "./pages/Rules/Rules";
 import "./App.scss";
 
@@ -15,6 +16,7 @@ const App = () => {
       <Route path="/campaigns" element={<Campaigns />} />
       <Route path="/characters" element={<Characters />} />
       <Route path="/characters/create" element={<CreateCharacter />} />
+      <Route path="/characters/:id" element={<ViewEditCharacter />} />
       <Route path="/rules" element={<Rules />} />
     </Routes>
   );

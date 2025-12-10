@@ -1,0 +1,722 @@
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { auth, db } from "../../../firebaseSetup";
+import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import Header from "../../components/Header/Header";
+import "./CreateCharacter.scss";
+
+const ViewEditCharacter = () => {
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    // Basic Information
+    characterName: "",
+    class: "",
+    level: 1,
+    background: "",
+    playerName: "",
+    race: "",
+    alignment: "",
+    experiencePoints: 0,
+
+    // Ability Scores
+    strength: 10,
+    dexterity: 10,
+    constitution: 10,
+    intelligence: 10,
+    wisdom: 10,
+    charisma: 10,
+
+    // Combat Stats
+    armorClass: 10,
+    initiative: 0,
+    speed: 30,
+    maxHitPoints: 8,
+    currentHitPoints: 8,
+    temporaryHitPoints: 0,
+    hitDice: "1d8",
+
+    // Proficiency
+    proficiencyBonus: 2,
+    savingThrowProficiencies: [] as string[],
+    skillProficiencies: [] as string[],
+
+    // Other
+    personalityTraits: "",
+    ideals: "",
+    bonds: "",
+    flaws: "",
+    characterAppearance: "",
+    alliesAndOrganizations: "",
+    additionalFeaturesAndTraits: "",
+    equipment: "",
+    spells: "",
+  });
+
+  useEffect(() => {
+    const fetchCharacter = async () => {
+      if (!id || !auth.currentUser) {
+        setError("Character ID missing or user not authenticated");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        const characterDoc = await getDoc(doc(db, "characters", id));
+        
+        if (!characterDoc.exists()) {
+          throw new Error("Character not found");
+        }
+
+        const characterData = characterDoc.data();
+
+        // Verify the character belongs to the current user
+        if (characterData.userId !== auth.currentUser.uid) {
+          throw new Error("You don't have permission to view this character");
+        }
+
+        // Populate form with character data
+        setFormData({
+          characterName: characterData.characterName || "",
+          class: characterData.class || "",
+          level: characterData.level || 1,
+          background: characterData.background || "",
+          playerName: characterData.playerName || "",
+          race: characterData.race || "",
+          alignment: characterData.alignment || "",
+          experiencePoints: characterData.experiencePoints || 0,
+          strength: characterData.strength || 10,
+          dexterity: characterData.dexterity || 10,
+          constitution: characterData.constitution || 10,
+          intelligence: characterData.intelligence || 10,
+          wisdom: characterData.wisdom || 10,
+          charisma: characterData.charisma || 10,
+          armorClass: characterData.armorClass || 10,
+          initiative: characterData.initiative || 0,
+          speed: characterData.speed || 30,
+          maxHitPoints: characterData.maxHitPoints || 8,
+          currentHitPoints: characterData.currentHitPoints || 8,
+          temporaryHitPoints: characterData.temporaryHitPoints || 0,
+          hitDice: characterData.hitDice || "1d8",
+          proficiencyBonus: characterData.proficiencyBonus || 2,
+          savingThrowProficiencies: characterData.savingThrowProficiencies || [],
+          skillProficiencies: characterData.skillProficiencies || [],
+          personalityTraits: characterData.personalityTraits || "",
+          ideals: characterData.ideals || "",
+          bonds: characterData.bonds || "",
+          flaws: characterData.flaws || "",
+          characterAppearance: characterData.characterAppearance || "",
+          alliesAndOrganizations: characterData.alliesAndOrganizations || "",
+          additionalFeaturesAndTraits: characterData.additionalFeaturesAndTraits || "",
+          equipment: characterData.equipment || "",
+          spells: characterData.spells || "",
+        });
+      } catch (err: any) {
+        setError(err.message || "Failed to load character");
+        console.error("Error fetching character:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCharacter();
+  }, [id]);
+
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleNumberChange = (name: string, value: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleCheckboxChange = (category: string, value: string) => {
+    setFormData((prev) => {
+      const currentArray =
+        category === "savingThrow"
+          ? prev.savingThrowProficiencies
+          : prev.skillProficiencies;
+      const newArray = currentArray.includes(value)
+        ? currentArray.filter((item) => item !== value)
+        : [...currentArray, value];
+
+      return {
+        ...prev,
+        [category === "savingThrow"
+          ? "savingThrowProficiencies"
+          : "skillProficiencies"]: newArray,
+      };
+    });
+  };
+
+  const calculateModifier = (score: number): number => {
+    return Math.floor((score - 10) / 2);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!id) return;
+
+    setSaving(true);
+    setError(null);
+
+    try {
+      if (!auth.currentUser) {
+        throw new Error("You must be logged in to update a character");
+      }
+
+      const characterData = {
+        ...formData,
+        updatedAt: serverTimestamp(),
+      };
+
+      await updateDoc(doc(db, "characters", id), characterData);
+      navigate("/characters");
+    } catch (err: any) {
+      setError(err.message || "Failed to update character");
+      console.error("Error updating character:", err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const abilities = [
+    { name: "Strength", key: "strength", abbrev: "STR" },
+    { name: "Dexterity", key: "dexterity", abbrev: "DEX" },
+    { name: "Constitution", key: "constitution", abbrev: "CON" },
+    { name: "Intelligence", key: "intelligence", abbrev: "INT" },
+    { name: "Wisdom", key: "wisdom", abbrev: "WIS" },
+    { name: "Charisma", key: "charisma", abbrev: "CHA" },
+  ];
+
+  const skills = [
+    { name: "Acrobatics", ability: "DEX" },
+    { name: "Animal Handling", ability: "WIS" },
+    { name: "Arcana", ability: "INT" },
+    { name: "Athletics", ability: "STR" },
+    { name: "Deception", ability: "CHA" },
+    { name: "History", ability: "INT" },
+    { name: "Insight", ability: "WIS" },
+    { name: "Intimidation", ability: "CHA" },
+    { name: "Investigation", ability: "INT" },
+    { name: "Medicine", ability: "WIS" },
+    { name: "Nature", ability: "INT" },
+    { name: "Perception", ability: "WIS" },
+    { name: "Performance", ability: "CHA" },
+    { name: "Persuasion", ability: "CHA" },
+    { name: "Religion", ability: "INT" },
+    { name: "Sleight of Hand", ability: "DEX" },
+    { name: "Stealth", ability: "DEX" },
+    { name: "Survival", ability: "WIS" },
+  ];
+
+  if (loading) {
+    return (
+      <div className="app">
+        <Header />
+        <div className="character-creation-page">
+          <div className="character-creation-page__container">
+            <h2>Loading Character...</h2>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="app">
+      <Header />
+      <div className="character-creation-page">
+        <div className="character-creation-page__container">
+          <h2>Edit Character: {formData.characterName || "Unnamed"}</h2>
+          {error && <div className="character-form__error">{error}</div>}
+          <form onSubmit={handleSubmit} className="character-form">
+            {/* Basic Information Section */}
+            <section className="character-form__section">
+              <h3>Basic Information</h3>
+              <div className="character-form__grid character-form__grid--2">
+                <div className="character-form__group">
+                  <label htmlFor="characterName">Character Name</label>
+                  <input
+                    type="text"
+                    id="characterName"
+                    name="characterName"
+                    value={formData.characterName}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                <div className="character-form__group">
+                  <label htmlFor="class">Class</label>
+                  <select
+                    id="class"
+                    name="class"
+                    value={formData.class}
+                    onChange={handleInputChange}
+                    required
+                  >
+                    <option value="">Select Class</option>
+                    <option value="Barbarian">Barbarian</option>
+                    <option value="Bard">Bard</option>
+                    <option value="Cleric">Cleric</option>
+                    <option value="Druid">Druid</option>
+                    <option value="Fighter">Fighter</option>
+                    <option value="Monk">Monk</option>
+                    <option value="Paladin">Paladin</option>
+                    <option value="Ranger">Ranger</option>
+                    <option value="Rogue">Rogue</option>
+                    <option value="Sorcerer">Sorcerer</option>
+                    <option value="Warlock">Warlock</option>
+                    <option value="Wizard">Wizard</option>
+                  </select>
+                </div>
+                <div className="character-form__group">
+                  <label htmlFor="level">Level</label>
+                  <input
+                    type="number"
+                    id="level"
+                    name="level"
+                    value={formData.level}
+                    onChange={(e) =>
+                      handleNumberChange("level", parseInt(e.target.value) || 1)
+                    }
+                    min="1"
+                    max="20"
+                    required
+                  />
+                </div>
+                <div className="character-form__group">
+                  <label htmlFor="race">Race</label>
+                  <select
+                    id="race"
+                    name="race"
+                    value={formData.race}
+                    onChange={handleInputChange}
+                    required
+                  >
+                    <option value="">Select Race</option>
+                    <option value="Dragonborn">Dragonborn</option>
+                    <option value="Dwarf">Dwarf</option>
+                    <option value="Elf">Elf</option>
+                    <option value="Gnome">Gnome</option>
+                    <option value="Half-Elf">Half-Elf</option>
+                    <option value="Half-Orc">Half-Orc</option>
+                    <option value="Halfling">Halfling</option>
+                    <option value="Human">Human</option>
+                    <option value="Tiefling">Tiefling</option>
+                  </select>
+                </div>
+                <div className="character-form__group">
+                  <label htmlFor="background">Background</label>
+                  <input
+                    type="text"
+                    id="background"
+                    name="background"
+                    value={formData.background}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="character-form__group">
+                  <label htmlFor="alignment">Alignment</label>
+                  <select
+                    id="alignment"
+                    name="alignment"
+                    value={formData.alignment}
+                    onChange={handleInputChange}
+                  >
+                    <option value="">Select Alignment</option>
+                    <option value="Lawful Good">Lawful Good</option>
+                    <option value="Neutral Good">Neutral Good</option>
+                    <option value="Chaotic Good">Chaotic Good</option>
+                    <option value="Lawful Neutral">Lawful Neutral</option>
+                    <option value="Neutral">Neutral</option>
+                    <option value="Chaotic Neutral">Chaotic Neutral</option>
+                    <option value="Lawful Evil">Lawful Evil</option>
+                    <option value="Neutral Evil">Neutral Evil</option>
+                    <option value="Chaotic Evil">Chaotic Evil</option>
+                  </select>
+                </div>
+                <div className="character-form__group">
+                  <label htmlFor="playerName">Player Name</label>
+                  <input
+                    type="text"
+                    id="playerName"
+                    name="playerName"
+                    value={formData.playerName}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="character-form__group">
+                  <label htmlFor="experiencePoints">Experience Points</label>
+                  <input
+                    type="number"
+                    id="experiencePoints"
+                    name="experiencePoints"
+                    value={formData.experiencePoints}
+                    onChange={(e) =>
+                      handleNumberChange(
+                        "experiencePoints",
+                        parseInt(e.target.value) || 0
+                      )
+                    }
+                    min="0"
+                  />
+                </div>
+              </div>
+            </section>
+
+            {/* Ability Scores Section */}
+            <section className="character-form__section">
+              <h3>Ability Scores</h3>
+              <div className="character-form__grid character-form__grid--3">
+                {abilities.map((ability) => {
+                  const score =
+                    formData[ability.key as keyof typeof formData] as number;
+                  const modifier = calculateModifier(score);
+                  return (
+                    <div key={ability.key} className="ability-score-group">
+                      <label htmlFor={ability.key}>
+                        {ability.name} ({ability.abbrev})
+                      </label>
+                      <input
+                        type="number"
+                        id={ability.key}
+                        name={ability.key}
+                        value={score}
+                        onChange={(e) =>
+                          handleNumberChange(
+                            ability.key,
+                            parseInt(e.target.value) || 10
+                          )
+                        }
+                        min="1"
+                        max="30"
+                      />
+                      <div className="ability-modifier">
+                        Modifier: {modifier >= 0 ? "+" : ""}
+                        {modifier}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+
+            {/* Combat Stats Section */}
+            <section className="character-form__section">
+              <h3>Combat Statistics</h3>
+              <div className="character-form__grid character-form__grid--4">
+                <div className="character-form__group">
+                  <label htmlFor="armorClass">Armor Class</label>
+                  <input
+                    type="number"
+                    id="armorClass"
+                    name="armorClass"
+                    value={formData.armorClass}
+                    onChange={(e) =>
+                      handleNumberChange(
+                        "armorClass",
+                        parseInt(e.target.value) || 10
+                      )
+                    }
+                  />
+                </div>
+                <div className="character-form__group">
+                  <label htmlFor="initiative">Initiative</label>
+                  <input
+                    type="number"
+                    id="initiative"
+                    name="initiative"
+                    value={formData.initiative}
+                    onChange={(e) =>
+                      handleNumberChange(
+                        "initiative",
+                        parseInt(e.target.value) || 0
+                      )
+                    }
+                  />
+                </div>
+                <div className="character-form__group">
+                  <label htmlFor="speed">Speed</label>
+                  <input
+                    type="number"
+                    id="speed"
+                    name="speed"
+                    value={formData.speed}
+                    onChange={(e) =>
+                      handleNumberChange(
+                        "speed",
+                        parseInt(e.target.value) || 30
+                      )
+                    }
+                  />
+                </div>
+                <div className="character-form__group">
+                  <label htmlFor="hitDice">Hit Dice</label>
+                  <input
+                    type="text"
+                    id="hitDice"
+                    name="hitDice"
+                    value={formData.hitDice}
+                    onChange={handleInputChange}
+                    placeholder="1d8"
+                  />
+                </div>
+                <div className="character-form__group">
+                  <label htmlFor="maxHitPoints">Max Hit Points</label>
+                  <input
+                    type="number"
+                    id="maxHitPoints"
+                    name="maxHitPoints"
+                    value={formData.maxHitPoints}
+                    onChange={(e) =>
+                      handleNumberChange(
+                        "maxHitPoints",
+                        parseInt(e.target.value) || 8
+                      )
+                    }
+                  />
+                </div>
+                <div className="character-form__group">
+                  <label htmlFor="currentHitPoints">Current Hit Points</label>
+                  <input
+                    type="number"
+                    id="currentHitPoints"
+                    name="currentHitPoints"
+                    value={formData.currentHitPoints}
+                    onChange={(e) =>
+                      handleNumberChange(
+                        "currentHitPoints",
+                        parseInt(e.target.value) || 8
+                      )
+                    }
+                  />
+                </div>
+                <div className="character-form__group">
+                  <label htmlFor="temporaryHitPoints">
+                    Temporary Hit Points
+                  </label>
+                  <input
+                    type="number"
+                    id="temporaryHitPoints"
+                    name="temporaryHitPoints"
+                    value={formData.temporaryHitPoints}
+                    onChange={(e) =>
+                      handleNumberChange(
+                        "temporaryHitPoints",
+                        parseInt(e.target.value) || 0
+                      )
+                    }
+                    min="0"
+                  />
+                </div>
+                <div className="character-form__group">
+                  <label htmlFor="proficiencyBonus">Proficiency Bonus</label>
+                  <input
+                    type="number"
+                    id="proficiencyBonus"
+                    name="proficiencyBonus"
+                    value={formData.proficiencyBonus}
+                    onChange={(e) =>
+                      handleNumberChange(
+                        "proficiencyBonus",
+                        parseInt(e.target.value) || 2
+                      )
+                    }
+                  />
+                </div>
+              </div>
+            </section>
+
+            {/* Saving Throws Section */}
+            <section className="character-form__section">
+              <h3>Saving Throw Proficiencies</h3>
+              <div className="character-form__checkbox-group">
+                {abilities.map((ability) => (
+                  <label key={ability.key} className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={formData.savingThrowProficiencies.includes(
+                        ability.abbrev
+                      )}
+                      onChange={() =>
+                        handleCheckboxChange("savingThrow", ability.abbrev)
+                      }
+                    />
+                    {ability.name} ({ability.abbrev})
+                  </label>
+                ))}
+              </div>
+            </section>
+
+            {/* Skills Section */}
+            <section className="character-form__section">
+              <h3>Skill Proficiencies</h3>
+              <div className="character-form__checkbox-group">
+                {skills.map((skill) => (
+                  <label key={skill.name} className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={formData.skillProficiencies.includes(
+                        skill.name
+                      )}
+                      onChange={() =>
+                        handleCheckboxChange("skill", skill.name)
+                      }
+                    />
+                    {skill.name} ({skill.ability})
+                  </label>
+                ))}
+              </div>
+            </section>
+
+            {/* Personality Section */}
+            <section className="character-form__section">
+              <h3>Personality</h3>
+              <div className="character-form__grid character-form__grid--2">
+                <div className="character-form__group">
+                  <label htmlFor="personalityTraits">Personality Traits</label>
+                  <textarea
+                    id="personalityTraits"
+                    name="personalityTraits"
+                    value={formData.personalityTraits}
+                    onChange={handleInputChange}
+                    rows={4}
+                  />
+                </div>
+                <div className="character-form__group">
+                  <label htmlFor="ideals">Ideals</label>
+                  <textarea
+                    id="ideals"
+                    name="ideals"
+                    value={formData.ideals}
+                    onChange={handleInputChange}
+                    rows={4}
+                  />
+                </div>
+                <div className="character-form__group">
+                  <label htmlFor="bonds">Bonds</label>
+                  <textarea
+                    id="bonds"
+                    name="bonds"
+                    value={formData.bonds}
+                    onChange={handleInputChange}
+                    rows={4}
+                  />
+                </div>
+                <div className="character-form__group">
+                  <label htmlFor="flaws">Flaws</label>
+                  <textarea
+                    id="flaws"
+                    name="flaws"
+                    value={formData.flaws}
+                    onChange={handleInputChange}
+                    rows={4}
+                  />
+                </div>
+              </div>
+            </section>
+
+            {/* Additional Information Section */}
+            <section className="character-form__section">
+              <h3>Additional Information</h3>
+              <div className="character-form__group">
+                <label htmlFor="characterAppearance">Character Appearance</label>
+                <textarea
+                  id="characterAppearance"
+                  name="characterAppearance"
+                  value={formData.characterAppearance}
+                  onChange={handleInputChange}
+                  rows={4}
+                />
+              </div>
+              <div className="character-form__group">
+                <label htmlFor="alliesAndOrganizations">
+                  Allies & Organizations
+                </label>
+                <textarea
+                  id="alliesAndOrganizations"
+                  name="alliesAndOrganizations"
+                  value={formData.alliesAndOrganizations}
+                  onChange={handleInputChange}
+                  rows={4}
+                />
+              </div>
+              <div className="character-form__group">
+                <label htmlFor="additionalFeaturesAndTraits">
+                  Additional Features & Traits
+                </label>
+                <textarea
+                  id="additionalFeaturesAndTraits"
+                  name="additionalFeaturesAndTraits"
+                  value={formData.additionalFeaturesAndTraits}
+                  onChange={handleInputChange}
+                  rows={6}
+                />
+              </div>
+              <div className="character-form__group">
+                <label htmlFor="equipment">Equipment</label>
+                <textarea
+                  id="equipment"
+                  name="equipment"
+                  value={formData.equipment}
+                  onChange={handleInputChange}
+                  rows={6}
+                />
+              </div>
+              <div className="character-form__group">
+                <label htmlFor="spells">Spells</label>
+                <textarea
+                  id="spells"
+                  name="spells"
+                  value={formData.spells}
+                  onChange={handleInputChange}
+                  rows={6}
+                />
+              </div>
+            </section>
+
+            {/* Submit Buttons */}
+            <div className="character-form__actions">
+              <button
+                type="submit"
+                className="character-form__submit"
+                disabled={saving}
+              >
+                {saving ? "Saving..." : "Save Changes"}
+              </button>
+              <button
+                type="button"
+                className="character-form__cancel"
+                onClick={() => navigate("/characters")}
+                disabled={saving}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ViewEditCharacter;
+
