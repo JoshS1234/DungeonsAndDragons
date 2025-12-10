@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { auth, db } from "../../../firebaseSetup";
-import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, updateDoc, serverTimestamp, collection, query, where, getDocs } from "firebase/firestore";
 import Header from "../../components/Header/Header";
 import "./CreateCampaign.scss";
 
@@ -23,6 +23,14 @@ const ViewEditCampaign = () => {
     world: "",
     theme: "",
   });
+  const [linkedPlayers, setLinkedPlayers] = useState<
+    Array<{
+      userId: string;
+      characterId: string;
+      characterName: string;
+      playerName: string;
+    }>
+  >([]);
 
   useEffect(() => {
     const fetchCampaign = async () => {
@@ -62,6 +70,13 @@ const ViewEditCampaign = () => {
           world: campaignData.world || "",
           theme: campaignData.theme || "",
         });
+
+        // Fetch linked players from campaign data
+        if (campaignData.players && Array.isArray(campaignData.players)) {
+          setLinkedPlayers(campaignData.players);
+        } else {
+          setLinkedPlayers([]);
+        }
       } catch (err: any) {
         setError(err.message || "Failed to load campaign");
         console.error("Error fetching campaign:", err);
@@ -104,6 +119,14 @@ const ViewEditCampaign = () => {
         ...prev,
         [name]: value,
       }));
+    }
+  };
+
+
+  const handleCopyCampaignId = () => {
+    if (id) {
+      navigator.clipboard.writeText(id);
+      // You could add a toast notification here if desired
     }
   };
 
@@ -153,6 +176,23 @@ const ViewEditCampaign = () => {
       <div className="campaign-creation-page">
         <div className="campaign-creation-page__container">
           <h2>Edit Campaign: {formData.campaignName || "Unnamed"}</h2>
+          <div className="campaign-id-display">
+            <label>Campaign ID:</label>
+            <div className="campaign-id-display__container">
+              <code className="campaign-id-display__id">{id}</code>
+              <button
+                type="button"
+                onClick={handleCopyCampaignId}
+                className="campaign-id-display__copy"
+                title="Copy Campaign ID"
+              >
+                📋 Copy
+              </button>
+            </div>
+            <p className="campaign-id-display__hint">
+              Share this ID with players to link them to this campaign
+            </p>
+          </div>
           {error && <div className="campaign-form__error">{error}</div>}
           <form onSubmit={handleSubmit} className="campaign-form">
             <section className="campaign-form__section">
@@ -285,6 +325,38 @@ const ViewEditCampaign = () => {
                   placeholder="Private notes, plot ideas, NPCs, future plans..."
                 />
               </div>
+            </section>
+
+            <section className="campaign-form__section">
+              <h3>Players</h3>
+              <p className="players-info-hint">
+                Players are automatically added when they link their characters to
+                this campaign using the Campaign ID.
+              </p>
+              {linkedPlayers.length > 0 ? (
+                <div className="players-list">
+                  <h4>Linked Players ({linkedPlayers.length})</h4>
+                  <div className="players-list__items">
+                    {linkedPlayers.map((player, index) => (
+                      <div key={`${player.userId}-${player.characterId}`} className="players-list__item">
+                        <div className="players-list__info">
+                          <span className="players-list__name">
+                            {player.playerName}
+                          </span>
+                          <span className="players-list__character">
+                            Character: {player.characterName}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="players-empty">
+                  No players linked yet. Share the Campaign ID above with players
+                  to have them link their characters.
+                </p>
+              )}
             </section>
 
             <div className="campaign-form__actions">

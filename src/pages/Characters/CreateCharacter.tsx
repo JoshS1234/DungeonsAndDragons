@@ -1,7 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { auth, db } from "../../../firebaseSetup";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  serverTimestamp,
+  doc,
+  getDoc,
+  updateDoc,
+  arrayUnion,
+} from "firebase/firestore";
 import Header from "../../components/Header/Header";
 import "./CreateCharacter.scss";
 
@@ -52,7 +60,13 @@ const CreateCharacter = () => {
     additionalFeaturesAndTraits: "",
     equipment: "",
     spells: "",
+    campaignIds: [] as string[],
   });
+  const [newCampaignId, setNewCampaignId] = useState("");
+  const [linkingCampaign, setLinkingCampaign] = useState(false);
+  const [linkedCampaigns, setLinkedCampaigns] = useState<
+    Array<{ id: string; name: string }>
+  >([]);
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -96,6 +110,65 @@ const CreateCharacter = () => {
     return Math.floor((score - 10) / 2);
   };
 
+  const handleLinkCampaign = async () => {
+    if (!newCampaignId.trim()) return;
+
+    const campaignId = newCampaignId.trim();
+
+    // Check if already linked
+    if (formData.campaignIds.includes(campaignId)) {
+      setError("This character is already linked to this campaign");
+      setNewCampaignId("");
+      return;
+    }
+
+    try {
+      setLinkingCampaign(true);
+      setError(null);
+
+      // Validate campaign exists
+      const campaignDoc = await getDoc(doc(db, "campaigns", campaignId));
+      if (!campaignDoc.exists()) {
+        throw new Error("Campaign not found. Please check the Campaign ID.");
+      }
+
+      const campaignData = campaignDoc.data();
+      const updatedCampaignIds = [...formData.campaignIds, campaignId];
+
+      setFormData((prev) => ({
+        ...prev,
+        campaignIds: updatedCampaignIds,
+      }));
+
+      // Update linked campaigns display
+      setLinkedCampaigns([
+        ...linkedCampaigns,
+        {
+          id: campaignId,
+          name: campaignData.campaignName || "Unnamed Campaign",
+        },
+      ]);
+
+      setNewCampaignId("");
+    } catch (err: any) {
+      setError(err.message || "Failed to link campaign");
+      console.error("Error linking campaign:", err);
+    } finally {
+      setLinkingCampaign(false);
+    }
+  };
+
+  const handleUnlinkCampaign = (campaignId: string) => {
+    // For CreateCharacter, we just remove from local state since character doesn't exist yet
+    setFormData((prev) => ({
+      ...prev,
+      campaignIds: prev.campaignIds.filter((id) => id !== campaignId),
+    }));
+    setLinkedCampaigns(
+      linkedCampaigns.filter((campaign) => campaign.id !== campaignId)
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -113,7 +186,37 @@ const CreateCharacter = () => {
         updatedAt: serverTimestamp(),
       };
 
-      await addDoc(collection(db, "characters"), characterData);
+      // Create character first
+      const characterRef = await addDoc(
+        collection(db, "characters"),
+        characterData
+      );
+      const characterId = characterRef.id;
+
+      // Link to campaigns if any were added
+      if (formData.campaignIds.length > 0) {
+        const playerInfo = {
+          userId: auth.currentUser.uid,
+          characterId: characterId,
+          characterName: formData.characterName || "Unnamed Character",
+          playerName:
+            formData.playerName ||
+            auth.currentUser.displayName ||
+            auth.currentUser.email ||
+            "Unknown Player",
+        };
+
+        // Update each campaign's players array
+        const campaignUpdatePromises = formData.campaignIds.map((campaignId) =>
+          updateDoc(doc(db, "campaigns", campaignId), {
+            players: arrayUnion(playerInfo),
+            updatedAt: serverTimestamp(),
+          })
+        );
+
+        await Promise.all(campaignUpdatePromises);
+      }
+
       navigate("/characters");
     } catch (err: any) {
       setError(err.message || "Failed to create character");
@@ -603,6 +706,76 @@ const CreateCharacter = () => {
                   rows={6}
                 />
               </div>
+            </section>
+
+            {/* Campaign Linking Section */}
+            <section className="character-form__section">
+              <h3>Linked Campaigns</h3>
+              <div className="character-form__group">
+                <label htmlFor="campaignId">Link to Campaign</label>
+                <p className="campaign-link-hint">
+                  Enter a Campaign ID to link this character to a campaign. You
+                  can link this character to multiple campaigns.
+                </p>
+                <div className="campaign-link-container">
+                  <input
+                    type="text"
+                    id="campaignId"
+                    value={newCampaignId}
+                    onChange={(e) => setNewCampaignId(e.target.value)}
+                    placeholder="Paste Campaign ID here"
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleLinkCampaign();
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleLinkCampaign}
+                    className="campaign-link-button"
+                    disabled={!newCampaignId.trim() || linkingCampaign}
+                  >
+                    {linkingCampaign ? "Linking..." : "Link Campaign"}
+                  </button>
+                </div>
+              </div>
+              {formData.campaignIds.length > 0 ? (
+                <div className="linked-campaigns-list">
+                  <h4>Linked Campaigns ({formData.campaignIds.length})</h4>
+                  <div className="linked-campaigns-list__items">
+                    {linkedCampaigns.map((campaign) => (
+                      <div
+                        key={campaign.id}
+                        className="linked-campaigns-list__item"
+                      >
+                        <div className="linked-campaigns-list__info">
+                          <span className="linked-campaigns-list__name">
+                            {campaign.name}
+                          </span>
+                          <code className="linked-campaigns-list__id">
+                            {campaign.id}
+                          </code>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleUnlinkCampaign(campaign.id)}
+                          className="linked-campaigns-list__remove"
+                          title="Unlink campaign"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="linked-campaigns-empty">
+                  No campaigns linked yet. Add a Campaign ID to link this
+                  character to a campaign.
+                </p>
+              )}
             </section>
 
             {/* Submit Buttons */}

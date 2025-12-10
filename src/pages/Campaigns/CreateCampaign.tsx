@@ -20,6 +20,12 @@ const CreateCampaign = () => {
     notes: "",
     world: "",
     theme: "",
+    players: [] as Array<{
+      userId: string;
+      characterId: string;
+      characterName: string;
+      playerName: string;
+    }>,
   });
 
   const handleInputChange = (
@@ -67,14 +73,25 @@ const CreateCampaign = () => {
       }
 
       const campaignData = {
-        ...formData,
+        campaignName: formData.campaignName,
+        description: formData.description,
+        setting: formData.setting,
+        dungeonMaster: formData.dungeonMaster,
+        currentLevel: formData.currentLevel,
+        startDate: formData.startDate,
+        status: formData.status,
+        notes: formData.notes,
+        world: formData.world,
+        theme: formData.theme,
+        players: [], // Players will be added when characters link to this campaign
         userId: auth.currentUser.uid,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
 
-      await addDoc(collection(db, "campaigns"), campaignData);
-      navigate("/campaigns");
+      const docRef = await addDoc(collection(db, "campaigns"), campaignData);
+      // Navigate to the view/edit page where the campaign ID will be displayed
+      navigate(`/campaigns/${docRef.id}`);
     } catch (err: any) {
       setError(err.message || "Failed to create campaign");
       console.error("Error creating campaign:", err);
@@ -221,6 +238,19 @@ const CreateCampaign = () => {
                   placeholder="Private notes, plot ideas, NPCs, future plans..."
                 />
               </div>
+            </section>
+
+            <section className="campaign-form__section">
+              <h3>Players</h3>
+              <p className="players-info-hint">
+                Players will be automatically added when they link their characters to
+                this campaign using the Campaign ID. After creating the campaign, share
+                the Campaign ID with your players.
+              </p>
+              <p className="players-empty">
+                No players linked yet. Players will appear here once they link their
+                characters to this campaign.
+              </p>
             </section>
 
             <div className="campaign-form__actions">
