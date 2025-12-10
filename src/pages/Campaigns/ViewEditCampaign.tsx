@@ -31,6 +31,7 @@ const ViewEditCampaign = () => {
       playerName: string;
     }>
   >([]);
+  const [removingPlayer, setRemovingPlayer] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchCampaign = async () => {
@@ -127,6 +128,59 @@ const ViewEditCampaign = () => {
     if (id) {
       navigator.clipboard.writeText(id);
       // You could add a toast notification here if desired
+    }
+  };
+
+  const handleRemovePlayer = async (player: {
+    userId: string;
+    characterId: string;
+    characterName: string;
+    playerName: string;
+  }) => {
+    if (!id) return;
+
+    try {
+      setRemovingPlayer(player.characterId);
+      setError(null);
+
+      // Get the character document
+      const characterDoc = await getDoc(doc(db, "characters", player.characterId));
+      if (!characterDoc.exists()) {
+        throw new Error("Character not found");
+      }
+
+      const characterData = characterDoc.data();
+      const currentCampaignIds = characterData.campaignIds || [];
+
+      // Remove this campaign ID from the character's campaignIds array
+      const updatedCampaignIds = currentCampaignIds.filter(
+        (campaignId: string) => campaignId !== id
+      );
+
+      // Remove the player from the campaign's players array
+      const updatedPlayers = linkedPlayers.filter(
+        (p) => !(p.characterId === player.characterId && p.userId === player.userId)
+      );
+
+      // Update both documents
+      await Promise.all([
+        updateDoc(doc(db, "campaigns", id), {
+          players: updatedPlayers,
+          updatedAt: serverTimestamp(),
+        }),
+        updateDoc(doc(db, "characters", player.characterId), {
+          campaignIds: updatedCampaignIds,
+          updatedAt: serverTimestamp(),
+        }),
+      ]);
+
+      // Update local state
+      setLinkedPlayers(updatedPlayers);
+    } catch (err: any) {
+      setError(err.message || "Failed to remove player from campaign");
+      console.error("Error removing player:", err);
+    } finally {
+      setRemovingPlayer(null);
     }
   };
 
@@ -347,6 +401,15 @@ const ViewEditCampaign = () => {
                             Character: {player.characterName}
                           </span>
                         </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemovePlayer(player)}
+                          className="players-list__remove"
+                          title="Remove player from campaign"
+                          disabled={removingPlayer === player.characterId}
+                        >
+                          {removingPlayer === player.characterId ? "..." : "✕"}
+                        </button>
                       </div>
                     ))}
                   </div>
