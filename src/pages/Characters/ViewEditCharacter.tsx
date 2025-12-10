@@ -11,6 +11,7 @@ const ViewEditCharacter = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [canEdit, setCanEdit] = useState(false);
   const [formData, setFormData] = useState({
     // Basic Information
     characterName: "",
@@ -82,10 +83,34 @@ const ViewEditCharacter = () => {
 
         const characterData = characterDoc.data();
 
-        // Verify the character belongs to the current user
-        if (characterData.userId !== auth.currentUser.uid) {
+        // Check if user owns the character
+        const isOwner = characterData.userId === auth.currentUser.uid;
+        
+        // Check if character is linked to a campaign owned by the current user (DM view)
+        let isDmOfLinkedCampaign = false;
+        if (!isOwner && characterData.campaignIds && characterData.campaignIds.length > 0) {
+          const campaignChecks = await Promise.all(
+            characterData.campaignIds.map(async (campaignId: string) => {
+              try {
+                const campaignDoc = await getDoc(doc(db, "campaigns", campaignId));
+                if (campaignDoc.exists()) {
+                  return campaignDoc.data().userId === auth.currentUser.uid;
+                }
+                return false;
+              } catch {
+                return false;
+              }
+            })
+          );
+          isDmOfLinkedCampaign = campaignChecks.some((isDm) => isDm);
+        }
+
+        // Allow viewing if user owns the character OR is DM of a linked campaign
+        if (!isOwner && !isDmOfLinkedCampaign) {
           throw new Error("You don't have permission to view this character");
         }
+
+        setCanEdit(isOwner);
 
         // Populate form with character data
         setFormData({
@@ -396,7 +421,12 @@ const ViewEditCharacter = () => {
       <Header />
       <div className="character-creation-page">
         <div className="character-creation-page__container">
-          <h2>Edit Character: {formData.characterName || "Unnamed"}</h2>
+          <h2>{canEdit ? "Edit Character" : "View Character"}: {formData.characterName || "Unnamed"}</h2>
+          {!canEdit && (
+            <p style={{ color: "#ffd700", fontStyle: "italic", marginBottom: "1rem" }}>
+              View-only mode: This character is linked to one of your campaigns
+            </p>
+          )}
           {error && <div className="character-form__error">{error}</div>}
           <form onSubmit={handleSubmit} className="character-form">
             {/* Basic Information Section */}
@@ -411,6 +441,8 @@ const ViewEditCharacter = () => {
                     name="characterName"
                     value={formData.characterName}
                     onChange={handleInputChange}
+                    disabled={!canEdit}
+                    disabled={!canEdit}
                     required
                   />
                 </div>
@@ -421,6 +453,8 @@ const ViewEditCharacter = () => {
                     name="class"
                     value={formData.class}
                     onChange={handleInputChange}
+                    disabled={!canEdit}
+                    disabled={!canEdit}
                     required
                   >
                     <option value="">Select Class</option>
@@ -448,6 +482,7 @@ const ViewEditCharacter = () => {
                     onChange={(e) =>
                       handleNumberChange("level", parseInt(e.target.value) || 1)
                     }
+                    disabled={!canEdit}
                     min="1"
                     max="20"
                     required
@@ -460,6 +495,8 @@ const ViewEditCharacter = () => {
                     name="race"
                     value={formData.race}
                     onChange={handleInputChange}
+                    disabled={!canEdit}
+                    disabled={!canEdit}
                     required
                   >
                     <option value="">Select Race</option>
@@ -482,6 +519,7 @@ const ViewEditCharacter = () => {
                     name="background"
                     value={formData.background}
                     onChange={handleInputChange}
+                    disabled={!canEdit}
                   />
                 </div>
                 <div className="character-form__group">
@@ -491,6 +529,7 @@ const ViewEditCharacter = () => {
                     name="alignment"
                     value={formData.alignment}
                     onChange={handleInputChange}
+                    disabled={!canEdit}
                   >
                     <option value="">Select Alignment</option>
                     <option value="Lawful Good">Lawful Good</option>
@@ -512,6 +551,7 @@ const ViewEditCharacter = () => {
                     name="playerName"
                     value={formData.playerName}
                     onChange={handleInputChange}
+                    disabled={!canEdit}
                   />
                 </div>
                 <div className="character-form__group">
@@ -527,6 +567,7 @@ const ViewEditCharacter = () => {
                         parseInt(e.target.value) || 0
                       )
                     }
+                    disabled={!canEdit}
                     min="0"
                   />
                 </div>
@@ -557,6 +598,7 @@ const ViewEditCharacter = () => {
                             parseInt(e.target.value) || 10
                           )
                         }
+                        disabled={!canEdit}
                         min="1"
                         max="30"
                       />
@@ -587,6 +629,7 @@ const ViewEditCharacter = () => {
                         parseInt(e.target.value) || 10
                       )
                     }
+                    disabled={!canEdit}
                   />
                 </div>
                 <div className="character-form__group">
@@ -602,6 +645,7 @@ const ViewEditCharacter = () => {
                         parseInt(e.target.value) || 0
                       )
                     }
+                    disabled={!canEdit}
                   />
                 </div>
                 <div className="character-form__group">
@@ -617,6 +661,7 @@ const ViewEditCharacter = () => {
                         parseInt(e.target.value) || 30
                       )
                     }
+                    disabled={!canEdit}
                   />
                 </div>
                 <div className="character-form__group">
@@ -627,6 +672,7 @@ const ViewEditCharacter = () => {
                     name="hitDice"
                     value={formData.hitDice}
                     onChange={handleInputChange}
+                    disabled={!canEdit}
                     placeholder="1d8"
                   />
                 </div>
@@ -643,6 +689,7 @@ const ViewEditCharacter = () => {
                         parseInt(e.target.value) || 8
                       )
                     }
+                    disabled={!canEdit}
                   />
                 </div>
                 <div className="character-form__group">
@@ -658,6 +705,7 @@ const ViewEditCharacter = () => {
                         parseInt(e.target.value) || 8
                       )
                     }
+                    disabled={!canEdit}
                   />
                 </div>
                 <div className="character-form__group">
@@ -675,6 +723,7 @@ const ViewEditCharacter = () => {
                         parseInt(e.target.value) || 0
                       )
                     }
+                    disabled={!canEdit}
                     min="0"
                   />
                 </div>
@@ -710,6 +759,7 @@ const ViewEditCharacter = () => {
                       onChange={() =>
                         handleCheckboxChange("savingThrow", ability.abbrev)
                       }
+                      disabled={!canEdit}
                     />
                     {ability.name} ({ability.abbrev})
                   </label>
@@ -731,6 +781,7 @@ const ViewEditCharacter = () => {
                       onChange={() =>
                         handleCheckboxChange("skill", skill.name)
                       }
+                      disabled={!canEdit}
                     />
                     {skill.name} ({skill.ability})
                   </label>
@@ -749,6 +800,7 @@ const ViewEditCharacter = () => {
                     name="personalityTraits"
                     value={formData.personalityTraits}
                     onChange={handleInputChange}
+                    disabled={!canEdit}
                     rows={4}
                   />
                 </div>
@@ -759,6 +811,7 @@ const ViewEditCharacter = () => {
                     name="ideals"
                     value={formData.ideals}
                     onChange={handleInputChange}
+                    disabled={!canEdit}
                     rows={4}
                   />
                 </div>
@@ -769,6 +822,7 @@ const ViewEditCharacter = () => {
                     name="bonds"
                     value={formData.bonds}
                     onChange={handleInputChange}
+                    disabled={!canEdit}
                     rows={4}
                   />
                 </div>
@@ -779,6 +833,7 @@ const ViewEditCharacter = () => {
                     name="flaws"
                     value={formData.flaws}
                     onChange={handleInputChange}
+                    disabled={!canEdit}
                     rows={4}
                   />
                 </div>
@@ -844,7 +899,8 @@ const ViewEditCharacter = () => {
               </div>
             </section>
 
-            {/* Campaign Linking Section */}
+            {/* Campaign Linking Section - Only show if user can edit */}
+            {canEdit && (
             <section className="character-form__section">
               <h3>Linked Campaigns</h3>
               <div className="character-form__group">
@@ -910,8 +966,10 @@ const ViewEditCharacter = () => {
                 </p>
               )}
             </section>
+            )}
 
-            {/* Submit Buttons */}
+            {/* Submit Buttons - Only show if user can edit */}
+            {canEdit && (
             <div className="character-form__actions">
               <button
                 type="submit"
@@ -929,6 +987,7 @@ const ViewEditCharacter = () => {
                 Cancel
               </button>
             </div>
+            )}
           </form>
         </div>
       </div>

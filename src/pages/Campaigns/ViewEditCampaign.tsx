@@ -393,7 +393,11 @@ const ViewEditCampaign = () => {
                   <div className="players-list__items">
                     {linkedPlayers.map((player, index) => (
                       <div key={`${player.userId}-${player.characterId}`} className="players-list__item">
-                        <div className="players-list__info">
+                        <div 
+                          className="players-list__info players-list__info--clickable"
+                          onClick={() => navigate(`/characters/${player.characterId}`)}
+                          title="Click to view character sheet"
+                        >
                           <span className="players-list__name">
                             {player.playerName}
                           </span>
@@ -403,7 +407,10 @@ const ViewEditCampaign = () => {
                         </div>
                         <button
                           type="button"
-                          onClick={() => handleRemovePlayer(player)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemovePlayer(player);
+                          }}
                           className="players-list__remove"
                           title="Remove player from campaign"
                           disabled={removingPlayer === player.characterId}
