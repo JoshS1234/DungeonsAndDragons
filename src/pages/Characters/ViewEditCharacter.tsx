@@ -1,7 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { auth, db, storage } from "../../../firebaseSetup";
-import { doc, getDoc, updateDoc, deleteDoc, serverTimestamp, arrayUnion } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  updateDoc,
+  deleteDoc,
+  serverTimestamp,
+  arrayUnion,
+} from "firebase/firestore";
 import { ref, deleteObject } from "firebase/storage";
 import Header from "../../components/Header/Header";
 import "./CreateCharacter.scss";
@@ -80,7 +87,7 @@ const ViewEditCharacter = () => {
         setError(null);
 
         const characterDoc = await getDoc(doc(db, "characters", id));
-        
+
         if (!characterDoc.exists()) {
           throw new Error("Character not found");
         }
@@ -89,16 +96,32 @@ const ViewEditCharacter = () => {
 
         // Check if user owns the character
         const isOwner = characterData.userId === auth.currentUser.uid;
-        
-        // Check if character is linked to a campaign owned by the current user (DM view)
-        let isDmOfLinkedCampaign = false;
-        if (!isOwner && characterData.campaignIds && characterData.campaignIds.length > 0) {
+
+        // Check if character is linked to a campaign where user is DM or player
+        let canView = isOwner;
+        if (
+          !isOwner &&
+          auth.currentUser &&
+          characterData.campaignIds &&
+          characterData.campaignIds.length > 0
+        ) {
+          const userId = auth.currentUser.uid;
           const campaignChecks = await Promise.all(
             characterData.campaignIds.map(async (campaignId: string) => {
               try {
-                const campaignDoc = await getDoc(doc(db, "campaigns", campaignId));
+                const campaignDoc = await getDoc(
+                  doc(db, "campaigns", campaignId)
+                );
                 if (campaignDoc.exists()) {
-                  return campaignDoc.data().userId === auth.currentUser.uid;
+                  const campaignData = campaignDoc.data();
+                  // Check if user is the DM
+                  const isDm = campaignData.userId === userId;
+                  // Check if user is a player in the campaign
+                  const players = campaignData.players || [];
+                  const isPlayer = players.some(
+                    (p: any) => p.userId === userId
+                  );
+                  return isDm || isPlayer;
                 }
                 return false;
               } catch {
@@ -106,11 +129,11 @@ const ViewEditCharacter = () => {
               }
             })
           );
-          isDmOfLinkedCampaign = campaignChecks.some((isDm) => isDm);
+          canView = campaignChecks.some((hasAccess) => hasAccess);
         }
 
-        // Allow viewing if user owns the character OR is DM of a linked campaign
-        if (!isOwner && !isDmOfLinkedCampaign) {
+        // Allow viewing if user owns the character OR is in a shared campaign (DM or player)
+        if (!canView) {
           throw new Error("You don't have permission to view this character");
         }
 
@@ -140,7 +163,8 @@ const ViewEditCharacter = () => {
           temporaryHitPoints: characterData.temporaryHitPoints || 0,
           hitDice: characterData.hitDice || "1d8",
           proficiencyBonus: characterData.proficiencyBonus || 2,
-          savingThrowProficiencies: characterData.savingThrowProficiencies || [],
+          savingThrowProficiencies:
+            characterData.savingThrowProficiencies || [],
           skillProficiencies: characterData.skillProficiencies || [],
           personalityTraits: characterData.personalityTraits || "",
           ideals: characterData.ideals || "",
@@ -148,7 +172,8 @@ const ViewEditCharacter = () => {
           flaws: characterData.flaws || "",
           characterAppearance: characterData.characterAppearance || "",
           alliesAndOrganizations: characterData.alliesAndOrganizations || "",
-          additionalFeaturesAndTraits: characterData.additionalFeaturesAndTraits || "",
+          additionalFeaturesAndTraits:
+            characterData.additionalFeaturesAndTraits || "",
           equipment: characterData.equipment || "",
           spells: characterData.spells || "",
           campaignIds: characterData.campaignIds || [],
@@ -159,7 +184,9 @@ const ViewEditCharacter = () => {
           const campaignPromises = characterData.campaignIds.map(
             async (campaignId: string) => {
               try {
-                const campaignDoc = await getDoc(doc(db, "campaigns", campaignId));
+                const campaignDoc = await getDoc(
+                  doc(db, "campaigns", campaignId)
+                );
                 if (campaignDoc.exists()) {
                   return {
                     id: campaignId,
@@ -262,7 +289,11 @@ const ViewEditCharacter = () => {
         userId: auth.currentUser.uid,
         characterId: id,
         characterName: formData.characterName || "Unnamed Character",
-        playerName: formData.playerName || auth.currentUser.displayName || auth.currentUser.email || "Unknown Player",
+        playerName:
+          formData.playerName ||
+          auth.currentUser.displayName ||
+          auth.currentUser.email ||
+          "Unknown Player",
       };
 
       // Update both campaign's players array and character's campaignIds array
@@ -319,10 +350,15 @@ const ViewEditCharacter = () => {
 
       // Filter out this character from players array
       const updatedPlayers = currentPlayers.filter(
-        (player: any) => !(player.characterId === id && player.userId === auth.currentUser?.uid)
+        (player: any) =>
+          !(
+            player.characterId === id && player.userId === auth.currentUser?.uid
+          )
       );
 
-      const updatedCampaignIds = formData.campaignIds.filter((cid) => cid !== campaignId);
+      const updatedCampaignIds = formData.campaignIds.filter(
+        (cid) => cid !== campaignId
+      );
 
       // Remove from both campaign's players array and character's campaignIds array
       await Promise.all([
@@ -382,7 +418,9 @@ const ViewEditCharacter = () => {
 
     // Verify confirmation name matches
     if (deleteConfirmName !== formData.characterName) {
-      setError("Character name does not match. Please enter the exact character name to confirm deletion.");
+      setError(
+        "Character name does not match. Please enter the exact character name to confirm deletion."
+      );
       return;
     }
 
@@ -399,16 +437,24 @@ const ViewEditCharacter = () => {
       const characterData = characterDoc.data();
 
       // Remove character from all linked campaigns
-      if (characterData.campaignIds && Array.isArray(characterData.campaignIds)) {
+      if (
+        characterData.campaignIds &&
+        Array.isArray(characterData.campaignIds)
+      ) {
         const campaignUpdatePromises = characterData.campaignIds.map(
           async (campaignId: string) => {
             try {
-              const campaignDoc = await getDoc(doc(db, "campaigns", campaignId));
+              const campaignDoc = await getDoc(
+                doc(db, "campaigns", campaignId)
+              );
               if (campaignDoc.exists()) {
                 const campaignData = campaignDoc.data();
                 const players = campaignData.players || [];
                 const updatedPlayers = players.filter(
-                  (p: any) => !(p.characterId === id && p.userId === auth.currentUser?.uid)
+                  (p: any) =>
+                    !(
+                      p.characterId === id && p.userId === auth.currentUser?.uid
+                    )
                 );
 
                 if (updatedPlayers.length !== players.length) {
@@ -419,7 +465,10 @@ const ViewEditCharacter = () => {
                 }
               }
             } catch (err) {
-              console.error(`Error removing character from campaign ${campaignId}:`, err);
+              console.error(
+                `Error removing character from campaign ${campaignId}:`,
+                err
+              );
               // Continue with deletion even if campaign update fails
             }
           }
@@ -432,7 +481,9 @@ const ViewEditCharacter = () => {
         try {
           // Extract the file path from the URL
           const urlParts = characterData.imageUrl.split("/");
-          const imagePathIndex = urlParts.findIndex((part: string) => part === "o");
+          const imagePathIndex = urlParts.findIndex(
+            (part: string) => part === "o"
+          );
           if (imagePathIndex !== -1 && imagePathIndex < urlParts.length - 1) {
             const encodedPath = urlParts.slice(imagePathIndex + 1).join("/");
             const decodedPath = decodeURIComponent(encodedPath).split("?")[0];
@@ -505,10 +556,20 @@ const ViewEditCharacter = () => {
       <Header />
       <div className="character-creation-page">
         <div className="character-creation-page__container">
-          <h2>{canEdit ? "Edit Character" : "View Character"}: {formData.characterName || "Unnamed"}</h2>
+          <h2>
+            {canEdit ? "Edit Character" : "View Character"}:{" "}
+            {formData.characterName || "Unnamed"}
+          </h2>
           {!canEdit && (
-            <p style={{ color: "#ffd700", fontStyle: "italic", marginBottom: "1rem" }}>
-              View-only mode: This character is linked to one of your campaigns
+            <p
+              style={{
+                color: "#ffd700",
+                fontStyle: "italic",
+                marginBottom: "1rem",
+              }}
+            >
+              View-only mode: This character is linked to a campaign you're part
+              of
             </p>
           )}
           {error && <div className="character-form__error">{error}</div>}
@@ -526,7 +587,6 @@ const ViewEditCharacter = () => {
                     value={formData.characterName}
                     onChange={handleInputChange}
                     disabled={!canEdit}
-                    disabled={!canEdit}
                     required
                   />
                 </div>
@@ -537,7 +597,6 @@ const ViewEditCharacter = () => {
                     name="class"
                     value={formData.class}
                     onChange={handleInputChange}
-                    disabled={!canEdit}
                     disabled={!canEdit}
                     required
                   >
@@ -579,7 +638,6 @@ const ViewEditCharacter = () => {
                     name="race"
                     value={formData.race}
                     onChange={handleInputChange}
-                    disabled={!canEdit}
                     disabled={!canEdit}
                     required
                   >
@@ -663,8 +721,9 @@ const ViewEditCharacter = () => {
               <h3>Ability Scores</h3>
               <div className="character-form__grid character-form__grid--3">
                 {abilities.map((ability) => {
-                  const score =
-                    formData[ability.key as keyof typeof formData] as number;
+                  const score = formData[
+                    ability.key as keyof typeof formData
+                  ] as number;
                   const modifier = calculateModifier(score);
                   return (
                     <div key={ability.key} className="ability-score-group">
@@ -859,12 +918,8 @@ const ViewEditCharacter = () => {
                   <label key={skill.name} className="checkbox-label">
                     <input
                       type="checkbox"
-                      checked={formData.skillProficiencies.includes(
-                        skill.name
-                      )}
-                      onChange={() =>
-                        handleCheckboxChange("skill", skill.name)
-                      }
+                      checked={formData.skillProficiencies.includes(skill.name)}
+                      onChange={() => handleCheckboxChange("skill", skill.name)}
                       disabled={!canEdit}
                     />
                     {skill.name} ({skill.ability})
@@ -928,7 +983,9 @@ const ViewEditCharacter = () => {
             <section className="character-form__section">
               <h3>Additional Information</h3>
               <div className="character-form__group">
-                <label htmlFor="characterAppearance">Character Appearance</label>
+                <label htmlFor="characterAppearance">
+                  Character Appearance
+                </label>
                 <textarea
                   id="characterAppearance"
                   name="characterAppearance"
@@ -985,114 +1042,126 @@ const ViewEditCharacter = () => {
 
             {/* Campaign Linking Section - Only show if user can edit */}
             {canEdit && (
-            <section className="character-form__section">
-              <h3>Linked Campaigns</h3>
-              <div className="character-form__group">
-                <label htmlFor="campaignId">Link to Campaign</label>
-                <p className="campaign-link-hint">
-                  Enter a Campaign ID to link this character to a campaign. You
-                  can link this character to multiple campaigns.
-                </p>
-                <div className="campaign-link-container">
-                  <input
-                    type="text"
-                    id="campaignId"
-                    value={newCampaignId}
-                    onChange={(e) => setNewCampaignId(e.target.value)}
-                    placeholder="Paste Campaign ID here"
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleLinkCampaign();
-                      }
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={handleLinkCampaign}
-                    className="campaign-link-button"
-                    disabled={!newCampaignId.trim() || linkingCampaign}
-                  >
-                    {linkingCampaign ? "Linking..." : "Link Campaign"}
-                  </button>
-                </div>
-              </div>
-              {formData.campaignIds.length > 0 ? (
-                <div className="linked-campaigns-list">
-                  <h4>Linked Campaigns ({formData.campaignIds.length})</h4>
-                  <div className="linked-campaigns-list__items">
-                    {linkedCampaigns.map((campaign) => (
-                      <div key={campaign.id} className="linked-campaigns-list__item">
-                        <div className="linked-campaigns-list__info">
-                          <span className="linked-campaigns-list__name">
-                            {campaign.name}
-                          </span>
-                          <code className="linked-campaigns-list__id">
-                            {campaign.id}
-                          </code>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleUnlinkCampaign(campaign.id)}
-                          className="linked-campaigns-list__remove"
-                          title="Unlink campaign"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ))}
+              <section className="character-form__section">
+                <h3>Linked Campaigns</h3>
+                <div className="character-form__group">
+                  <label htmlFor="campaignId">Link to Campaign</label>
+                  <p className="campaign-link-hint">
+                    Enter a Campaign ID to link this character to a campaign.
+                    You can link this character to multiple campaigns.
+                  </p>
+                  <div className="campaign-link-container">
+                    <input
+                      type="text"
+                      id="campaignId"
+                      value={newCampaignId}
+                      onChange={(e) => setNewCampaignId(e.target.value)}
+                      placeholder="Paste Campaign ID here"
+                      onKeyPress={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleLinkCampaign();
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleLinkCampaign}
+                      className="campaign-link-button"
+                      disabled={!newCampaignId.trim() || linkingCampaign}
+                    >
+                      {linkingCampaign ? "Linking..." : "Link Campaign"}
+                    </button>
                   </div>
                 </div>
-              ) : (
-                <p className="linked-campaigns-empty">
-                  No campaigns linked yet. Add a Campaign ID to link this
-                  character to a campaign.
-                </p>
-              )}
-            </section>
+                {formData.campaignIds.length > 0 ? (
+                  <div className="linked-campaigns-list">
+                    <h4>Linked Campaigns ({formData.campaignIds.length})</h4>
+                    <div className="linked-campaigns-list__items">
+                      {linkedCampaigns.map((campaign) => (
+                        <div
+                          key={campaign.id}
+                          className="linked-campaigns-list__item"
+                        >
+                          <div className="linked-campaigns-list__info">
+                            <span className="linked-campaigns-list__name">
+                              {campaign.name}
+                            </span>
+                            <code className="linked-campaigns-list__id">
+                              {campaign.id}
+                            </code>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleUnlinkCampaign(campaign.id)}
+                            className="linked-campaigns-list__remove"
+                            title="Unlink campaign"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="linked-campaigns-empty">
+                    No campaigns linked yet. Add a Campaign ID to link this
+                    character to a campaign.
+                  </p>
+                )}
+              </section>
             )}
 
             {/* Submit Buttons - Only show if user can edit */}
             {canEdit && (
-            <div className="character-form__actions">
-              <button
-                type="submit"
-                className="character-form__submit"
-                disabled={saving || deleting}
-              >
-                {saving ? "Saving..." : "Save Changes"}
-              </button>
-              <button
-                type="button"
-                className="character-form__cancel"
-                onClick={() => navigate("/characters")}
-                disabled={saving || deleting}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="character-form__delete"
-                onClick={() => setShowDeleteConfirm(true)}
-                disabled={saving || deleting}
-              >
-                Delete Character
-              </button>
-            </div>
+              <div className="character-form__actions">
+                <button
+                  type="submit"
+                  className="character-form__submit"
+                  disabled={saving || deleting}
+                >
+                  {saving ? "Saving..." : "Save Changes"}
+                </button>
+                <button
+                  type="button"
+                  className="character-form__cancel"
+                  onClick={() => navigate("/characters")}
+                  disabled={saving || deleting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="character-form__delete"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={saving || deleting}
+                >
+                  Delete Character
+                </button>
+              </div>
             )}
 
             {/* Delete Confirmation Modal */}
             {showDeleteConfirm && canEdit && (
               <div className="delete-confirm-modal">
-                <div className="delete-confirm-modal__overlay" onClick={() => {
-                  setShowDeleteConfirm(false);
-                  setDeleteConfirmName("");
-                  setError(null);
-                }} />
+                <div
+                  className="delete-confirm-modal__overlay"
+                  onClick={() => {
+                    setShowDeleteConfirm(false);
+                    setDeleteConfirmName("");
+                    setError(null);
+                  }}
+                />
                 <div className="delete-confirm-modal__content">
                   <h3>Delete Character</h3>
-                  <p>This action cannot be undone. This will permanently delete your character and remove them from all linked campaigns.</p>
-                  <p>To confirm, please enter the character name: <strong>{formData.characterName}</strong></p>
+                  <p>
+                    This action cannot be undone. This will permanently delete
+                    your character and remove them from all linked campaigns.
+                  </p>
+                  <p>
+                    To confirm, please enter the character name:{" "}
+                    <strong>{formData.characterName}</strong>
+                  </p>
                   <input
                     type="text"
                     className="delete-confirm-modal__input"
@@ -1101,7 +1170,9 @@ const ViewEditCharacter = () => {
                     placeholder="Enter character name to confirm"
                     autoFocus
                   />
-                  {error && <div className="delete-confirm-modal__error">{error}</div>}
+                  {error && (
+                    <div className="delete-confirm-modal__error">{error}</div>
+                  )}
                   <div className="delete-confirm-modal__actions">
                     <button
                       type="button"
@@ -1119,7 +1190,9 @@ const ViewEditCharacter = () => {
                       type="button"
                       className="delete-confirm-modal__confirm"
                       onClick={handleDelete}
-                      disabled={deleting || deleteConfirmName !== formData.characterName}
+                      disabled={
+                        deleting || deleteConfirmName !== formData.characterName
+                      }
                     >
                       {deleting ? "Deleting..." : "Delete Character"}
                     </button>
@@ -1135,4 +1208,3 @@ const ViewEditCharacter = () => {
 };
 
 export default ViewEditCharacter;
-
