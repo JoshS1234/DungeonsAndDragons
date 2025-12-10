@@ -1,7 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { auth, db } from "../../../firebaseSetup";
-import { doc, getDoc, updateDoc, serverTimestamp, collection, query, where, getDocs } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  updateDoc,
+  serverTimestamp,
+  collection,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
 import Header from "../../components/Header/Header";
 import "./CreateCampaign.scss";
 
@@ -135,7 +144,6 @@ const ViewEditCampaign = () => {
     }
   };
 
-
   const handleCopyCampaignId = () => {
     if (id) {
       navigator.clipboard.writeText(id);
@@ -156,7 +164,9 @@ const ViewEditCampaign = () => {
       setError(null);
 
       // Get the character document
-      const characterDoc = await getDoc(doc(db, "characters", player.characterId));
+      const characterDoc = await getDoc(
+        doc(db, "characters", player.characterId)
+      );
       if (!characterDoc.exists()) {
         throw new Error("Character not found");
       }
@@ -171,7 +181,8 @@ const ViewEditCampaign = () => {
 
       // Remove the player from the campaign's players array
       const updatedPlayers = linkedPlayers.filter(
-        (p) => !(p.characterId === player.characterId && p.userId === player.userId)
+        (p) =>
+          !(p.characterId === player.characterId && p.userId === player.userId)
       );
 
       // Update both documents
@@ -241,9 +252,18 @@ const ViewEditCampaign = () => {
       <Header />
       <div className="campaign-creation-page">
         <div className="campaign-creation-page__container">
-          <h2>{canEdit ? "Edit Campaign" : "View Campaign"}: {formData.campaignName || "Unnamed"}</h2>
+          <h2>
+            {canEdit ? "Edit Campaign" : "View Campaign"}:{" "}
+            {formData.campaignName || "Unnamed"}
+          </h2>
           {!canEdit && (
-            <p style={{ color: "#ffd700", fontStyle: "italic", marginBottom: "1rem" }}>
+            <p
+              style={{
+                color: "#ffd700",
+                fontStyle: "italic",
+                marginBottom: "1rem",
+              }}
+            >
               View-only mode: You are a player in this campaign
             </p>
           )}
@@ -398,7 +418,16 @@ const ViewEditCampaign = () => {
               {canEdit && (
                 <div className="campaign-form__group">
                   <label htmlFor="notes">
-                    DM Notes <span style={{ fontSize: "0.85em", fontStyle: "italic", color: "#ffd700" }}>*This will not be shown to players*</span>
+                    DM Notes{" "}
+                    <span
+                      style={{
+                        fontSize: "0.85em",
+                        fontStyle: "italic",
+                        color: "#ffd700",
+                      }}
+                    >
+                      *This will not be shown to players*
+                    </span>
                   </label>
                   <textarea
                     id="notes"
@@ -415,18 +444,23 @@ const ViewEditCampaign = () => {
             <section className="campaign-form__section">
               <h3>Players</h3>
               <p className="players-info-hint">
-                Players are automatically added when they link their characters to
-                this campaign using the Campaign ID.
+                Players are automatically added when they link their characters
+                to this campaign using the Campaign ID.
               </p>
               {linkedPlayers.length > 0 ? (
                 <div className="players-list">
                   <h4>Linked Players ({linkedPlayers.length})</h4>
                   <div className="players-list__items">
                     {linkedPlayers.map((player, index) => (
-                      <div key={`${player.userId}-${player.characterId}`} className="players-list__item">
-                        <div 
+                      <div
+                        key={`${player.userId}-${player.characterId}`}
+                        className="players-list__item"
+                      >
+                        <div
                           className="players-list__info players-list__info--clickable"
-                          onClick={() => navigate(`/characters/${player.characterId}`)}
+                          onClick={() =>
+                            navigate(`/characters/${player.characterId}`)
+                          }
                           title="Click to view character sheet"
                         >
                           <span className="players-list__name">
@@ -447,7 +481,9 @@ const ViewEditCampaign = () => {
                             title="Remove player from campaign"
                             disabled={removingPlayer === player.characterId}
                           >
-                            {removingPlayer === player.characterId ? "..." : "✕"}
+                            {removingPlayer === player.characterId
+                              ? "..."
+                              : "✕"}
                           </button>
                         )}
                       </div>
@@ -456,8 +492,8 @@ const ViewEditCampaign = () => {
                 </div>
               ) : (
                 <p className="players-empty">
-                  No players linked yet. Share the Campaign ID above with players
-                  to have them link their characters.
+                  No players linked yet. Share the Campaign ID above with
+                  players to have them link their characters.
                 </p>
               )}
             </section>
