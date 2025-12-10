@@ -33,6 +33,51 @@
     align-items: center;
   }
 
+  .create-campaign-button {
+    display: inline-block;
+    padding: 1rem 2rem;
+    font-size: 1.2em;
+    font-weight: 600;
+    background: linear-gradient(
+      135deg,
+      #8b4513 0%,
+      #6b3410 50%,
+      #8b4513 100%
+    );
+    color: #ffd700;
+    border: 2px solid #8b6914;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 
+      0 4px 12px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: "Cinzel", "Times New Roman", serif;
+    margin-bottom: 2rem;
+
+    &:hover {
+      background: linear-gradient(
+        135deg,
+        #a0522d 0%,
+        #8b4513 50%,
+        #a0522d 100%
+      );
+      border-color: #ffd700;
+      color: #fffacd;
+      transform: translateY(-2px);
+      box-shadow: 
+        0 6px 16px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        0 0 20px rgba(255, 215, 0, 0.3);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
   .info-card {
     background: rgba(0, 0, 0, 0.4);
     backdrop-filter: blur(10px);
