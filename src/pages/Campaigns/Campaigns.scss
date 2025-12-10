@@ -38,19 +38,13 @@
     padding: 1rem 2rem;
     font-size: 1.2em;
     font-weight: 600;
-    background: linear-gradient(
-      135deg,
-      #8b4513 0%,
-      #6b3410 50%,
-      #8b4513 100%
-    );
+    background: linear-gradient(135deg, #8b4513 0%, #6b3410 50%, #8b4513 100%);
     color: #ffd700;
     border: 2px solid #8b6914;
     border-radius: 8px;
     text-decoration: none;
     transition: all 0.3s ease;
-    box-shadow: 
-      0 4px 12px rgba(0, 0, 0, 0.4),
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4),
       inset 0 1px 0 rgba(255, 255, 255, 0.1);
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -67,10 +61,8 @@
       border-color: #ffd700;
       color: #fffacd;
       transform: translateY(-2px);
-      box-shadow: 
-        0 6px 16px rgba(0, 0, 0, 0.5),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2),
-        0 0 20px rgba(255, 215, 0, 0.3);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 20px rgba(255, 215, 0, 0.3);
     }
 
     &:active {
@@ -98,6 +90,123 @@
       font-size: 1.2em;
       color: #e0e0e0;
       line-height: 1.6;
+    }
+
+    &--error {
+      border-color: rgba(255, 68, 68, 0.5);
+      background-color: rgba(128, 0, 0, 0.3);
+
+      h3 {
+        color: #ffaaaa;
+      }
+
+      p {
+        color: #ffcccc;
+      }
+    }
+  }
+
+  .campaigns-list {
+    width: 100%;
+    max-width: 1200px;
+
+    h3 {
+      font-size: 2em;
+      color: #ffd700;
+      margin-bottom: 2rem;
+      font-family: "Cinzel", "Times New Roman", serif;
+      text-align: left;
+    }
+
+    .campaigns-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .campaign-card {
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(255, 215, 0, 0.3);
+      border-radius: 12px;
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+
+      &--clickable {
+        text-decoration: none;
+        display: block;
+        cursor: pointer;
+      }
+
+      &:hover {
+        transform: translateY(-5px);
+        border-color: rgba(255, 215, 0, 0.6);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+      }
+
+      h4 {
+        font-size: 1.5em;
+        color: #ffd700;
+        margin-bottom: 1rem;
+        font-family: "Cinzel", "Times New Roman", serif;
+        border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+        padding-bottom: 0.5rem;
+      }
+
+      .campaign-card__details {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+
+        p {
+          font-size: 1em;
+          color: #e0e0e0;
+          line-height: 1.6;
+        }
+
+        .campaign-card__label {
+          color: #ffd700;
+          font-weight: 600;
+        }
+
+        .campaign-card__status {
+          padding: 0.25rem 0.75rem;
+          border-radius: 4px;
+          font-weight: 600;
+          display: inline-block;
+
+          &--active {
+            background-color: rgba(0, 128, 0, 0.3);
+            color: #90ee90;
+            border: 1px solid #00ff00;
+          }
+
+          &--on-hold {
+            background-color: rgba(255, 165, 0, 0.3);
+            color: #ffd700;
+            border: 1px solid #ffa500;
+          }
+
+          &--completed {
+            background-color: rgba(0, 0, 255, 0.3);
+            color: #87ceeb;
+            border: 1px solid #4169e1;
+          }
+
+          &--planning {
+            background-color: rgba(128, 128, 128, 0.3);
+            color: #d3d3d3;
+            border: 1px solid #808080;
+          }
+        }
+
+        .campaign-card__description {
+          margin-top: 0.5rem;
+          font-style: italic;
+          color: #c0c0c0;
+          font-size: 0.95em;
+        }
+      }
     }
   }
 }

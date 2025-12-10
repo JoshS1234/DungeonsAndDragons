@@ -1,13 +1,15 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { auth, db } from "../../../firebaseSetup";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import Header from "../../components/Header/Header";
 import "./CreateCampaign.scss";
 
-const CreateCampaign = () => {
+const ViewEditCampaign = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const { id } = useParams<{ id: string }>();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     campaignName: "",
@@ -21,6 +23,55 @@ const CreateCampaign = () => {
     world: "",
     theme: "",
   });
+
+  useEffect(() => {
+    const fetchCampaign = async () => {
+      if (!id || !auth.currentUser) {
+        setError("Campaign ID missing or user not authenticated");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        const campaignDoc = await getDoc(doc(db, "campaigns", id));
+
+        if (!campaignDoc.exists()) {
+          throw new Error("Campaign not found");
+        }
+
+        const campaignData = campaignDoc.data();
+
+        // Verify the campaign belongs to the current user
+        if (campaignData.userId !== auth.currentUser.uid) {
+          throw new Error("You don't have permission to view this campaign");
+        }
+
+        // Populate form with campaign data
+        setFormData({
+          campaignName: campaignData.campaignName || "",
+          description: campaignData.description || "",
+          setting: campaignData.setting || "",
+          dungeonMaster: campaignData.dungeonMaster || "",
+          currentLevel: campaignData.currentLevel || 1,
+          startDate: campaignData.startDate || "",
+          status: campaignData.status || "Active",
+          notes: campaignData.notes || "",
+          world: campaignData.world || "",
+          theme: campaignData.theme || "",
+        });
+      } catch (err: any) {
+        setError(err.message || "Failed to load campaign");
+        console.error("Error fetching campaign:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCampaign();
+  }, [id]);
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -58,37 +109,50 @@ const CreateCampaign = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    if (!id) return;
+
+    setSaving(true);
     setError(null);
 
     try {
       if (!auth.currentUser) {
-        throw new Error("You must be logged in to create a campaign");
+        throw new Error("You must be logged in to update a campaign");
       }
 
       const campaignData = {
         ...formData,
-        userId: auth.currentUser.uid,
-        createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
 
-      await addDoc(collection(db, "campaigns"), campaignData);
+      await updateDoc(doc(db, "campaigns", id), campaignData);
       navigate("/campaigns");
     } catch (err: any) {
-      setError(err.message || "Failed to create campaign");
-      console.error("Error creating campaign:", err);
+      setError(err.message || "Failed to update campaign");
+      console.error("Error updating campaign:", err);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="app">
+        <Header />
+        <div className="campaign-creation-page">
+          <div className="campaign-creation-page__container">
+            <h2>Loading Campaign...</h2>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="app">
       <Header />
       <div className="campaign-creation-page">
         <div className="campaign-creation-page__container">
-          <h2>Create New Campaign</h2>
+          <h2>Edit Campaign: {formData.campaignName || "Unnamed"}</h2>
           {error && <div className="campaign-form__error">{error}</div>}
           <form onSubmit={handleSubmit} className="campaign-form">
             <section className="campaign-form__section">
@@ -227,15 +291,15 @@ const CreateCampaign = () => {
               <button
                 type="submit"
                 className="campaign-form__submit"
-                disabled={loading}
+                disabled={saving}
               >
-                {loading ? "Creating..." : "Create Campaign"}
+                {saving ? "Saving..." : "Save Changes"}
               </button>
               <button
                 type="button"
                 className="campaign-form__cancel"
                 onClick={() => navigate("/campaigns")}
-                disabled={loading}
+                disabled={saving}
               >
                 Cancel
               </button>
@@ -247,4 +311,4 @@ const CreateCampaign = () => {
   );
 };
 
-export default CreateCampaign;
+export default ViewEditCampaign;

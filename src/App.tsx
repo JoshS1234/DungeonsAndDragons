@@ -3,6 +3,7 @@ import Home from "./pages/Home/Home";
 import Account from "./pages/Account/Account";
 import Campaigns from "./pages/Campaigns/Campaigns";
 import CreateCampaign from "./pages/Campaigns/CreateCampaign";
+import ViewEditCampaign from "./pages/Campaigns/ViewEditCampaign";
 import Characters from "./pages/Characters/Characters";
 import CreateCharacter from "./pages/Characters/CreateCharacter";
 import ViewEditCharacter from "./pages/Characters/ViewEditCharacter";
@@ -16,6 +17,7 @@ const App = () => {
       <Route path="/account" element={<Account />} />
       <Route path="/campaigns" element={<Campaigns />} />
       <Route path="/campaigns/create" element={<CreateCampaign />} />
+      <Route path="/campaigns/:id" element={<ViewEditCampaign />} />
       <Route path="/characters" element={<Characters />} />
       <Route path="/characters/create" element={<CreateCharacter />} />
       <Route path="/characters/:id" element={<ViewEditCharacter />} />
