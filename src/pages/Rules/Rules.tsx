@@ -15,22 +15,42 @@ const Rules = () => {
               Browse through D&D rules, spells, items, and reference materials.
             </p>
             <div className="rules-list">
-              <div className="rules-item">
+              <a
+                href="https://media.wizards.com/2018/dnd/downloads/DnD_BasicRules_2018.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rules-item rules-item--link"
+              >
                 <h4>Core Rules</h4>
                 <p>Basic rules and mechanics for gameplay</p>
-              </div>
-              <div className="rules-item">
+              </a>
+              <a
+                href="https://dndspellslist.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rules-item rules-item--link"
+              >
                 <h4>Spells</h4>
                 <p>Complete spell reference guide</p>
-              </div>
-              <div className="rules-item">
+              </a>
+              <a
+                href="https://www.dndbeyond.com/equipment"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rules-item rules-item--link"
+              >
                 <h4>Items & Equipment</h4>
                 <p>Weapons, armor, and magical items</p>
-              </div>
-              <div className="rules-item">
+              </a>
+              <a
+                href="https://www.dndbeyond.com/monsters"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rules-item rules-item--link"
+              >
                 <h4>Monsters & Bestiary</h4>
                 <p>Creature statistics and descriptions</p>
-              </div>
+              </a>
             </div>
           </div>
         </div>
