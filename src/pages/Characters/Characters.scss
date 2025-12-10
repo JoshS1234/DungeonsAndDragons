@@ -53,6 +53,116 @@
       font-size: 1.2em;
       color: #e0e0e0;
       line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+
+    &--error {
+      border-color: rgba(255, 68, 68, 0.5);
+      background-color: rgba(128, 0, 0, 0.3);
+
+      h3 {
+        color: #ffaaaa;
+      }
+
+      p {
+        color: #ffcccc;
+      }
+    }
+  }
+
+  .characters-list {
+    width: 100%;
+    max-width: 1200px;
+
+    h3 {
+      font-size: 2em;
+      color: #ffd700;
+      margin-bottom: 2rem;
+      font-family: "Cinzel", "Times New Roman", serif;
+      text-align: left;
+    }
+
+    .characters-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .character-card {
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(255, 215, 0, 0.3);
+      border-radius: 12px;
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+
+      &:hover {
+        transform: translateY(-5px);
+        border-color: rgba(255, 215, 0, 0.6);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+      }
+
+      h4 {
+        font-size: 1.5em;
+        color: #ffd700;
+        margin-bottom: 1rem;
+        font-family: "Cinzel", "Times New Roman", serif;
+        border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+        padding-bottom: 0.5rem;
+      }
+
+      .character-card__details {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+
+        p {
+          font-size: 1em;
+          color: #e0e0e0;
+          line-height: 1.6;
+        }
+
+        .character-card__label {
+          color: #ffd700;
+          font-weight: 600;
+        }
+      }
+    }
+  }
+
+  .create-character-button {
+    display: inline-block;
+    padding: 1rem 2rem;
+    font-size: 1.2em;
+    font-weight: 600;
+    background: linear-gradient(135deg, #8b4513 0%, #6b3410 50%, #8b4513 100%);
+    color: #ffd700;
+    border: 2px solid #8b6914;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: "Cinzel", "Times New Roman", serif;
+
+    &:hover {
+      background: linear-gradient(
+        135deg,
+        #a0522d 0%,
+        #8b4513 50%,
+        #a0522d 100%
+      );
+      border-color: #ffd700;
+      color: #fffacd;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 20px rgba(255, 215, 0, 0.3);
+    }
+
+    &:active {
+      transform: translateY(0);
     }
   }
 }
