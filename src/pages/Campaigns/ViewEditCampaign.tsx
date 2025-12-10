@@ -459,7 +459,9 @@ const ViewEditCampaign = () => {
                         <div
                           className="players-list__info players-list__info--clickable"
                           onClick={() =>
-                            navigate(`/characters/${player.characterId}`)
+                            navigate(`/characters/${player.characterId}`, {
+                              state: { fromCampaign: id },
+                            })
                           }
                           title="Click to view character sheet"
                         >

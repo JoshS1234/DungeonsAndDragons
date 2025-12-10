@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { auth, db, storage } from "../../../firebaseSetup";
 import {
   doc,
@@ -15,8 +15,10 @@ import "./CreateCharacter.scss";
 
 const ViewEditCharacter = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(true);
+  const campaignIdFromState = (location.state as any)?.fromCampaign;
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -556,10 +558,52 @@ const ViewEditCharacter = () => {
       <Header />
       <div className="character-creation-page">
         <div className="character-creation-page__container">
-          <h2>
-            {canEdit ? "Edit Character" : "View Character"}:{" "}
-            {formData.characterName || "Unnamed"}
-          </h2>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: "1rem",
+              flexWrap: "wrap",
+              gap: "1rem",
+            }}
+          >
+            <h2 style={{ margin: 0 }}>
+              {canEdit ? "Edit Character" : "View Character"}:{" "}
+              {formData.characterName || "Unnamed"}
+            </h2>
+            {campaignIdFromState && (
+              <button
+                type="button"
+                onClick={() => navigate(`/campaigns/${campaignIdFromState}`)}
+                className="character-form__back-button"
+                style={{
+                  padding: "0.5rem 1rem",
+                  fontSize: "1em",
+                  fontWeight: 600,
+                  background: "rgba(139, 0, 0, 0.5)",
+                  color: "#fff",
+                  border: "2px solid #ffd700",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  transition: "all 0.3s ease",
+                  fontFamily: '"Cinzel", "Times New Roman", serif',
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(139, 0, 0, 0.7)";
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "rgba(139, 0, 0, 0.5)";
+                  e.currentTarget.style.transform = "translateY(0)";
+                }}
+              >
+                ← Back to Campaign
+              </button>
+            )}
+          </div>
           {!canEdit && (
             <p
               style={{
