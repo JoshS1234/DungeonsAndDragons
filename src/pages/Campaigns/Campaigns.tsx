@@ -95,7 +95,9 @@ const Campaigns = () => {
         const playerCampaignPromises = Array.from(campaignIds).map(
           async (campaignId) => {
             try {
-              const campaignDoc = await getDoc(doc(db, "campaigns", campaignId));
+              const campaignDoc = await getDoc(
+                doc(db, "campaigns", campaignId)
+              );
               if (campaignDoc.exists()) {
                 const campaignData = campaignDoc.data();
                 // Check if user is actually in the players array
@@ -119,7 +121,9 @@ const Campaigns = () => {
           }
         );
 
-        const playerCampaignsResults = await Promise.all(playerCampaignPromises);
+        const playerCampaignsResults = await Promise.all(
+          playerCampaignPromises
+        );
         playerCampaignsResults.forEach((campaign) => {
           if (campaign) {
             campaignsMap.set(campaign.id, campaign);
@@ -224,13 +228,17 @@ const Campaigns = () => {
                           )}
                           {campaign.setting && (
                             <p>
-                              <span className="campaign-card__label">Setting:</span>{" "}
+                              <span className="campaign-card__label">
+                                Setting:
+                              </span>{" "}
                               {campaign.setting}
                             </p>
                           )}
                           {campaign.world && (
                             <p>
-                              <span className="campaign-card__label">World:</span>{" "}
+                              <span className="campaign-card__label">
+                                World:
+                              </span>{" "}
                               {campaign.world}
                             </p>
                           )}
@@ -240,13 +248,17 @@ const Campaigns = () => {
                           </p>
                           {campaign.startDate && (
                             <p>
-                              <span className="campaign-card__label">Started:</span>{" "}
+                              <span className="campaign-card__label">
+                                Started:
+                              </span>{" "}
                               {campaign.startDate}
                             </p>
                           )}
                           {campaign.status && (
                             <p>
-                              <span className="campaign-card__label">Status:</span>{" "}
+                              <span className="campaign-card__label">
+                                Status:
+                              </span>{" "}
                               <span
                                 className={`campaign-card__status campaign-card__status--${campaign.status
                                   .toLowerCase()
@@ -258,7 +270,9 @@ const Campaigns = () => {
                           )}
                           {campaign.theme && (
                             <p>
-                              <span className="campaign-card__label">Theme:</span>{" "}
+                              <span className="campaign-card__label">
+                                Theme:
+                              </span>{" "}
                               {campaign.theme}
                             </p>
                           )}
@@ -297,13 +311,17 @@ const Campaigns = () => {
                           )}
                           {campaign.setting && (
                             <p>
-                              <span className="campaign-card__label">Setting:</span>{" "}
+                              <span className="campaign-card__label">
+                                Setting:
+                              </span>{" "}
                               {campaign.setting}
                             </p>
                           )}
                           {campaign.world && (
                             <p>
-                              <span className="campaign-card__label">World:</span>{" "}
+                              <span className="campaign-card__label">
+                                World:
+                              </span>{" "}
                               {campaign.world}
                             </p>
                           )}
@@ -313,13 +331,17 @@ const Campaigns = () => {
                           </p>
                           {campaign.startDate && (
                             <p>
-                              <span className="campaign-card__label">Started:</span>{" "}
+                              <span className="campaign-card__label">
+                                Started:
+                              </span>{" "}
                               {campaign.startDate}
                             </p>
                           )}
                           {campaign.status && (
                             <p>
-                              <span className="campaign-card__label">Status:</span>{" "}
+                              <span className="campaign-card__label">
+                                Status:
+                              </span>{" "}
                               <span
                                 className={`campaign-card__status campaign-card__status--${campaign.status
                                   .toLowerCase()
@@ -331,7 +353,9 @@ const Campaigns = () => {
                           )}
                           {campaign.theme && (
                             <p>
-                              <span className="campaign-card__label">Theme:</span>{" "}
+                              <span className="campaign-card__label">
+                                Theme:
+                              </span>{" "}
                               {campaign.theme}
                             </p>
                           )}

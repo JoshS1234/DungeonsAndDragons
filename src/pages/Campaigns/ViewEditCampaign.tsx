@@ -1,16 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { auth, db } from "../../../firebaseSetup";
-import {
-  doc,
-  getDoc,
-  updateDoc,
-  serverTimestamp,
-  collection,
-  query,
-  where,
-  getDocs,
-} from "firebase/firestore";
+import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import Header from "../../components/Header/Header";
 import "./CreateCampaign.scss";
 
@@ -63,13 +54,17 @@ const ViewEditCampaign = () => {
 
         const campaignData = campaignDoc.data();
 
+        if (!auth.currentUser) {
+          throw new Error("User not authenticated");
+        }
+
         // Check if user is the owner
         const isOwner = campaignData.userId === auth.currentUser.uid;
 
         // Check if user is a player in this campaign
         const players = campaignData.players || [];
         const isPlayer = players.some(
-          (p: any) => p.userId === auth.currentUser.uid
+          (p: any) => p.userId === auth.currentUser!.uid
         );
 
         // Allow viewing if user is owner OR player
@@ -157,11 +152,14 @@ const ViewEditCampaign = () => {
     characterName: string;
     playerName: string;
   }) => {
-    if (!id) return;
+    if (!id || !auth.currentUser) return;
 
     try {
       setRemovingPlayer(player.characterId);
       setError(null);
+
+      // Check if player is removing themselves
+      const isRemovingSelf = player.userId === auth.currentUser.uid;
 
       // Get the character document
       const characterDoc = await getDoc(
@@ -197,12 +195,17 @@ const ViewEditCampaign = () => {
         }),
       ]);
 
-      // Update local state
-      setLinkedPlayers(updatedPlayers);
+      // If player is removing themselves, redirect to campaigns page
+      // since they no longer have access to view this campaign
+      if (isRemovingSelf) {
+        navigate("/campaigns");
+      } else {
+        // Update local state
+        setLinkedPlayers(updatedPlayers);
+      }
     } catch (err: any) {
       setError(err.message || "Failed to remove player from campaign");
       console.error("Error removing player:", err);
-    } finally {
       setRemovingPlayer(null);
     }
   };
@@ -252,10 +255,50 @@ const ViewEditCampaign = () => {
       <Header />
       <div className="campaign-creation-page">
         <div className="campaign-creation-page__container">
-          <h2>
-            {canEdit ? "Edit Campaign" : "View Campaign"}:{" "}
-            {formData.campaignName || "Unnamed"}
-          </h2>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: "1rem",
+              flexWrap: "wrap",
+              gap: "1rem",
+            }}
+          >
+            <h2 style={{ margin: 0 }}>
+              {canEdit ? "Edit Campaign" : "View Campaign"}:{" "}
+              {formData.campaignName || "Unnamed"}
+            </h2>
+            <button
+              type="button"
+              onClick={() => navigate("/campaigns")}
+              className="campaign-form__back-button"
+              style={{
+                padding: "0.5rem 1rem",
+                fontSize: "1em",
+                fontWeight: 600,
+                background: "rgba(139, 0, 0, 0.5)",
+                color: "#fff",
+                border: "2px solid #ffd700",
+                borderRadius: "6px",
+                cursor: "pointer",
+                transition: "all 0.3s ease",
+                fontFamily: '"Cinzel", "Times New Roman", serif',
+                textTransform: "uppercase",
+                letterSpacing: "0.5px",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(139, 0, 0, 0.7)";
+                e.currentTarget.style.transform = "translateY(-2px)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "rgba(139, 0, 0, 0.5)";
+                e.currentTarget.style.transform = "translateY(0)";
+              }}
+            >
+              ← Back to Campaigns
+            </button>
+          </div>
           {!canEdit && (
             <p
               style={{
@@ -451,7 +494,7 @@ const ViewEditCampaign = () => {
                 <div className="players-list">
                   <h4>Linked Players ({linkedPlayers.length})</h4>
                   <div className="players-list__items">
-                    {linkedPlayers.map((player, index) => (
+                    {linkedPlayers.map((player) => (
                       <div
                         key={`${player.userId}-${player.characterId}`}
                         className="players-list__item"
@@ -472,7 +515,9 @@ const ViewEditCampaign = () => {
                             Character: {player.characterName}
                           </span>
                         </div>
-                        {canEdit && (
+                        {(canEdit ||
+                          (auth.currentUser &&
+                            player.userId === auth.currentUser.uid)) && (
                           <button
                             type="button"
                             onClick={(e) => {
@@ -480,7 +525,11 @@ const ViewEditCampaign = () => {
                               handleRemovePlayer(player);
                             }}
                             className="players-list__remove"
-                            title="Remove player from campaign"
+                            title={
+                              canEdit
+                                ? "Remove player from campaign"
+                                : "Remove yourself from this campaign"
+                            }
                             disabled={removingPlayer === player.characterId}
                           >
                             {removingPlayer === player.characterId
