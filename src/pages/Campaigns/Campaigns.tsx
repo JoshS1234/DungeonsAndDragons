@@ -35,6 +35,8 @@ interface Campaign {
 
 const Campaigns = () => {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [ownedCampaigns, setOwnedCampaigns] = useState<Campaign[]>([]);
+  const [playerCampaigns, setPlayerCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -117,19 +119,29 @@ const Campaigns = () => {
           }
         );
 
-        const playerCampaigns = await Promise.all(playerCampaignPromises);
-        playerCampaigns.forEach((campaign) => {
+        const playerCampaignsResults = await Promise.all(playerCampaignPromises);
+        playerCampaignsResults.forEach((campaign) => {
           if (campaign) {
             campaignsMap.set(campaign.id, campaign);
           }
         });
 
-        // Convert map to array and sort by campaign name
-        const campaignsData = Array.from(campaignsMap.values()).sort((a, b) =>
-          (a.campaignName || "").localeCompare(b.campaignName || "")
-        );
+        // Convert map to array and separate into owned and player campaigns
+        const allCampaigns = Array.from(campaignsMap.values());
+        const ownedCampaignsList = allCampaigns
+          .filter((c) => c.isOwner)
+          .sort((a, b) =>
+            (a.campaignName || "").localeCompare(b.campaignName || "")
+          );
+        const playerCampaignsList = allCampaigns
+          .filter((c) => c.isPlayer && !c.isOwner)
+          .sort((a, b) =>
+            (a.campaignName || "").localeCompare(b.campaignName || "")
+          );
 
-        setCampaigns(campaignsData);
+        setCampaigns(allCampaigns);
+        setOwnedCampaigns(ownedCampaignsList);
+        setPlayerCampaigns(playerCampaignsList);
       } catch (error: any) {
         console.error("Error fetching campaigns:", error);
 
@@ -178,7 +190,7 @@ const Campaigns = () => {
             <div className="info-card">
               <p>Loading campaigns...</p>
             </div>
-          ) : campaigns.length === 0 ? (
+          ) : ownedCampaigns.length === 0 && playerCampaigns.length === 0 ? (
             <div className="info-card">
               <h3>Your Campaigns</h3>
               <p>
@@ -187,82 +199,156 @@ const Campaigns = () => {
               </p>
             </div>
           ) : (
-            <div className="campaigns-list">
-              <h3>Your Campaigns ({campaigns.length})</h3>
-              <div className="campaigns-grid">
-                {campaigns.map((campaign) => (
-                  <Link
-                    key={campaign.id}
-                    to={`/campaigns/${campaign.id}`}
-                    className={`campaign-card campaign-card--clickable ${
-                      campaign.isOwner ? "campaign-card--dm" : ""
-                    }`}
-                  >
-                    {campaign.isOwner && (
-                      <div className="campaign-card__dm-badge">
-                        ⭐ Dungeon Master
-                      </div>
-                    )}
-                    <h4>{campaign.campaignName || "Unnamed Campaign"}</h4>
-                    <div className="campaign-card__details">
-                      {campaign.dungeonMaster && (
-                        <p>
-                          <span className="campaign-card__label">DM:</span>{" "}
-                          {campaign.dungeonMaster}
-                        </p>
-                      )}
-                      {campaign.setting && (
-                        <p>
-                          <span className="campaign-card__label">Setting:</span>{" "}
-                          {campaign.setting}
-                        </p>
-                      )}
-                      {campaign.world && (
-                        <p>
-                          <span className="campaign-card__label">World:</span>{" "}
-                          {campaign.world}
-                        </p>
-                      )}
-                      <p>
-                        <span className="campaign-card__label">Level:</span>{" "}
-                        {campaign.currentLevel || 1}
-                      </p>
-                      {campaign.startDate && (
-                        <p>
-                          <span className="campaign-card__label">Started:</span>{" "}
-                          {campaign.startDate}
-                        </p>
-                      )}
-                      {campaign.status && (
-                        <p>
-                          <span className="campaign-card__label">Status:</span>{" "}
-                          <span
-                            className={`campaign-card__status campaign-card__status--${campaign.status
-                              .toLowerCase()
-                              .replace(" ", "-")}`}
-                          >
-                            {campaign.status}
-                          </span>
-                        </p>
-                      )}
-                      {campaign.theme && (
-                        <p>
-                          <span className="campaign-card__label">Theme:</span>{" "}
-                          {campaign.theme}
-                        </p>
-                      )}
-                      {campaign.description && (
-                        <p className="campaign-card__description">
-                          {campaign.description.length > 100
-                            ? `${campaign.description.substring(0, 100)}...`
-                            : campaign.description}
-                        </p>
-                      )}
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
+            <>
+              {/* Owned Campaigns Section */}
+              {ownedCampaigns.length > 0 && (
+                <div className="campaigns-list">
+                  <h3>My Campaigns ({ownedCampaigns.length})</h3>
+                  <div className="campaigns-grid">
+                    {ownedCampaigns.map((campaign) => (
+                      <Link
+                        key={campaign.id}
+                        to={`/campaigns/${campaign.id}`}
+                        className="campaign-card campaign-card--clickable campaign-card--dm"
+                      >
+                        <div className="campaign-card__dm-badge">
+                          ⭐ Dungeon Master
+                        </div>
+                        <h4>{campaign.campaignName || "Unnamed Campaign"}</h4>
+                        <div className="campaign-card__details">
+                          {campaign.dungeonMaster && (
+                            <p>
+                              <span className="campaign-card__label">DM:</span>{" "}
+                              {campaign.dungeonMaster}
+                            </p>
+                          )}
+                          {campaign.setting && (
+                            <p>
+                              <span className="campaign-card__label">Setting:</span>{" "}
+                              {campaign.setting}
+                            </p>
+                          )}
+                          {campaign.world && (
+                            <p>
+                              <span className="campaign-card__label">World:</span>{" "}
+                              {campaign.world}
+                            </p>
+                          )}
+                          <p>
+                            <span className="campaign-card__label">Level:</span>{" "}
+                            {campaign.currentLevel || 1}
+                          </p>
+                          {campaign.startDate && (
+                            <p>
+                              <span className="campaign-card__label">Started:</span>{" "}
+                              {campaign.startDate}
+                            </p>
+                          )}
+                          {campaign.status && (
+                            <p>
+                              <span className="campaign-card__label">Status:</span>{" "}
+                              <span
+                                className={`campaign-card__status campaign-card__status--${campaign.status
+                                  .toLowerCase()
+                                  .replace(" ", "-")}`}
+                              >
+                                {campaign.status}
+                              </span>
+                            </p>
+                          )}
+                          {campaign.theme && (
+                            <p>
+                              <span className="campaign-card__label">Theme:</span>{" "}
+                              {campaign.theme}
+                            </p>
+                          )}
+                          {campaign.description && (
+                            <p className="campaign-card__description">
+                              {campaign.description.length > 100
+                                ? `${campaign.description.substring(0, 100)}...`
+                                : campaign.description}
+                            </p>
+                          )}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Player Campaigns Section */}
+              {playerCampaigns.length > 0 && (
+                <div className="campaigns-list">
+                  <h3>Campaigns I'm Playing In ({playerCampaigns.length})</h3>
+                  <div className="campaigns-grid">
+                    {playerCampaigns.map((campaign) => (
+                      <Link
+                        key={campaign.id}
+                        to={`/campaigns/${campaign.id}`}
+                        className="campaign-card campaign-card--clickable"
+                      >
+                        <h4>{campaign.campaignName || "Unnamed Campaign"}</h4>
+                        <div className="campaign-card__details">
+                          {campaign.dungeonMaster && (
+                            <p>
+                              <span className="campaign-card__label">DM:</span>{" "}
+                              {campaign.dungeonMaster}
+                            </p>
+                          )}
+                          {campaign.setting && (
+                            <p>
+                              <span className="campaign-card__label">Setting:</span>{" "}
+                              {campaign.setting}
+                            </p>
+                          )}
+                          {campaign.world && (
+                            <p>
+                              <span className="campaign-card__label">World:</span>{" "}
+                              {campaign.world}
+                            </p>
+                          )}
+                          <p>
+                            <span className="campaign-card__label">Level:</span>{" "}
+                            {campaign.currentLevel || 1}
+                          </p>
+                          {campaign.startDate && (
+                            <p>
+                              <span className="campaign-card__label">Started:</span>{" "}
+                              {campaign.startDate}
+                            </p>
+                          )}
+                          {campaign.status && (
+                            <p>
+                              <span className="campaign-card__label">Status:</span>{" "}
+                              <span
+                                className={`campaign-card__status campaign-card__status--${campaign.status
+                                  .toLowerCase()
+                                  .replace(" ", "-")}`}
+                              >
+                                {campaign.status}
+                              </span>
+                            </p>
+                          )}
+                          {campaign.theme && (
+                            <p>
+                              <span className="campaign-card__label">Theme:</span>{" "}
+                              {campaign.theme}
+                            </p>
+                          )}
+                          {campaign.description && (
+                            <p className="campaign-card__description">
+                              {campaign.description.length > 100
+                                ? `${campaign.description.substring(0, 100)}...`
+                                : campaign.description}
+                            </p>
+                          )}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

@@ -109,6 +109,11 @@
   .campaigns-list {
     width: 100%;
     max-width: 1200px;
+    margin-bottom: 3rem;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
 
     h3 {
       font-size: 2em;
