@@ -6,16 +6,20 @@ import App from "../App.tsx";
 
 const AppContainer = () => {
   const [component, setComponent] = useState(<></>);
+  const [userKey, setUserKey] = useState<string | null>(null);
 
   useEffect(() => {
     auth.onAuthStateChanged((user) => {
       if (user) {
+        // Use user ID as key to force BrowserRouter to reset when user changes
+        setUserKey(user.uid);
         setComponent(
-          <BrowserRouter>
+          <BrowserRouter key={user.uid}>
             <App />
           </BrowserRouter>
         );
       } else {
+        setUserKey(null);
         setComponent(<LoginContainer />);
       }
     });
