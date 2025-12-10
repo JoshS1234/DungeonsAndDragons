@@ -395,18 +395,21 @@ const ViewEditCampaign = () => {
                   placeholder="World-building details, locations, important places..."
                 />
               </div>
-              <div className="campaign-form__group">
-                <label htmlFor="notes">DM Notes</label>
-                <textarea
-                  id="notes"
-                  name="notes"
-                  value={formData.notes}
-                  onChange={handleInputChange}
-                  disabled={!canEdit}
-                  rows={6}
-                  placeholder="Private notes, plot ideas, NPCs, future plans..."
-                />
-              </div>
+              {canEdit && (
+                <div className="campaign-form__group">
+                  <label htmlFor="notes">
+                    DM Notes <span style={{ fontSize: "0.85em", fontStyle: "italic", color: "#ffd700" }}>*This will not be shown to players*</span>
+                  </label>
+                  <textarea
+                    id="notes"
+                    name="notes"
+                    value={formData.notes}
+                    onChange={handleInputChange}
+                    rows={6}
+                    placeholder="Private notes, plot ideas, NPCs, future plans..."
+                  />
+                </div>
+              )}
             </section>
 
             <section className="campaign-form__section">
