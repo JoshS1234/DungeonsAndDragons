@@ -9,6 +9,8 @@ import {
   getDocs,
   Timestamp,
   orderBy,
+  doc,
+  getDoc,
 } from "firebase/firestore";
 import Header from "../../components/Header/Header";
 import "./Campaigns.scss";
@@ -26,6 +28,8 @@ interface Campaign {
   theme?: string;
   notes?: string;
   createdAt?: Timestamp;
+  isOwner?: boolean;
+  isPlayer?: boolean;
   [key: string]: any;
 }
 
@@ -46,21 +50,84 @@ const Campaigns = () => {
         setLoading(true);
         setError(null);
 
-        // Query with orderBy - requires Firestore composite index
-        const campaignsQuery = query(
+        const campaignsMap = new Map<string, Campaign>();
+
+        // Query campaigns where user is the owner
+        const ownedCampaignsQuery = query(
           collection(db, "campaigns"),
-          where("userId", "==", user.uid),
-          orderBy("campaignName", "desc")
+          where("userId", "==", user.uid)
         );
 
-        const querySnapshot = await getDocs(campaignsQuery);
-        const campaignsData: Campaign[] = [];
-        querySnapshot.forEach((doc) => {
-          campaignsData.push({
+        const ownedSnapshot = await getDocs(ownedCampaignsQuery);
+        ownedSnapshot.forEach((doc) => {
+          campaignsMap.set(doc.id, {
             id: doc.id,
             ...doc.data(),
+            isOwner: true,
+            isPlayer: false,
           } as Campaign);
         });
+
+        // Query characters where user is owner to find campaigns they're a player in
+        const charactersQuery = query(
+          collection(db, "characters"),
+          where("userId", "==", user.uid)
+        );
+
+        const charactersSnapshot = await getDocs(charactersQuery);
+        const campaignIds = new Set<string>();
+
+        charactersSnapshot.forEach((charDoc) => {
+          const charData = charDoc.data();
+          if (charData.campaignIds && Array.isArray(charData.campaignIds)) {
+            charData.campaignIds.forEach((campaignId: string) => {
+              // Only add if not already marked as owner
+              if (!campaignsMap.has(campaignId)) {
+                campaignIds.add(campaignId);
+              }
+            });
+          }
+        });
+
+        // Fetch campaigns where user is a player
+        const playerCampaignPromises = Array.from(campaignIds).map(
+          async (campaignId) => {
+            try {
+              const campaignDoc = await getDoc(doc(db, "campaigns", campaignId));
+              if (campaignDoc.exists()) {
+                const campaignData = campaignDoc.data();
+                // Check if user is actually in the players array
+                const players = campaignData.players || [];
+                const isPlayer = players.some(
+                  (p: any) => p.userId === user.uid
+                );
+                if (isPlayer) {
+                  return {
+                    id: campaignDoc.id,
+                    ...campaignData,
+                    isOwner: false,
+                    isPlayer: true,
+                  } as Campaign;
+                }
+              }
+              return null;
+            } catch {
+              return null;
+            }
+          }
+        );
+
+        const playerCampaigns = await Promise.all(playerCampaignPromises);
+        playerCampaigns.forEach((campaign) => {
+          if (campaign) {
+            campaignsMap.set(campaign.id, campaign);
+          }
+        });
+
+        // Convert map to array and sort by campaign name
+        const campaignsData = Array.from(campaignsMap.values()).sort((a, b) =>
+          (a.campaignName || "").localeCompare(b.campaignName || "")
+        );
 
         setCampaigns(campaignsData);
       } catch (error: any) {
@@ -127,8 +194,15 @@ const Campaigns = () => {
                   <Link
                     key={campaign.id}
                     to={`/campaigns/${campaign.id}`}
-                    className="campaign-card campaign-card--clickable"
+                    className={`campaign-card campaign-card--clickable ${
+                      campaign.isOwner ? "campaign-card--dm" : ""
+                    }`}
                   >
+                    {campaign.isOwner && (
+                      <div className="campaign-card__dm-badge">
+                        ⭐ Dungeon Master
+                      </div>
+                    )}
                     <h4>{campaign.campaignName || "Unnamed Campaign"}</h4>
                     <div className="campaign-card__details">
                       {campaign.dungeonMaster && (

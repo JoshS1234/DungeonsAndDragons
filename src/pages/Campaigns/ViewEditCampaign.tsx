@@ -32,6 +32,7 @@ const ViewEditCampaign = () => {
     }>
   >([]);
   const [removingPlayer, setRemovingPlayer] = useState<string | null>(null);
+  const [canEdit, setCanEdit] = useState(false);
 
   useEffect(() => {
     const fetchCampaign = async () => {
@@ -53,10 +54,21 @@ const ViewEditCampaign = () => {
 
         const campaignData = campaignDoc.data();
 
-        // Verify the campaign belongs to the current user
-        if (campaignData.userId !== auth.currentUser.uid) {
+        // Check if user is the owner
+        const isOwner = campaignData.userId === auth.currentUser.uid;
+
+        // Check if user is a player in this campaign
+        const players = campaignData.players || [];
+        const isPlayer = players.some(
+          (p: any) => p.userId === auth.currentUser.uid
+        );
+
+        // Allow viewing if user is owner OR player
+        if (!isOwner && !isPlayer) {
           throw new Error("You don't have permission to view this campaign");
         }
+
+        setCanEdit(isOwner);
 
         // Populate form with campaign data
         setFormData({
@@ -229,7 +241,12 @@ const ViewEditCampaign = () => {
       <Header />
       <div className="campaign-creation-page">
         <div className="campaign-creation-page__container">
-          <h2>Edit Campaign: {formData.campaignName || "Unnamed"}</h2>
+          <h2>{canEdit ? "Edit Campaign" : "View Campaign"}: {formData.campaignName || "Unnamed"}</h2>
+          {!canEdit && (
+            <p style={{ color: "#ffd700", fontStyle: "italic", marginBottom: "1rem" }}>
+              View-only mode: You are a player in this campaign
+            </p>
+          )}
           <div className="campaign-id-display">
             <label>Campaign ID:</label>
             <div className="campaign-id-display__container">
@@ -243,9 +260,11 @@ const ViewEditCampaign = () => {
                 📋 Copy
               </button>
             </div>
-            <p className="campaign-id-display__hint">
-              Share this ID with players to link them to this campaign
-            </p>
+            {canEdit && (
+              <p className="campaign-id-display__hint">
+                Share this ID with players to link them to this campaign
+              </p>
+            )}
           </div>
           {error && <div className="campaign-form__error">{error}</div>}
           <form onSubmit={handleSubmit} className="campaign-form">
@@ -260,6 +279,7 @@ const ViewEditCampaign = () => {
                     name="campaignName"
                     value={formData.campaignName}
                     onChange={handleInputChange}
+                    disabled={!canEdit}
                     required
                     placeholder="Enter campaign name"
                   />
@@ -272,6 +292,7 @@ const ViewEditCampaign = () => {
                     name="dungeonMaster"
                     value={formData.dungeonMaster}
                     onChange={handleInputChange}
+                    disabled={!canEdit}
                     placeholder="DM name"
                   />
                 </div>
@@ -283,6 +304,7 @@ const ViewEditCampaign = () => {
                     name="setting"
                     value={formData.setting}
                     onChange={handleInputChange}
+                    disabled={!canEdit}
                     placeholder="e.g., Forgotten Realms, Homebrew"
                   />
                 </div>
@@ -299,6 +321,7 @@ const ViewEditCampaign = () => {
                         currentLevel: parseInt(e.target.value) || 1,
                       }))
                     }
+                    disabled={!canEdit}
                     min="1"
                     max="20"
                   />
@@ -311,6 +334,7 @@ const ViewEditCampaign = () => {
                     name="startDate"
                     value={formData.startDate}
                     onChange={handleInputChange}
+                    disabled={!canEdit}
                     placeholder="DD/MM/YYYY"
                     pattern="^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\d{4}$"
                     title="Please enter date in DD/MM/YYYY format"
@@ -323,6 +347,7 @@ const ViewEditCampaign = () => {
                     name="status"
                     value={formData.status}
                     onChange={handleInputChange}
+                    disabled={!canEdit}
                   >
                     <option value="Active">Active</option>
                     <option value="On Hold">On Hold</option>
@@ -342,6 +367,7 @@ const ViewEditCampaign = () => {
                   name="description"
                   value={formData.description}
                   onChange={handleInputChange}
+                  disabled={!canEdit}
                   rows={6}
                   placeholder="Describe your campaign, its story, and key events..."
                 />
@@ -364,6 +390,7 @@ const ViewEditCampaign = () => {
                   name="world"
                   value={formData.world}
                   onChange={handleInputChange}
+                  disabled={!canEdit}
                   rows={4}
                   placeholder="World-building details, locations, important places..."
                 />
@@ -375,6 +402,7 @@ const ViewEditCampaign = () => {
                   name="notes"
                   value={formData.notes}
                   onChange={handleInputChange}
+                  disabled={!canEdit}
                   rows={6}
                   placeholder="Private notes, plot ideas, NPCs, future plans..."
                 />
@@ -405,18 +433,20 @@ const ViewEditCampaign = () => {
                             Character: {player.characterName}
                           </span>
                         </div>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRemovePlayer(player);
-                          }}
-                          className="players-list__remove"
-                          title="Remove player from campaign"
-                          disabled={removingPlayer === player.characterId}
-                        >
-                          {removingPlayer === player.characterId ? "..." : "✕"}
-                        </button>
+                        {canEdit && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemovePlayer(player);
+                            }}
+                            className="players-list__remove"
+                            title="Remove player from campaign"
+                            disabled={removingPlayer === player.characterId}
+                          >
+                            {removingPlayer === player.characterId ? "..." : "✕"}
+                          </button>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -429,23 +459,36 @@ const ViewEditCampaign = () => {
               )}
             </section>
 
-            <div className="campaign-form__actions">
-              <button
-                type="submit"
-                className="campaign-form__submit"
-                disabled={saving}
-              >
-                {saving ? "Saving..." : "Save Changes"}
-              </button>
-              <button
-                type="button"
-                className="campaign-form__cancel"
-                onClick={() => navigate("/campaigns")}
-                disabled={saving}
-              >
-                Cancel
-              </button>
-            </div>
+            {canEdit && (
+              <div className="campaign-form__actions">
+                <button
+                  type="submit"
+                  className="campaign-form__submit"
+                  disabled={saving}
+                >
+                  {saving ? "Saving..." : "Save Changes"}
+                </button>
+                <button
+                  type="button"
+                  className="campaign-form__cancel"
+                  onClick={() => navigate("/campaigns")}
+                  disabled={saving}
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+            {!canEdit && (
+              <div className="campaign-form__actions">
+                <button
+                  type="button"
+                  className="campaign-form__cancel"
+                  onClick={() => navigate("/campaigns")}
+                >
+                  Back to Campaigns
+                </button>
+              </div>
+            )}
           </form>
         </div>
       </div>
