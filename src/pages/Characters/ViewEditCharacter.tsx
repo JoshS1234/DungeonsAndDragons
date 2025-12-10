@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { auth, db } from "../../../firebaseSetup";
-import { doc, getDoc, updateDoc, serverTimestamp, arrayUnion } from "firebase/firestore";
+import { auth, db, storage } from "../../../firebaseSetup";
+import { doc, getDoc, updateDoc, deleteDoc, serverTimestamp, arrayUnion } from "firebase/firestore";
+import { ref, deleteObject } from "firebase/storage";
 import Header from "../../components/Header/Header";
 import "./CreateCharacter.scss";
 
@@ -10,8 +11,11 @@ const ViewEditCharacter = () => {
   const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [canEdit, setCanEdit] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmName, setDeleteConfirmName] = useState("");
   const [formData, setFormData] = useState({
     // Basic Information
     characterName: "",
@@ -370,6 +374,86 @@ const ViewEditCharacter = () => {
       console.error("Error updating character:", err);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!id || !auth.currentUser) return;
+
+    // Verify confirmation name matches
+    if (deleteConfirmName !== formData.characterName) {
+      setError("Character name does not match. Please enter the exact character name to confirm deletion.");
+      return;
+    }
+
+    setDeleting(true);
+    setError(null);
+
+    try {
+      // Get character data to handle cleanup
+      const characterDoc = await getDoc(doc(db, "characters", id));
+      if (!characterDoc.exists()) {
+        throw new Error("Character not found");
+      }
+
+      const characterData = characterDoc.data();
+
+      // Remove character from all linked campaigns
+      if (characterData.campaignIds && Array.isArray(characterData.campaignIds)) {
+        const campaignUpdatePromises = characterData.campaignIds.map(
+          async (campaignId: string) => {
+            try {
+              const campaignDoc = await getDoc(doc(db, "campaigns", campaignId));
+              if (campaignDoc.exists()) {
+                const campaignData = campaignDoc.data();
+                const players = campaignData.players || [];
+                const updatedPlayers = players.filter(
+                  (p: any) => !(p.characterId === id && p.userId === auth.currentUser?.uid)
+                );
+
+                if (updatedPlayers.length !== players.length) {
+                  await updateDoc(doc(db, "campaigns", campaignId), {
+                    players: updatedPlayers,
+                    updatedAt: serverTimestamp(),
+                  });
+                }
+              }
+            } catch (err) {
+              console.error(`Error removing character from campaign ${campaignId}:`, err);
+              // Continue with deletion even if campaign update fails
+            }
+          }
+        );
+        await Promise.all(campaignUpdatePromises);
+      }
+
+      // Delete character image from storage if it exists
+      if (characterData.imageUrl) {
+        try {
+          // Extract the file path from the URL
+          const urlParts = characterData.imageUrl.split("/");
+          const imagePathIndex = urlParts.findIndex((part: string) => part === "o");
+          if (imagePathIndex !== -1 && imagePathIndex < urlParts.length - 1) {
+            const encodedPath = urlParts.slice(imagePathIndex + 1).join("/");
+            const decodedPath = decodeURIComponent(encodedPath).split("?")[0];
+            const imageRef = ref(storage, decodedPath);
+            await deleteObject(imageRef);
+          }
+        } catch (err) {
+          console.error("Error deleting character image:", err);
+          // Continue with character deletion even if image deletion fails
+        }
+      }
+
+      // Delete the character document
+      await deleteDoc(doc(db, "characters", id));
+
+      // Navigate back to characters list
+      navigate("/characters");
+    } catch (err: any) {
+      setError(err.message || "Failed to delete character");
+      console.error("Error deleting character:", err);
+      setDeleting(false);
     }
   };
 
@@ -974,7 +1058,7 @@ const ViewEditCharacter = () => {
               <button
                 type="submit"
                 className="character-form__submit"
-                disabled={saving}
+                disabled={saving || deleting}
               >
                 {saving ? "Saving..." : "Save Changes"}
               </button>
@@ -982,11 +1066,66 @@ const ViewEditCharacter = () => {
                 type="button"
                 className="character-form__cancel"
                 onClick={() => navigate("/characters")}
-                disabled={saving}
+                disabled={saving || deleting}
               >
                 Cancel
               </button>
+              <button
+                type="button"
+                className="character-form__delete"
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={saving || deleting}
+              >
+                Delete Character
+              </button>
             </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteConfirm && canEdit && (
+              <div className="delete-confirm-modal">
+                <div className="delete-confirm-modal__overlay" onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setDeleteConfirmName("");
+                  setError(null);
+                }} />
+                <div className="delete-confirm-modal__content">
+                  <h3>Delete Character</h3>
+                  <p>This action cannot be undone. This will permanently delete your character and remove them from all linked campaigns.</p>
+                  <p>To confirm, please enter the character name: <strong>{formData.characterName}</strong></p>
+                  <input
+                    type="text"
+                    className="delete-confirm-modal__input"
+                    value={deleteConfirmName}
+                    onChange={(e) => setDeleteConfirmName(e.target.value)}
+                    placeholder="Enter character name to confirm"
+                    autoFocus
+                  />
+                  {error && <div className="delete-confirm-modal__error">{error}</div>}
+                  <div className="delete-confirm-modal__actions">
+                    <button
+                      type="button"
+                      className="delete-confirm-modal__cancel"
+                      onClick={() => {
+                        setShowDeleteConfirm(false);
+                        setDeleteConfirmName("");
+                        setError(null);
+                      }}
+                      disabled={deleting}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="delete-confirm-modal__confirm"
+                      onClick={handleDelete}
+                      disabled={deleting || deleteConfirmName !== formData.characterName}
+                    >
+                      {deleting ? "Deleting..." : "Delete Character"}
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
           </form>
         </div>
