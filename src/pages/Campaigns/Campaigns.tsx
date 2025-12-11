@@ -8,7 +8,6 @@ import {
   where,
   getDocs,
   Timestamp,
-  orderBy,
   doc,
   getDoc,
 } from "firebase/firestore";
@@ -34,7 +33,6 @@ interface Campaign {
 }
 
 const Campaigns = () => {
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [ownedCampaigns, setOwnedCampaigns] = useState<Campaign[]>([]);
   const [playerCampaigns, setPlayerCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,7 +41,8 @@ const Campaigns = () => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        setCampaigns([]);
+        setOwnedCampaigns([]);
+        setPlayerCampaigns([]);
         setLoading(false);
         return;
       }
@@ -143,7 +142,6 @@ const Campaigns = () => {
             (a.campaignName || "").localeCompare(b.campaignName || "")
           );
 
-        setCampaigns(allCampaigns);
         setOwnedCampaigns(ownedCampaignsList);
         setPlayerCampaigns(playerCampaignsList);
       } catch (error: any) {

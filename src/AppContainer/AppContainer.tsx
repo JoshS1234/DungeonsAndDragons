@@ -6,20 +6,17 @@ import App from "../App.tsx";
 
 const AppContainer = () => {
   const [component, setComponent] = useState(<></>);
-  const [userKey, setUserKey] = useState<string | null>(null);
 
   useEffect(() => {
     auth.onAuthStateChanged((user) => {
       if (user) {
         // Use user ID as key to force HashRouter to reset when user changes
-        setUserKey(user.uid);
         setComponent(
           <HashRouter key={user.uid}>
             <App />
           </HashRouter>
         );
       } else {
-        setUserKey(null);
         setComponent(<LoginContainer />);
       }
     });
