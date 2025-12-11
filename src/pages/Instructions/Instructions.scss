@@ -1,0 +1,175 @@
+.instructions-content {
+  padding: 2rem;
+  max-width: 1000px;
+  margin: 0 auto;
+  color: #f0f0f0;
+
+  h1 {
+    font-size: 2.5em;
+    color: #ffd700;
+    margin-bottom: 1rem;
+    text-align: center;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    font-family: "Cinzel", "Times New Roman", serif;
+  }
+
+  .instructions-intro {
+    font-size: 1.2em;
+    text-align: center;
+    margin-bottom: 3rem;
+    color: #e0e0e0;
+    line-height: 1.6;
+  }
+
+  .instructions-section {
+    margin-bottom: 3rem;
+
+    h2 {
+      font-size: 2em;
+      color: #ffd700;
+      margin-bottom: 1.5rem;
+      border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+      padding-bottom: 0.5rem;
+      font-family: "Cinzel", "Times New Roman", serif;
+    }
+
+    .instruction-card {
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(255, 215, 0, 0.3);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+      transition: all 0.3s ease;
+
+      &:hover {
+        border-color: rgba(255, 215, 0, 0.6);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+      }
+
+      h3 {
+        font-size: 1.5em;
+        color: #ffd700;
+        margin-bottom: 1rem;
+        font-family: "Cinzel", "Times New Roman", serif;
+      }
+
+      ol {
+        padding-left: 1.5rem;
+        line-height: 1.8;
+        margin-bottom: 1rem;
+
+        li {
+          margin-bottom: 0.75rem;
+          color: #e0e0e0;
+
+          strong {
+            color: #ffd700;
+          }
+
+          ul {
+            margin-top: 0.5rem;
+            padding-left: 1.5rem;
+            list-style-type: disc;
+
+            li {
+              margin-bottom: 0.5rem;
+            }
+          }
+
+          ol[type="a"] {
+            margin-top: 0.5rem;
+            padding-left: 1.5rem;
+            list-style-type: lower-alpha;
+
+            li {
+              margin-bottom: 0.5rem;
+            }
+          }
+        }
+      }
+
+      ul {
+        padding-left: 1.5rem;
+        line-height: 1.8;
+        margin-bottom: 1rem;
+
+        li {
+          margin-bottom: 0.75rem;
+          color: #e0e0e0;
+          list-style-type: disc;
+
+          strong {
+            color: #ffd700;
+          }
+        }
+      }
+
+      p {
+        line-height: 1.8;
+        color: #e0e0e0;
+        margin-top: 1rem;
+
+        strong {
+          color: #ffd700;
+        }
+      }
+
+      .instruction-note {
+        background: rgba(255, 215, 0, 0.1);
+        border-left: 4px solid #ffd700;
+        padding: 1rem;
+        margin-top: 1rem;
+        border-radius: 4px;
+        font-style: italic;
+      }
+
+      .instruction-warning {
+        background: rgba(255, 0, 0, 0.1);
+        border-left: 4px solid #ff6b6b;
+        padding: 1rem;
+        margin-top: 1rem;
+        border-radius: 4px;
+        font-style: italic;
+      }
+
+      .instruction-tip {
+        background: rgba(100, 200, 255, 0.1);
+        border-left: 4px solid #64c8ff;
+        padding: 1rem;
+        margin-top: 1rem;
+        border-radius: 4px;
+        font-style: italic;
+      }
+    }
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .instructions-content {
+    padding: 1.5rem 1rem;
+
+    h1 {
+      font-size: 2em;
+    }
+
+    .instructions-intro {
+      font-size: 1.1em;
+    }
+
+    .instructions-section {
+      h2 {
+        font-size: 1.5em;
+      }
+
+      .instruction-card {
+        padding: 1.5rem;
+
+        h3 {
+          font-size: 1.3em;
+        }
+      }
+    }
+  }
+}
+

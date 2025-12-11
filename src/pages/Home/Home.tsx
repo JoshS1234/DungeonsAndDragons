@@ -9,6 +9,9 @@ const Home = () => {
       <div className="landing-content">
         <h2>Welcome, Adventurer!</h2>
         <p>You have successfully logged into your D&D campaign.</p>
+        <Link to="/instructions" className="instructions-link">
+          📖 How to Use This Site - Instructions for Players & DMs
+        </Link>
         <div className="landing-content__features">
           <Link to="/campaigns" className="feature-card">
             <h3>🎲 Campaigns</h3>

@@ -9,6 +9,7 @@ import Characters from "./pages/Characters/Characters";
 import CreateCharacter from "./pages/Characters/CreateCharacter";
 import ViewEditCharacter from "./pages/Characters/ViewEditCharacter";
 import Rules from "./pages/Rules/Rules";
+import Instructions from "./pages/Instructions/Instructions";
 import "./App.scss";
 
 const App = () => {
@@ -25,17 +26,18 @@ const App = () => {
   }, []); // Only run on mount
 
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/account" element={<Account />} />
-      <Route path="/campaigns" element={<Campaigns />} />
-      <Route path="/campaigns/create" element={<CreateCampaign />} />
-      <Route path="/campaigns/:id" element={<ViewEditCampaign />} />
-      <Route path="/characters" element={<Characters />} />
-      <Route path="/characters/create" element={<CreateCharacter />} />
-      <Route path="/characters/:id" element={<ViewEditCharacter />} />
-      <Route path="/rules" element={<Rules />} />
-    </Routes>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/account" element={<Account />} />
+          <Route path="/campaigns" element={<Campaigns />} />
+          <Route path="/campaigns/create" element={<CreateCampaign />} />
+          <Route path="/campaigns/:id" element={<ViewEditCampaign />} />
+          <Route path="/characters" element={<Characters />} />
+          <Route path="/characters/create" element={<CreateCharacter />} />
+          <Route path="/characters/:id" element={<ViewEditCharacter />} />
+          <Route path="/rules" element={<Rules />} />
+          <Route path="/instructions" element={<Instructions />} />
+        </Routes>
   );
 };
 
