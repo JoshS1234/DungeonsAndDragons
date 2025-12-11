@@ -3,6 +3,7 @@
 ## Immediate Steps to Take
 
 1. **Commit and push the workflow file**:
+
    ```bash
    git add .github/workflows/deploy.yml
    git commit -m "Add GitHub Pages deployment workflow"
@@ -10,16 +11,19 @@
    ```
 
 2. **Enable GitHub Pages**:
+
    - Go to your repository on GitHub
    - Click **Settings** → **Pages**
    - Under **Source**, select **GitHub Actions** (NOT a branch)
    - Save
 
 3. **Add GitHub Secrets** (if not done):
+
    - Go to **Settings** → **Secrets and variables** → **Actions**
    - Add all your Firebase environment variables as secrets
 
 4. **Check the Actions tab**:
+
    - After pushing, go to **Actions** tab
    - You should see "Deploy to GitHub Pages" workflow running
    - Wait for it to complete (usually 2-3 minutes)
@@ -44,4 +48,3 @@ Your site URL will be:
 `https://[your-username].github.io/[repository-name]/`
 
 Check the workflow output in Actions tab to see the exact URL.
-
