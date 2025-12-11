@@ -3,7 +3,9 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - main  # Change to your default branch name if different
+      - main
+      - master # Support both main and master branches
+  workflow_dispatch: # Allow manual trigger
 
 permissions:
   contents: read
@@ -33,7 +35,7 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          # Add your Firebase environment variables here
+          # Firebase environment variables from GitHub Secrets
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
           VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
           VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
@@ -60,4 +62,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
