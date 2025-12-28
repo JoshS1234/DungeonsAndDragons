@@ -69,6 +69,27 @@ const CreateCharacter = () => {
   const [linkedCampaigns, setLinkedCampaigns] = useState<
     Array<{ id: string; name: string }>
   >([]);
+  const [abilityScoreInputs, setAbilityScoreInputs] = useState<{
+    [key: string]: string;
+  }>({
+    strength: "10",
+    dexterity: "10",
+    constitution: "10",
+    intelligence: "10",
+    wisdom: "10",
+    charisma: "10",
+  });
+  const [combatStatInputs, setCombatStatInputs] = useState<{
+    [key: string]: string;
+  }>({
+    armorClass: "10",
+    initiative: "0",
+    speed: "30",
+    maxHitPoints: "8",
+    currentHitPoints: "8",
+    temporaryHitPoints: "0",
+    proficiencyBonus: "2",
+  });
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -423,6 +444,8 @@ const CreateCharacter = () => {
                     ability.key as keyof typeof formData
                   ] as number;
                   const modifier = calculateModifier(score);
+                  const inputValue =
+                    abilityScoreInputs[ability.key] ?? String(score);
                   return (
                     <div key={ability.key} className="ability-score-group">
                       <label htmlFor={ability.key}>
@@ -432,13 +455,41 @@ const CreateCharacter = () => {
                         type="number"
                         id={ability.key}
                         name={ability.key}
-                        value={score}
-                        onChange={(e) =>
-                          handleNumberChange(
-                            ability.key,
-                            parseInt(e.target.value) || 10
-                          )
-                        }
+                        value={inputValue}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setAbilityScoreInputs((prev) => ({
+                            ...prev,
+                            [ability.key]: value,
+                          }));
+                          if (value !== "") {
+                            const numValue = parseInt(value);
+                            if (!isNaN(numValue)) {
+                              handleNumberChange(ability.key, numValue);
+                            }
+                          }
+                        }}
+                        onBlur={(e) => {
+                          const value = e.target.value;
+                          const numValue = parseInt(value);
+                          if (value === "" || isNaN(numValue) || numValue < 1) {
+                            handleNumberChange(ability.key, 10);
+                            setAbilityScoreInputs((prev) => ({
+                              ...prev,
+                              [ability.key]: "10",
+                            }));
+                          } else {
+                            const clampedValue = Math.min(
+                              Math.max(numValue, 1),
+                              30
+                            );
+                            handleNumberChange(ability.key, clampedValue);
+                            setAbilityScoreInputs((prev) => ({
+                              ...prev,
+                              [ability.key]: String(clampedValue),
+                            }));
+                          }
+                        }}
                         min="1"
                         max="30"
                       />
@@ -462,13 +513,38 @@ const CreateCharacter = () => {
                     type="number"
                     id="armorClass"
                     name="armorClass"
-                    value={formData.armorClass}
-                    onChange={(e) =>
-                      handleNumberChange(
-                        "armorClass",
-                        parseInt(e.target.value) || 10
-                      )
+                    value={
+                      combatStatInputs.armorClass ?? String(formData.armorClass)
                     }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setCombatStatInputs((prev) => ({
+                        ...prev,
+                        armorClass: value,
+                      }));
+                      if (value !== "") {
+                        const numValue = parseInt(value);
+                        if (!isNaN(numValue)) {
+                          handleNumberChange("armorClass", numValue);
+                        }
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const value = e.target.value;
+                      const numValue = parseInt(value);
+                      if (value === "" || isNaN(numValue)) {
+                        handleNumberChange("armorClass", 10);
+                        setCombatStatInputs((prev) => ({
+                          ...prev,
+                          armorClass: "10",
+                        }));
+                      } else {
+                        setCombatStatInputs((prev) => ({
+                          ...prev,
+                          armorClass: String(numValue),
+                        }));
+                      }
+                    }}
                   />
                 </div>
                 <div className="character-form__group">
@@ -477,13 +553,38 @@ const CreateCharacter = () => {
                     type="number"
                     id="initiative"
                     name="initiative"
-                    value={formData.initiative}
-                    onChange={(e) =>
-                      handleNumberChange(
-                        "initiative",
-                        parseInt(e.target.value) || 0
-                      )
+                    value={
+                      combatStatInputs.initiative ?? String(formData.initiative)
                     }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setCombatStatInputs((prev) => ({
+                        ...prev,
+                        initiative: value,
+                      }));
+                      if (value !== "") {
+                        const numValue = parseInt(value);
+                        if (!isNaN(numValue)) {
+                          handleNumberChange("initiative", numValue);
+                        }
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const value = e.target.value;
+                      const numValue = parseInt(value);
+                      if (value === "" || isNaN(numValue)) {
+                        handleNumberChange("initiative", 0);
+                        setCombatStatInputs((prev) => ({
+                          ...prev,
+                          initiative: "0",
+                        }));
+                      } else {
+                        setCombatStatInputs((prev) => ({
+                          ...prev,
+                          initiative: String(numValue),
+                        }));
+                      }
+                    }}
                   />
                 </div>
                 <div className="character-form__group">
@@ -492,13 +593,36 @@ const CreateCharacter = () => {
                     type="number"
                     id="speed"
                     name="speed"
-                    value={formData.speed}
-                    onChange={(e) =>
-                      handleNumberChange(
-                        "speed",
-                        parseInt(e.target.value) || 30
-                      )
-                    }
+                    value={combatStatInputs.speed ?? String(formData.speed)}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setCombatStatInputs((prev) => ({
+                        ...prev,
+                        speed: value,
+                      }));
+                      if (value !== "") {
+                        const numValue = parseInt(value);
+                        if (!isNaN(numValue)) {
+                          handleNumberChange("speed", numValue);
+                        }
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const value = e.target.value;
+                      const numValue = parseInt(value);
+                      if (value === "" || isNaN(numValue)) {
+                        handleNumberChange("speed", 30);
+                        setCombatStatInputs((prev) => ({
+                          ...prev,
+                          speed: "30",
+                        }));
+                      } else {
+                        setCombatStatInputs((prev) => ({
+                          ...prev,
+                          speed: String(numValue),
+                        }));
+                      }
+                    }}
                   />
                 </div>
                 <div className="character-form__group">
@@ -518,13 +642,39 @@ const CreateCharacter = () => {
                     type="number"
                     id="maxHitPoints"
                     name="maxHitPoints"
-                    value={formData.maxHitPoints}
-                    onChange={(e) =>
-                      handleNumberChange(
-                        "maxHitPoints",
-                        parseInt(e.target.value) || 8
-                      )
+                    value={
+                      combatStatInputs.maxHitPoints ??
+                      String(formData.maxHitPoints)
                     }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setCombatStatInputs((prev) => ({
+                        ...prev,
+                        maxHitPoints: value,
+                      }));
+                      if (value !== "") {
+                        const numValue = parseInt(value);
+                        if (!isNaN(numValue)) {
+                          handleNumberChange("maxHitPoints", numValue);
+                        }
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const value = e.target.value;
+                      const numValue = parseInt(value);
+                      if (value === "" || isNaN(numValue)) {
+                        handleNumberChange("maxHitPoints", 8);
+                        setCombatStatInputs((prev) => ({
+                          ...prev,
+                          maxHitPoints: "8",
+                        }));
+                      } else {
+                        setCombatStatInputs((prev) => ({
+                          ...prev,
+                          maxHitPoints: String(numValue),
+                        }));
+                      }
+                    }}
                   />
                 </div>
                 <div className="character-form__group">
@@ -533,13 +683,39 @@ const CreateCharacter = () => {
                     type="number"
                     id="currentHitPoints"
                     name="currentHitPoints"
-                    value={formData.currentHitPoints}
-                    onChange={(e) =>
-                      handleNumberChange(
-                        "currentHitPoints",
-                        parseInt(e.target.value) || 8
-                      )
+                    value={
+                      combatStatInputs.currentHitPoints ??
+                      String(formData.currentHitPoints)
                     }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setCombatStatInputs((prev) => ({
+                        ...prev,
+                        currentHitPoints: value,
+                      }));
+                      if (value !== "") {
+                        const numValue = parseInt(value);
+                        if (!isNaN(numValue)) {
+                          handleNumberChange("currentHitPoints", numValue);
+                        }
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const value = e.target.value;
+                      const numValue = parseInt(value);
+                      if (value === "" || isNaN(numValue)) {
+                        handleNumberChange("currentHitPoints", 8);
+                        setCombatStatInputs((prev) => ({
+                          ...prev,
+                          currentHitPoints: "8",
+                        }));
+                      } else {
+                        setCombatStatInputs((prev) => ({
+                          ...prev,
+                          currentHitPoints: String(numValue),
+                        }));
+                      }
+                    }}
                   />
                 </div>
                 <div className="character-form__group">
@@ -550,13 +726,39 @@ const CreateCharacter = () => {
                     type="number"
                     id="temporaryHitPoints"
                     name="temporaryHitPoints"
-                    value={formData.temporaryHitPoints}
-                    onChange={(e) =>
-                      handleNumberChange(
-                        "temporaryHitPoints",
-                        parseInt(e.target.value) || 0
-                      )
+                    value={
+                      combatStatInputs.temporaryHitPoints ??
+                      String(formData.temporaryHitPoints)
                     }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setCombatStatInputs((prev) => ({
+                        ...prev,
+                        temporaryHitPoints: value,
+                      }));
+                      if (value !== "") {
+                        const numValue = parseInt(value);
+                        if (!isNaN(numValue)) {
+                          handleNumberChange("temporaryHitPoints", numValue);
+                        }
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const value = e.target.value;
+                      const numValue = parseInt(value);
+                      if (value === "" || isNaN(numValue)) {
+                        handleNumberChange("temporaryHitPoints", 0);
+                        setCombatStatInputs((prev) => ({
+                          ...prev,
+                          temporaryHitPoints: "0",
+                        }));
+                      } else {
+                        setCombatStatInputs((prev) => ({
+                          ...prev,
+                          temporaryHitPoints: String(numValue),
+                        }));
+                      }
+                    }}
                     min="0"
                   />
                 </div>
@@ -566,13 +768,39 @@ const CreateCharacter = () => {
                     type="number"
                     id="proficiencyBonus"
                     name="proficiencyBonus"
-                    value={formData.proficiencyBonus}
-                    onChange={(e) =>
-                      handleNumberChange(
-                        "proficiencyBonus",
-                        parseInt(e.target.value) || 2
-                      )
+                    value={
+                      combatStatInputs.proficiencyBonus ??
+                      String(formData.proficiencyBonus)
                     }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setCombatStatInputs((prev) => ({
+                        ...prev,
+                        proficiencyBonus: value,
+                      }));
+                      if (value !== "") {
+                        const numValue = parseInt(value);
+                        if (!isNaN(numValue)) {
+                          handleNumberChange("proficiencyBonus", numValue);
+                        }
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const value = e.target.value;
+                      const numValue = parseInt(value);
+                      if (value === "" || isNaN(numValue)) {
+                        handleNumberChange("proficiencyBonus", 2);
+                        setCombatStatInputs((prev) => ({
+                          ...prev,
+                          proficiencyBonus: "2",
+                        }));
+                      } else {
+                        setCombatStatInputs((prev) => ({
+                          ...prev,
+                          proficiencyBonus: String(numValue),
+                        }));
+                      }
+                    }}
                   />
                 </div>
               </div>

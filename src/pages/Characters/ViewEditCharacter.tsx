@@ -77,6 +77,27 @@ const ViewEditCharacter = () => {
   const [linkedCampaigns, setLinkedCampaigns] = useState<
     Array<{ id: string; name: string }>
   >([]);
+  const [abilityScoreInputs, setAbilityScoreInputs] = useState<{
+    [key: string]: string;
+  }>({
+    strength: "10",
+    dexterity: "10",
+    constitution: "10",
+    intelligence: "10",
+    wisdom: "10",
+    charisma: "10",
+  });
+  const [combatStatInputs, setCombatStatInputs] = useState<{
+    [key: string]: string;
+  }>({
+    armorClass: "10",
+    initiative: "0",
+    speed: "30",
+    maxHitPoints: "8",
+    currentHitPoints: "8",
+    temporaryHitPoints: "0",
+    proficiencyBonus: "2",
+  });
 
   useEffect(() => {
     const fetchCharacter = async () => {
@@ -144,6 +165,20 @@ const ViewEditCharacter = () => {
         setCanEdit(isOwner);
 
         // Populate form with character data
+        const strength = characterData.strength || 10;
+        const dexterity = characterData.dexterity || 10;
+        const constitution = characterData.constitution || 10;
+        const intelligence = characterData.intelligence || 10;
+        const wisdom = characterData.wisdom || 10;
+        const charisma = characterData.charisma || 10;
+        const armorClass = characterData.armorClass || 10;
+        const initiative = characterData.initiative || 0;
+        const speed = characterData.speed || 30;
+        const maxHitPoints = characterData.maxHitPoints || 8;
+        const currentHitPoints = characterData.currentHitPoints || 8;
+        const temporaryHitPoints = characterData.temporaryHitPoints || 0;
+        const proficiencyBonus = characterData.proficiencyBonus || 2;
+
         setFormData({
           characterName: characterData.characterName || "",
           class: characterData.class || "",
@@ -153,20 +188,20 @@ const ViewEditCharacter = () => {
           race: characterData.race || "",
           alignment: characterData.alignment || "",
           experiencePoints: characterData.experiencePoints || 0,
-          strength: characterData.strength || 10,
-          dexterity: characterData.dexterity || 10,
-          constitution: characterData.constitution || 10,
-          intelligence: characterData.intelligence || 10,
-          wisdom: characterData.wisdom || 10,
-          charisma: characterData.charisma || 10,
-          armorClass: characterData.armorClass || 10,
-          initiative: characterData.initiative || 0,
-          speed: characterData.speed || 30,
-          maxHitPoints: characterData.maxHitPoints || 8,
-          currentHitPoints: characterData.currentHitPoints || 8,
-          temporaryHitPoints: characterData.temporaryHitPoints || 0,
+          strength,
+          dexterity,
+          constitution,
+          intelligence,
+          wisdom,
+          charisma,
+          armorClass,
+          initiative,
+          speed,
+          maxHitPoints,
+          currentHitPoints,
+          temporaryHitPoints,
           hitDice: characterData.hitDice || "1d8",
-          proficiencyBonus: characterData.proficiencyBonus || 2,
+          proficiencyBonus,
           savingThrowProficiencies:
             characterData.savingThrowProficiencies || [],
           skillProficiencies: characterData.skillProficiencies || [],
@@ -181,6 +216,27 @@ const ViewEditCharacter = () => {
           equipment: characterData.equipment || "",
           spells: characterData.spells || "",
           campaignIds: characterData.campaignIds || [],
+        });
+
+        // Update ability score inputs
+        setAbilityScoreInputs({
+          strength: String(strength),
+          dexterity: String(dexterity),
+          constitution: String(constitution),
+          intelligence: String(intelligence),
+          wisdom: String(wisdom),
+          charisma: String(charisma),
+        });
+
+        // Update combat stat inputs
+        setCombatStatInputs({
+          armorClass: String(armorClass),
+          initiative: String(initiative),
+          speed: String(speed),
+          maxHitPoints: String(maxHitPoints),
+          currentHitPoints: String(currentHitPoints),
+          temporaryHitPoints: String(temporaryHitPoints),
+          proficiencyBonus: String(proficiencyBonus),
         });
 
         // Fetch campaign names for linked campaigns
@@ -785,6 +841,8 @@ const ViewEditCharacter = () => {
                     ability.key as keyof typeof formData
                   ] as number;
                   const modifier = calculateModifier(score);
+                  const inputValue =
+                    abilityScoreInputs[ability.key] ?? String(score);
                   return (
                     <div key={ability.key} className="ability-score-group">
                       <label htmlFor={ability.key}>
@@ -794,13 +852,41 @@ const ViewEditCharacter = () => {
                         type="number"
                         id={ability.key}
                         name={ability.key}
-                        value={score}
-                        onChange={(e) =>
-                          handleNumberChange(
-                            ability.key,
-                            parseInt(e.target.value) || 10
-                          )
-                        }
+                        value={inputValue}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setAbilityScoreInputs((prev) => ({
+                            ...prev,
+                            [ability.key]: value,
+                          }));
+                          if (value !== "") {
+                            const numValue = parseInt(value);
+                            if (!isNaN(numValue)) {
+                              handleNumberChange(ability.key, numValue);
+                            }
+                          }
+                        }}
+                        onBlur={(e) => {
+                          const value = e.target.value;
+                          const numValue = parseInt(value);
+                          if (value === "" || isNaN(numValue) || numValue < 1) {
+                            handleNumberChange(ability.key, 10);
+                            setAbilityScoreInputs((prev) => ({
+                              ...prev,
+                              [ability.key]: "10",
+                            }));
+                          } else {
+                            const clampedValue = Math.min(
+                              Math.max(numValue, 1),
+                              30
+                            );
+                            handleNumberChange(ability.key, clampedValue);
+                            setAbilityScoreInputs((prev) => ({
+                              ...prev,
+                              [ability.key]: String(clampedValue),
+                            }));
+                          }
+                        }}
                         disabled={!canEdit}
                         min="1"
                         max="30"
@@ -825,13 +911,38 @@ const ViewEditCharacter = () => {
                     type="number"
                     id="armorClass"
                     name="armorClass"
-                    value={formData.armorClass}
-                    onChange={(e) =>
-                      handleNumberChange(
-                        "armorClass",
-                        parseInt(e.target.value) || 10
-                      )
+                    value={
+                      combatStatInputs.armorClass ?? String(formData.armorClass)
                     }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setCombatStatInputs((prev) => ({
+                        ...prev,
+                        armorClass: value,
+                      }));
+                      if (value !== "") {
+                        const numValue = parseInt(value);
+                        if (!isNaN(numValue)) {
+                          handleNumberChange("armorClass", numValue);
+                        }
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const value = e.target.value;
+                      const numValue = parseInt(value);
+                      if (value === "" || isNaN(numValue)) {
+                        handleNumberChange("armorClass", 10);
+                        setCombatStatInputs((prev) => ({
+                          ...prev,
+                          armorClass: "10",
+                        }));
+                      } else {
+                        setCombatStatInputs((prev) => ({
+                          ...prev,
+                          armorClass: String(numValue),
+                        }));
+                      }
+                    }}
                     disabled={!canEdit}
                   />
                 </div>
@@ -841,13 +952,38 @@ const ViewEditCharacter = () => {
                     type="number"
                     id="initiative"
                     name="initiative"
-                    value={formData.initiative}
-                    onChange={(e) =>
-                      handleNumberChange(
-                        "initiative",
-                        parseInt(e.target.value) || 0
-                      )
+                    value={
+                      combatStatInputs.initiative ?? String(formData.initiative)
                     }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setCombatStatInputs((prev) => ({
+                        ...prev,
+                        initiative: value,
+                      }));
+                      if (value !== "") {
+                        const numValue = parseInt(value);
+                        if (!isNaN(numValue)) {
+                          handleNumberChange("initiative", numValue);
+                        }
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const value = e.target.value;
+                      const numValue = parseInt(value);
+                      if (value === "" || isNaN(numValue)) {
+                        handleNumberChange("initiative", 0);
+                        setCombatStatInputs((prev) => ({
+                          ...prev,
+                          initiative: "0",
+                        }));
+                      } else {
+                        setCombatStatInputs((prev) => ({
+                          ...prev,
+                          initiative: String(numValue),
+                        }));
+                      }
+                    }}
                     disabled={!canEdit}
                   />
                 </div>
@@ -857,13 +993,36 @@ const ViewEditCharacter = () => {
                     type="number"
                     id="speed"
                     name="speed"
-                    value={formData.speed}
-                    onChange={(e) =>
-                      handleNumberChange(
-                        "speed",
-                        parseInt(e.target.value) || 30
-                      )
-                    }
+                    value={combatStatInputs.speed ?? String(formData.speed)}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setCombatStatInputs((prev) => ({
+                        ...prev,
+                        speed: value,
+                      }));
+                      if (value !== "") {
+                        const numValue = parseInt(value);
+                        if (!isNaN(numValue)) {
+                          handleNumberChange("speed", numValue);
+                        }
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const value = e.target.value;
+                      const numValue = parseInt(value);
+                      if (value === "" || isNaN(numValue)) {
+                        handleNumberChange("speed", 30);
+                        setCombatStatInputs((prev) => ({
+                          ...prev,
+                          speed: "30",
+                        }));
+                      } else {
+                        setCombatStatInputs((prev) => ({
+                          ...prev,
+                          speed: String(numValue),
+                        }));
+                      }
+                    }}
                     disabled={!canEdit}
                   />
                 </div>
@@ -885,13 +1044,39 @@ const ViewEditCharacter = () => {
                     type="number"
                     id="maxHitPoints"
                     name="maxHitPoints"
-                    value={formData.maxHitPoints}
-                    onChange={(e) =>
-                      handleNumberChange(
-                        "maxHitPoints",
-                        parseInt(e.target.value) || 8
-                      )
+                    value={
+                      combatStatInputs.maxHitPoints ??
+                      String(formData.maxHitPoints)
                     }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setCombatStatInputs((prev) => ({
+                        ...prev,
+                        maxHitPoints: value,
+                      }));
+                      if (value !== "") {
+                        const numValue = parseInt(value);
+                        if (!isNaN(numValue)) {
+                          handleNumberChange("maxHitPoints", numValue);
+                        }
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const value = e.target.value;
+                      const numValue = parseInt(value);
+                      if (value === "" || isNaN(numValue)) {
+                        handleNumberChange("maxHitPoints", 8);
+                        setCombatStatInputs((prev) => ({
+                          ...prev,
+                          maxHitPoints: "8",
+                        }));
+                      } else {
+                        setCombatStatInputs((prev) => ({
+                          ...prev,
+                          maxHitPoints: String(numValue),
+                        }));
+                      }
+                    }}
                     disabled={!canEdit}
                   />
                 </div>
@@ -901,13 +1086,39 @@ const ViewEditCharacter = () => {
                     type="number"
                     id="currentHitPoints"
                     name="currentHitPoints"
-                    value={formData.currentHitPoints}
-                    onChange={(e) =>
-                      handleNumberChange(
-                        "currentHitPoints",
-                        parseInt(e.target.value) || 8
-                      )
+                    value={
+                      combatStatInputs.currentHitPoints ??
+                      String(formData.currentHitPoints)
                     }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setCombatStatInputs((prev) => ({
+                        ...prev,
+                        currentHitPoints: value,
+                      }));
+                      if (value !== "") {
+                        const numValue = parseInt(value);
+                        if (!isNaN(numValue)) {
+                          handleNumberChange("currentHitPoints", numValue);
+                        }
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const value = e.target.value;
+                      const numValue = parseInt(value);
+                      if (value === "" || isNaN(numValue)) {
+                        handleNumberChange("currentHitPoints", 8);
+                        setCombatStatInputs((prev) => ({
+                          ...prev,
+                          currentHitPoints: "8",
+                        }));
+                      } else {
+                        setCombatStatInputs((prev) => ({
+                          ...prev,
+                          currentHitPoints: String(numValue),
+                        }));
+                      }
+                    }}
                     disabled={!canEdit}
                   />
                 </div>
@@ -919,13 +1130,39 @@ const ViewEditCharacter = () => {
                     type="number"
                     id="temporaryHitPoints"
                     name="temporaryHitPoints"
-                    value={formData.temporaryHitPoints}
-                    onChange={(e) =>
-                      handleNumberChange(
-                        "temporaryHitPoints",
-                        parseInt(e.target.value) || 0
-                      )
+                    value={
+                      combatStatInputs.temporaryHitPoints ??
+                      String(formData.temporaryHitPoints)
                     }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setCombatStatInputs((prev) => ({
+                        ...prev,
+                        temporaryHitPoints: value,
+                      }));
+                      if (value !== "") {
+                        const numValue = parseInt(value);
+                        if (!isNaN(numValue)) {
+                          handleNumberChange("temporaryHitPoints", numValue);
+                        }
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const value = e.target.value;
+                      const numValue = parseInt(value);
+                      if (value === "" || isNaN(numValue)) {
+                        handleNumberChange("temporaryHitPoints", 0);
+                        setCombatStatInputs((prev) => ({
+                          ...prev,
+                          temporaryHitPoints: "0",
+                        }));
+                      } else {
+                        setCombatStatInputs((prev) => ({
+                          ...prev,
+                          temporaryHitPoints: String(numValue),
+                        }));
+                      }
+                    }}
                     disabled={!canEdit}
                     min="0"
                   />
@@ -936,13 +1173,40 @@ const ViewEditCharacter = () => {
                     type="number"
                     id="proficiencyBonus"
                     name="proficiencyBonus"
-                    value={formData.proficiencyBonus}
-                    onChange={(e) =>
-                      handleNumberChange(
-                        "proficiencyBonus",
-                        parseInt(e.target.value) || 2
-                      )
+                    value={
+                      combatStatInputs.proficiencyBonus ??
+                      String(formData.proficiencyBonus)
                     }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setCombatStatInputs((prev) => ({
+                        ...prev,
+                        proficiencyBonus: value,
+                      }));
+                      if (value !== "") {
+                        const numValue = parseInt(value);
+                        if (!isNaN(numValue)) {
+                          handleNumberChange("proficiencyBonus", numValue);
+                        }
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const value = e.target.value;
+                      const numValue = parseInt(value);
+                      if (value === "" || isNaN(numValue)) {
+                        handleNumberChange("proficiencyBonus", 2);
+                        setCombatStatInputs((prev) => ({
+                          ...prev,
+                          proficiencyBonus: "2",
+                        }));
+                      } else {
+                        setCombatStatInputs((prev) => ({
+                          ...prev,
+                          proficiencyBonus: String(numValue),
+                        }));
+                      }
+                    }}
+                    disabled={!canEdit}
                   />
                 </div>
               </div>
