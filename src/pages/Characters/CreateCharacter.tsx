@@ -90,6 +90,19 @@ const CreateCharacter = () => {
     temporaryHitPoints: "0",
     proficiencyBonus: "2",
   });
+  const [rolledScores, setRolledScores] = useState<number[]>([]);
+  const [hasRolled, setHasRolled] = useState(false);
+  // Track which rolled score index is assigned to which ability
+  const [scoreAssignments, setScoreAssignments] = useState<{
+    [abilityKey: string]: number | null; // abilityKey -> rolledScoreIndex
+  }>({
+    strength: null,
+    dexterity: null,
+    constitution: null,
+    intelligence: null,
+    wisdom: null,
+    charisma: null,
+  });
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -272,6 +285,82 @@ const CreateCharacter = () => {
     { name: "Charisma", key: "charisma", abbrev: "CHA" },
   ];
 
+  const roll4d6DropLowest = (): number => {
+    const rolls: number[] = [];
+    for (let i = 0; i < 4; i++) {
+      rolls.push(Math.floor(Math.random() * 6) + 1);
+    }
+    rolls.sort((a, b) => b - a); // Sort descending
+    return rolls[0] + rolls[1] + rolls[2]; // Sum of top 3
+  };
+
+  const handleRollAbilityScores = () => {
+    const newScores: number[] = [];
+    for (let i = 0; i < 6; i++) {
+      newScores.push(roll4d6DropLowest());
+    }
+    newScores.sort((a, b) => b - a); // Sort descending for display
+    setRolledScores(newScores);
+    setHasRolled(true);
+    // Reset assignments when new rolls are made
+    setScoreAssignments({
+      strength: null,
+      dexterity: null,
+      constitution: null,
+      intelligence: null,
+      wisdom: null,
+      charisma: null,
+    });
+  };
+
+  const handleAssignScore = (abilityKey: string, scoreIndex: number) => {
+    const score = rolledScores[scoreIndex];
+    const currentScoreIndex = scoreAssignments[abilityKey];
+
+    // If clicking the same score index that's already assigned, unassign it
+    if (currentScoreIndex === scoreIndex) {
+      setScoreAssignments((prev) => ({
+        ...prev,
+        [abilityKey]: null,
+      }));
+      // Reset to default
+      handleNumberChange(abilityKey, 10);
+      setAbilityScoreInputs((prev) => ({
+        ...prev,
+        [abilityKey]: "10",
+      }));
+      return;
+    }
+
+    // Check if this score index is already assigned to another ability
+    const previousAbility = Object.keys(scoreAssignments).find(
+      (key) =>
+        scoreAssignments[key as keyof typeof scoreAssignments] === scoreIndex &&
+        key !== abilityKey
+    );
+
+    if (previousAbility) {
+      // Clear the previous assignment
+      setScoreAssignments((prev) => ({
+        ...prev,
+        [previousAbility]: null,
+      }));
+    }
+
+    // Assign the score index to the selected ability
+    setScoreAssignments((prev) => ({
+      ...prev,
+      [abilityKey]: scoreIndex,
+    }));
+
+    // Update the form data and input state
+    handleNumberChange(abilityKey, score);
+    setAbilityScoreInputs((prev) => ({
+      ...prev,
+      [abilityKey]: String(score),
+    }));
+  };
+
   const skills = [
     { name: "Acrobatics", ability: "DEX" },
     { name: "Animal Handling", ability: "WIS" },
@@ -438,6 +527,66 @@ const CreateCharacter = () => {
             {/* Ability Scores Section */}
             <section className="character-form__section">
               <h3>Ability Scores</h3>
+
+              {/* Dice Rolling Section */}
+              <div className="dice-rolling-section">
+                <button
+                  type="button"
+                  className="roll-dice-button"
+                  onClick={handleRollAbilityScores}
+                  disabled={hasRolled}
+                >
+                  {hasRolled
+                    ? "✓ Ability Scores Rolled"
+                    : "🎲 Roll Ability Scores (4d6, drop lowest)"}
+                </button>
+                {rolledScores.length > 0 && (
+                  <div className="rolled-scores-container">
+                    <p className="rolled-scores-label">
+                      Rolled Scores (click an ability below to assign):
+                    </p>
+                    <div className="rolled-scores-grid">
+                      {rolledScores.map((score, index) => {
+                        const assignedTo = Object.keys(scoreAssignments).find(
+                          (key) =>
+                            scoreAssignments[
+                              key as keyof typeof scoreAssignments
+                            ] === index
+                        );
+                        const isAssigned = assignedTo !== undefined;
+                        return (
+                          <div
+                            key={index}
+                            className={`rolled-score ${
+                              isAssigned ? "rolled-score--assigned" : ""
+                            }`}
+                            title={
+                              isAssigned && assignedTo
+                                ? `Assigned to ${
+                                    abilities.find((a) => a.key === assignedTo)
+                                      ?.name
+                                  }`
+                                : "Click an ability below to assign this score"
+                            }
+                          >
+                            {score}
+                            {isAssigned && assignedTo && (
+                              <span className="rolled-score__assigned-label">
+                                →{" "}
+                                {
+                                  abilities.find((a) => a.key === assignedTo)
+                                    ?.abbrev
+                                }
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div className="character-form__grid character-form__grid--3">
                 {abilities.map((ability) => {
                   const score = formData[
@@ -446,11 +595,50 @@ const CreateCharacter = () => {
                   const modifier = calculateModifier(score);
                   const inputValue =
                     abilityScoreInputs[ability.key] ?? String(score);
+                  const assignedScoreIndex = scoreAssignments[ability.key];
                   return (
                     <div key={ability.key} className="ability-score-group">
                       <label htmlFor={ability.key}>
                         {ability.name} ({ability.abbrev})
                       </label>
+                      {rolledScores.length > 0 && (
+                        <div className="ability-score-assignments">
+                          {rolledScores.map((score, scoreIndex) => {
+                            const isAssignedToThis =
+                              assignedScoreIndex === scoreIndex;
+                            const isAssignedToOther =
+                              Object.values(scoreAssignments).includes(
+                                scoreIndex
+                              ) && !isAssignedToThis;
+                            return (
+                              <button
+                                key={`${ability.key}-${scoreIndex}`}
+                                type="button"
+                                className={`ability-assign-button ${
+                                  isAssignedToThis
+                                    ? "ability-assign-button--active"
+                                    : isAssignedToOther
+                                    ? "ability-assign-button--disabled"
+                                    : ""
+                                }`}
+                                onClick={() =>
+                                  handleAssignScore(ability.key, scoreIndex)
+                                }
+                                disabled={isAssignedToOther}
+                                title={
+                                  isAssignedToThis
+                                    ? `Click to unassign ${score} from ${ability.name}`
+                                    : isAssignedToOther
+                                    ? `This score is already assigned to another ability`
+                                    : `Assign ${score} to ${ability.name}`
+                                }
+                              >
+                                {score}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
                       <input
                         type="number"
                         id={ability.key}

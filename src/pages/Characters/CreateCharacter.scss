@@ -105,6 +105,122 @@
     }
   }
 
+  .dice-rolling-section {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 215, 0, 0.3);
+    border-radius: 8px;
+
+    .roll-dice-button {
+      padding: 1rem 2rem;
+      font-size: 1.1em;
+      font-weight: 600;
+      background: linear-gradient(
+        135deg,
+        #8b4513 0%,
+        #6b3410 50%,
+        #8b4513 100%
+      );
+      color: #ffd700;
+      border: 2px solid #8b6914;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-family: "Cinzel", "Times New Roman", serif;
+      width: 100%;
+      margin-bottom: 1rem;
+
+      &:hover:not(:disabled) {
+        background: linear-gradient(
+          135deg,
+          #a0522d 0%,
+          #8b4513 50%,
+          #a0522d 100%
+        );
+        border-color: #ffd700;
+        color: #fffacd;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2),
+          0 0 20px rgba(255, 215, 0, 0.3);
+      }
+
+      &:active:not(:disabled) {
+        transform: translateY(0);
+      }
+
+      &:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        background: linear-gradient(
+          135deg,
+          #5a2d0a 0%,
+          #4a1f08 50%,
+          #5a2d0a 100%
+        );
+        border-color: rgba(139, 105, 20, 0.5);
+      }
+    }
+
+    .rolled-scores-container {
+      margin-top: 1rem;
+
+      .rolled-scores-label {
+        color: #ffd700;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        text-align: center;
+        font-size: 1em;
+      }
+
+      .rolled-scores-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 0.75rem;
+
+        @media screen and (max-width: 768px) {
+          grid-template-columns: repeat(3, 1fr);
+        }
+
+        .rolled-score {
+          padding: 1rem;
+          font-size: 1.3em;
+          font-weight: 700;
+          background: rgba(0, 0, 0, 0.5);
+          border: 2px solid rgba(255, 215, 0, 0.4);
+          border-radius: 8px;
+          color: #ffd700;
+          transition: all 0.3s ease;
+          text-align: center;
+          position: relative;
+          min-height: 60px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 0.25rem;
+
+          &--assigned {
+            background: rgba(139, 0, 0, 0.4);
+            border-color: rgba(255, 215, 0, 0.6);
+          }
+
+          .rolled-score__assigned-label {
+            font-size: 0.6em;
+            color: #fffacd;
+            font-weight: 500;
+            opacity: 0.8;
+          }
+        }
+      }
+    }
+  }
+
   .ability-score-group {
     display: flex;
     flex-direction: column;
@@ -119,6 +235,51 @@
       color: #ffd700;
       font-weight: 600;
       text-align: center;
+    }
+
+    .ability-score-assignments {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-bottom: 0.5rem;
+
+      .ability-assign-button {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.9em;
+        font-weight: 600;
+        background: rgba(0, 0, 0, 0.5);
+        border: 2px solid rgba(255, 215, 0, 0.3);
+        border-radius: 6px;
+        color: #ffd700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        min-width: 45px;
+
+        &:hover:not(:disabled) {
+          border-color: #ffd700;
+          background: rgba(0, 0, 0, 0.7);
+          transform: translateY(-1px);
+        }
+
+        &--active {
+          background: rgba(139, 0, 0, 0.5);
+          border-color: #ffd700;
+          color: #fffacd;
+          box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+        }
+
+        &--disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+          background: rgba(0, 0, 0, 0.3);
+        }
+
+        &:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+      }
     }
 
     input {
