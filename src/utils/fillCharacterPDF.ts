@@ -65,9 +65,42 @@ const calculateSkillModifier = (
 export const fillCharacterPDF = async (characterData: CharacterData) => {
   try {
     // Load the PDF template from the public folder
-    const pdfTemplateUrl = "/TWC-DnD-5E-Character-Sheet-v1.6.pdf";
-    const pdfTemplateResponse = await fetch(pdfTemplateUrl);
-    const pdfTemplateBytes = await pdfTemplateResponse.arrayBuffer();
+    // Try multiple paths to handle both local dev and GitHub Pages deployment
+    const baseUrl = import.meta.env.BASE_URL || "./";
+    const pdfFileName = "TWC-DnD-5E-Character-Sheet-v1.6.pdf";
+
+    // Try paths in order: relative path (for base: "./"), absolute path, and with base URL
+    const possiblePaths = [
+      pdfFileName, // Relative path (works with base: "./")
+      `/${pdfFileName}`, // Absolute path (works if at root)
+      `${baseUrl}${pdfFileName}`, // With base URL
+      `${baseUrl.replace(/\/$/, "")}/${pdfFileName}`, // Base URL without trailing slash
+    ];
+
+    let pdfTemplateBytes: ArrayBuffer | null = null;
+    let lastError: Error | null = null;
+
+    for (const path of possiblePaths) {
+      try {
+        const response = await fetch(path);
+        if (response.ok) {
+          pdfTemplateBytes = await response.arrayBuffer();
+          console.log(`Successfully loaded PDF template from: ${path}`);
+          break;
+        }
+      } catch (error: any) {
+        lastError = error;
+        continue;
+      }
+    }
+
+    if (!pdfTemplateBytes) {
+      throw new Error(
+        `Failed to load PDF template. Tried paths: ${possiblePaths.join(
+          ", "
+        )}. ${lastError?.message || ""}`
+      );
+    }
 
     // Load the PDF document
     const pdfDoc = await PDFDocument.load(pdfTemplateBytes);
@@ -692,10 +725,11 @@ export const fillCharacterPDF = async (characterData: CharacterData) => {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error filling PDF:", error);
+    const errorMessage = error?.message || "Unknown error";
     throw new Error(
-      "Failed to generate PDF. Please make sure the PDF template is available."
+      `Failed to generate PDF: ${errorMessage}. Please make sure the PDF template is available.`
     );
   }
 };
