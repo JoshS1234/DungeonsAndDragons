@@ -199,7 +199,8 @@
 
   .character-form__submit,
   .character-form__cancel,
-  .character-form__delete {
+  .character-form__delete,
+  .character-form__export-pdf {
     padding: 1rem 2.5rem;
     font-size: 1.2em;
     font-weight: 600;
@@ -270,6 +271,32 @@
       color: #ffcccc;
       transform: translateY(-2px);
       box-shadow: 4px 4px 8px rgba(139, 0, 0, 0.6);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+  }
+
+  .character-form__export-pdf {
+    background: linear-gradient(135deg, #2d5016 0%, #1f370e 50%, #2d5016 100%);
+    color: #90ee90;
+    border-color: #4ade80;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+    &:hover:not(:disabled) {
+      background: linear-gradient(
+        135deg,
+        #3d7026 0%,
+        #2d5016 50%,
+        #3d7026 100%
+      );
+      border-color: #6ade80;
+      color: #a0ffa0;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 20px rgba(74, 222, 128, 0.3);
     }
 
     &:active:not(:disabled) {
@@ -582,7 +609,8 @@
 
       .character-form__submit,
       .character-form__cancel,
-      .character-form__delete {
+      .character-form__delete,
+      .character-form__export-pdf {
         width: 100%;
       }
     }

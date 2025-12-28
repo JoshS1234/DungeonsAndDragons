@@ -11,6 +11,7 @@ import {
 } from "firebase/firestore";
 import { ref, deleteObject } from "firebase/storage";
 import Header from "../../components/Header/Header";
+import { fillCharacterPDF } from "../../utils/fillCharacterPDF";
 import "./CreateCharacter.scss";
 
 const ViewEditCharacter = () => {
@@ -21,6 +22,7 @@ const ViewEditCharacter = () => {
   const campaignIdFromState = (location.state as any)?.fromCampaign;
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [exportingPDF, setExportingPDF] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [canEdit, setCanEdit] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -507,6 +509,20 @@ const ViewEditCharacter = () => {
       setError(err.message || "Failed to delete character");
       console.error("Error deleting character:", err);
       setDeleting(false);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    setExportingPDF(true);
+    setError(null);
+
+    try {
+      await fillCharacterPDF(formData);
+    } catch (err: any) {
+      setError(err.message || "Failed to export PDF");
+      console.error("Error exporting PDF:", err);
+    } finally {
+      setExportingPDF(false);
     }
   };
 
@@ -1156,13 +1172,25 @@ const ViewEditCharacter = () => {
               </section>
             )}
 
+            {/* Export PDF Button - Available to all viewers */}
+            <div className="character-form__actions">
+              <button
+                type="button"
+                className="character-form__export-pdf"
+                onClick={handleExportPDF}
+                disabled={exportingPDF || saving || deleting}
+              >
+                {exportingPDF ? "Exporting..." : "Export PDF"}
+              </button>
+            </div>
+
             {/* Submit Buttons - Only show if user can edit */}
             {canEdit && (
               <div className="character-form__actions">
                 <button
                   type="submit"
                   className="character-form__submit"
-                  disabled={saving || deleting}
+                  disabled={saving || deleting || exportingPDF}
                 >
                   {saving ? "Saving..." : "Save Changes"}
                 </button>
@@ -1170,7 +1198,7 @@ const ViewEditCharacter = () => {
                   type="button"
                   className="character-form__cancel"
                   onClick={() => navigate("/characters")}
-                  disabled={saving || deleting}
+                  disabled={saving || deleting || exportingPDF}
                 >
                   Cancel
                 </button>
@@ -1178,7 +1206,7 @@ const ViewEditCharacter = () => {
                   type="button"
                   className="character-form__delete"
                   onClick={() => setShowDeleteConfirm(true)}
-                  disabled={saving || deleting}
+                  disabled={saving || deleting || exportingPDF}
                 >
                   Delete Character
                 </button>

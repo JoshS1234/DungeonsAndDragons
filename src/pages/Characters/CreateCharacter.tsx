@@ -11,11 +11,13 @@ import {
   arrayUnion,
 } from "firebase/firestore";
 import Header from "../../components/Header/Header";
+import { fillCharacterPDF } from "../../utils/fillCharacterPDF";
 import "./CreateCharacter.scss";
 
 const CreateCharacter = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [exportingPDF, setExportingPDF] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     // Basic Information
@@ -167,6 +169,20 @@ const CreateCharacter = () => {
     setLinkedCampaigns(
       linkedCampaigns.filter((campaign) => campaign.id !== campaignId)
     );
+  };
+
+  const handleExportPDF = async () => {
+    setExportingPDF(true);
+    setError(null);
+
+    try {
+      await fillCharacterPDF(formData);
+    } catch (err: any) {
+      setError(err.message || "Failed to export PDF");
+      console.error("Error exporting PDF:", err);
+    } finally {
+      setExportingPDF(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -778,12 +794,24 @@ const CreateCharacter = () => {
               )}
             </section>
 
+            {/* Export PDF Button */}
+            <div className="character-form__actions">
+              <button
+                type="button"
+                className="character-form__export-pdf"
+                onClick={handleExportPDF}
+                disabled={exportingPDF || loading}
+              >
+                {exportingPDF ? "Exporting..." : "Export PDF"}
+              </button>
+            </div>
+
             {/* Submit Buttons */}
             <div className="character-form__actions">
               <button
                 type="submit"
                 className="character-form__submit"
-                disabled={loading}
+                disabled={loading || exportingPDF}
               >
                 {loading ? "Creating..." : "Create Character"}
               </button>
@@ -791,7 +819,7 @@ const CreateCharacter = () => {
                 type="button"
                 className="character-form__cancel"
                 onClick={() => navigate("/characters")}
-                disabled={loading}
+                disabled={loading || exportingPDF}
               >
                 Cancel
               </button>

@@ -19,6 +19,7 @@
   "dependencies": {
     "@firebase/firestore-types": "^3.0.3",
     "firebase": "^12.6.0",
+    "pdf-lib": "^1.17.1",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "react-router-dom": "^7.10.1"
