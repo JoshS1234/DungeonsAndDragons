@@ -9,8 +9,11 @@ import {
   getDocs,
   Timestamp,
   orderBy,
+  doc,
+  getDoc,
 } from "firebase/firestore";
 import Header from "../../components/Header/Header";
+import { fillCharacterPDF } from "../../utils/fillCharacterPDF";
 import "./Characters.scss";
 
 interface Character {
@@ -29,6 +32,7 @@ const Characters = () => {
   const [characters, setCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [exportingPDF, setExportingPDF] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -85,6 +89,29 @@ const Characters = () => {
     return () => unsubscribe();
   }, []);
 
+  const handleExportPDF = async (characterId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    setExportingPDF(characterId);
+    setError(null);
+
+    try {
+      const characterDoc = await getDoc(doc(db, "characters", characterId));
+      if (!characterDoc.exists()) {
+        throw new Error("Character not found");
+      }
+
+      const characterData = characterDoc.data();
+      await fillCharacterPDF(characterData);
+    } catch (err: any) {
+      setError(err.message || "Failed to export PDF");
+      console.error("Error exporting PDF:", err);
+    } finally {
+      setExportingPDF(null);
+    }
+  };
+
   return (
     <div className="app">
       <Header />
@@ -120,43 +147,52 @@ const Characters = () => {
               <h3>Your Characters ({characters.length})</h3>
               <div className="characters-grid">
                 {characters.map((character) => (
-                  <Link
-                    key={character.id}
-                    to={`/characters/${character.id}`}
-                    className="character-card character-card--clickable"
-                  >
-                    <h4>{character.characterName || "Unnamed Character"}</h4>
-                    <div className="character-card__details">
-                      <p>
-                        <span className="character-card__label">Class:</span>{" "}
-                        {character.class || "—"}
-                      </p>
-                      <p>
-                        <span className="character-card__label">Level:</span>{" "}
-                        {character.level || 1}
-                      </p>
-                      <p>
-                        <span className="character-card__label">Race:</span>{" "}
-                        {character.race || "—"}
-                      </p>
-                      {character.background && (
+                  <div key={character.id} className="character-card">
+                    <Link
+                      to={`/characters/${character.id}`}
+                      className="character-card__link"
+                    >
+                      <h4>{character.characterName || "Unnamed Character"}</h4>
+                      <div className="character-card__details">
                         <p>
-                          <span className="character-card__label">
-                            Background:
-                          </span>{" "}
-                          {character.background}
+                          <span className="character-card__label">Class:</span>{" "}
+                          {character.class || "—"}
                         </p>
-                      )}
-                      {character.alignment && (
                         <p>
-                          <span className="character-card__label">
-                            Alignment:
-                          </span>{" "}
-                          {character.alignment}
+                          <span className="character-card__label">Level:</span>{" "}
+                          {character.level || 1}
                         </p>
-                      )}
-                    </div>
-                  </Link>
+                        <p>
+                          <span className="character-card__label">Race:</span>{" "}
+                          {character.race || "—"}
+                        </p>
+                        {character.background && (
+                          <p>
+                            <span className="character-card__label">
+                              Background:
+                            </span>{" "}
+                            {character.background}
+                          </p>
+                        )}
+                        {character.alignment && (
+                          <p>
+                            <span className="character-card__label">
+                              Alignment:
+                            </span>{" "}
+                            {character.alignment}
+                          </p>
+                        )}
+                      </div>
+                    </Link>
+                    <button
+                      className="character-card__export-pdf"
+                      onClick={(e) => handleExportPDF(character.id, e)}
+                      disabled={exportingPDF === character.id}
+                      title="Export PDF"
+                    >
+                      {exportingPDF === character.id ? "Exporting..." : "📄 Export PDF"}
+                    </button>
+                  </div>
                 ))}
               </div>
             </div>
