@@ -1,6 +1,6 @@
 import { PDFDocument } from "pdf-lib";
 
-interface CharacterData {
+export interface CharacterData {
   // Basic Information
   characterName: string;
   class: string;

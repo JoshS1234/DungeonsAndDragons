@@ -14,6 +14,7 @@ import {
 } from "firebase/firestore";
 import Header from "../../components/Header/Header";
 import { fillCharacterPDF } from "../../utils/fillCharacterPDF";
+import type { CharacterData } from "../../utils/fillCharacterPDF";
 import "./Characters.scss";
 
 interface Character {
@@ -92,7 +93,7 @@ const Characters = () => {
   const handleExportPDF = async (characterId: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     setExportingPDF(characterId);
     setError(null);
 
@@ -102,7 +103,7 @@ const Characters = () => {
         throw new Error("Character not found");
       }
 
-      const characterData = characterDoc.data();
+      const characterData = characterDoc.data() as CharacterData;
       await fillCharacterPDF(characterData);
     } catch (err: any) {
       setError(err.message || "Failed to export PDF");
@@ -190,7 +191,9 @@ const Characters = () => {
                       disabled={exportingPDF === character.id}
                       title="Export PDF"
                     >
-                      {exportingPDF === character.id ? "Exporting..." : "📄 Export PDF"}
+                      {exportingPDF === character.id
+                        ? "Exporting..."
+                        : "📄 Export PDF"}
                     </button>
                   </div>
                 ))}
