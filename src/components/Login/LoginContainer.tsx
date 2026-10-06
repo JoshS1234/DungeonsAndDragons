@@ -1,4 +1,4 @@
-import { auth, db } from "../../../firebaseSetup";
+import { auth } from "../../../firebaseSetup";
 import LoginCurrUser from "./LoginCurrUser";
 import { useState } from "react";
 import type { FormEvent } from "react";
@@ -10,7 +10,11 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
 } from "firebase/auth";
-import { setDoc, doc } from "firebase/firestore";
+
+const readForm = (form: HTMLFormElement): Record<string, string> =>
+  Object.fromEntries(
+    Array.from(new FormData(form), ([key, value]) => [key, String(value)])
+  );
 
 const LoginContainer = () => {
   const [isNewUser, setIsNewUser] = useState(false);
@@ -19,23 +23,12 @@ const LoginContainer = () => {
   const handleSignUp = (e: FormEvent) => {
     e.preventDefault();
     const target = e.currentTarget as HTMLFormElement;
-
-    const email = target.email.value;
-    const password1 = target.password.value;
-    const password2 = target.password2.value;
+    const { email, password: password1, password2 } = readForm(target);
 
     if (password1 == password2) {
-      createUserWithEmailAndPassword(auth, email, password1)
-        .then(() => {
-          if (auth.currentUser) {
-            setDoc(doc(db, "users", auth.currentUser.uid), {
-              favouriteBeers: [],
-            });
-          }
-        })
-        .catch((err) => {
-          alert(err);
-        });
+      createUserWithEmailAndPassword(auth, email, password1).catch((err) => {
+        alert(err);
+      });
     } else {
       target.reset();
       alert("your passwords did not match");
@@ -44,10 +37,7 @@ const LoginContainer = () => {
 
   const handleSignIn = (e: FormEvent) => {
     e.preventDefault();
-    const target = e.currentTarget as HTMLFormElement;
-
-    const email = target.email.value;
-    const password = target.password.value;
+    const { email, password } = readForm(e.currentTarget as HTMLFormElement);
 
     signInWithEmailAndPassword(auth, email, password).catch((err) => {
       alert(err);
@@ -56,10 +46,8 @@ const LoginContainer = () => {
 
   const handleForgotPasswordEmail = (e: FormEvent) => {
     e.preventDefault();
-    const target = e.currentTarget as HTMLFormElement;
-
-    const email = target.email.value;
-    if (!email) {
+    const { email } = readForm(e.currentTarget as HTMLFormElement);
+    if (email) {
       alert(
         "Normally this function would send a password reset email, however this feature has been disabled as it is a mockup site"
       );

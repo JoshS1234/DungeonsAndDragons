@@ -8,7 +8,7 @@ const AppContainer = () => {
   const [component, setComponent] = useState(<></>);
 
   useEffect(() => {
-    auth.onAuthStateChanged((user) => {
+    return auth.onAuthStateChanged((user) => {
       if (user) {
         // Use user ID as key to force HashRouter to reset when user changes
         setComponent(

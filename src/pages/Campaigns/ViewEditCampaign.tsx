@@ -3,6 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { auth, db } from "../../../firebaseSetup";
 import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import Header from "../../components/Header/Header";
+import NumberInput from "../../components/NumberInput/NumberInput";
+import { formatDateInput } from "../../utils/formatDateInput";
 import "./CreateCampaign.scss";
 
 const ViewEditCampaign = () => {
@@ -111,32 +113,10 @@ const ViewEditCampaign = () => {
     >
   ) => {
     const { name, value } = e.target;
-
-    // Format date input for DD/MM/YYYY
-    if (name === "startDate") {
-      // Remove all non-numeric characters
-      let formattedValue = value.replace(/\D/g, "");
-
-      // Add slashes automatically
-      if (formattedValue.length > 2) {
-        formattedValue =
-          formattedValue.substring(0, 2) + "/" + formattedValue.substring(2);
-      }
-      if (formattedValue.length > 5) {
-        formattedValue =
-          formattedValue.substring(0, 5) + "/" + formattedValue.substring(5, 9);
-      }
-
-      setFormData((prev) => ({
-        ...prev,
-        [name]: formattedValue,
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "startDate" ? formatDateInput(value) : value,
+    }));
   };
 
   const handleCopyCampaignId = () => {
@@ -255,58 +235,21 @@ const ViewEditCampaign = () => {
       <Header />
       <div className="campaign-creation-page">
         <div className="campaign-creation-page__container">
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: "1rem",
-              flexWrap: "wrap",
-              gap: "1rem",
-            }}
-          >
-            <h2 style={{ margin: 0 }}>
+          <div className="page-title-row">
+            <h2>
               {canEdit ? "Edit Campaign" : "View Campaign"}:{" "}
               {formData.campaignName || "Unnamed"}
             </h2>
             <button
               type="button"
               onClick={() => navigate("/campaigns")}
-              className="campaign-form__back-button"
-              style={{
-                padding: "0.5rem 1rem",
-                fontSize: "1em",
-                fontWeight: 600,
-                background: "rgba(139, 0, 0, 0.5)",
-                color: "#fff",
-                border: "2px solid #ffd700",
-                borderRadius: "6px",
-                cursor: "pointer",
-                transition: "all 0.3s ease",
-                fontFamily: '"Cinzel", "Times New Roman", serif',
-                textTransform: "uppercase",
-                letterSpacing: "0.5px",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "rgba(139, 0, 0, 0.7)";
-                e.currentTarget.style.transform = "translateY(-2px)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "rgba(139, 0, 0, 0.5)";
-                e.currentTarget.style.transform = "translateY(0)";
-              }}
+              className="back-button"
             >
               ← Back to Campaigns
             </button>
           </div>
           {!canEdit && (
-            <p
-              style={{
-                color: "#ffd700",
-                fontStyle: "italic",
-                marginBottom: "1rem",
-              }}
-            >
+            <p className="view-only-note">
               View-only mode: You are a player in this campaign
             </p>
           )}
@@ -373,20 +316,17 @@ const ViewEditCampaign = () => {
                 </div>
                 <div className="campaign-form__group">
                   <label htmlFor="currentLevel">Current Party Level</label>
-                  <input
-                    type="number"
+                  <NumberInput
                     id="currentLevel"
                     name="currentLevel"
                     value={formData.currentLevel}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        currentLevel: parseInt(e.target.value) || 1,
-                      }))
+                    onChange={(currentLevel) =>
+                      setFormData((prev) => ({ ...prev, currentLevel }))
                     }
+                    fallback={1}
+                    min={1}
+                    max={20}
                     disabled={!canEdit}
-                    min="1"
-                    max="20"
                   />
                 </div>
                 <div className="campaign-form__group">
@@ -462,13 +402,7 @@ const ViewEditCampaign = () => {
                 <div className="campaign-form__group">
                   <label htmlFor="notes">
                     DM Notes{" "}
-                    <span
-                      style={{
-                        fontSize: "0.85em",
-                        fontStyle: "italic",
-                        color: "#ffd700",
-                      }}
-                    >
+                    <span className="campaign-form__label-note">
                       *This will not be shown to players*
                     </span>
                   </label>

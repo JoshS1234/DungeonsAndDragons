@@ -30,6 +30,7 @@ const LoginCurrUser = ({
         type="password"
         className="login-page__form-textbox"
         name="password"
+        id="password"
       />
       <button type="submit" className="login-page__form-button">
         Submit

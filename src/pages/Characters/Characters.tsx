@@ -14,7 +14,6 @@ import {
 } from "firebase/firestore";
 import Header from "../../components/Header/Header";
 import { fillCharacterPDF } from "../../utils/fillCharacterPDF";
-import type { CharacterData } from "../../utils/fillCharacterPDF";
 import "./Characters.scss";
 
 interface Character {
@@ -75,7 +74,7 @@ const Characters = () => {
           setError(
             indexUrl
               ? `Firestore index required. Click here to create it: ${indexUrl}`
-              : "Firestore index required. Check the browser console for the index creation link, or see FIRESTORE_INDEX_SETUP.md for instructions."
+              : "Firestore index required. Check the browser console for the index creation link."
           );
         } else {
           setError(
@@ -103,8 +102,7 @@ const Characters = () => {
         throw new Error("Character not found");
       }
 
-      const characterData = characterDoc.data() as CharacterData;
-      await fillCharacterPDF(characterData);
+      await fillCharacterPDF(characterDoc.data());
     } catch (err: any) {
       setError(err.message || "Failed to export PDF");
       console.error("Error exporting PDF:", err);

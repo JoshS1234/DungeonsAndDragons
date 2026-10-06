@@ -15,7 +15,12 @@ const LoginForgotPassword = ({
       <label className="login-page__form-label" htmlFor="email">
         Email
       </label>
-      <input type="text" className="login-page__form-textbox" name="email" />
+      <input
+        type="text"
+        className="login-page__form-textbox"
+        name="email"
+        id="email"
+      />
       <button type="submit" className="login-page__form-button">
         Submit
       </button>

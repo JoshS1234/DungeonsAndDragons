@@ -15,7 +15,12 @@ const LoginNewUser = ({
       <label className="login-page__form-label" htmlFor="email">
         Email
       </label>
-      <input type="text" className="login-page__form-textbox" name="email" />
+      <input
+        type="text"
+        className="login-page__form-textbox"
+        name="email"
+        id="email"
+      />
       <label className="login-page__form-label" htmlFor="password">
         Password
       </label>
@@ -23,6 +28,7 @@ const LoginNewUser = ({
         type="password"
         className="login-page__form-textbox"
         name="password"
+        id="password"
       />
       <label className="login-page__form-label" htmlFor="password2">
         Confirm password
@@ -31,6 +37,7 @@ const LoginNewUser = ({
         type="password"
         className="login-page__form-textbox"
         name="password2"
+        id="password2"
       />
       <button type="submit" className="login-page__form-button">
         Submit
