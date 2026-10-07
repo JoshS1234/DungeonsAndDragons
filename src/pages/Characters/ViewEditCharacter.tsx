@@ -1,29 +1,31 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { auth, db } from "../../../firebaseSetup";
-import {
-  doc,
-  getDoc,
-  updateDoc,
-  deleteDoc,
-  serverTimestamp,
-  arrayUnion,
-} from "firebase/firestore";
+import { auth } from "../../../firebaseSetup";
 import Header from "../../components/Header/Header";
 import CharacterFormFields from "../../components/CharacterForm/CharacterFormFields";
 import CampaignLinker from "../../components/CharacterForm/CampaignLinker";
-import type { LinkedCampaign } from "../../components/CharacterForm/CampaignLinker";
+import { findJoinableCampaign } from "../../services/campaigns";
+import {
+  deleteCharacter,
+  fallbackPlayerName,
+  getCharacter,
+  getCharacterCampaigns,
+  joinCampaign,
+  leaveCampaign,
+  updateCharacter,
+} from "../../services/characters";
+import type { LinkedCampaign } from "../../services/characters";
 import { fillCharacterPDF } from "../../utils/fillCharacterPDF";
-import { DEFAULT_CHARACTER, normaliseCharacter } from "../../utils/dnd";
+import { DEFAULT_CHARACTER } from "../../utils/dnd";
 import type { CharacterData } from "../../utils/dnd";
 import "./CreateCharacter.scss";
-
-type CampaignPlayer = { userId: string; characterId: string };
 
 const ViewEditCharacter = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams<{ id: string }>();
+  const characterId = id!;
+  const user = auth.currentUser!;
   const campaignIdFromState = (location.state as { fromCampaign?: string })
     ?.fromCampaign;
   const [loading, setLoading] = useState(true);
@@ -39,64 +41,29 @@ const ViewEditCharacter = () => {
 
   useEffect(() => {
     const fetchCharacter = async () => {
-      if (!id || !auth.currentUser) {
-        setError("Character ID missing or user not authenticated");
-        setLoading(false);
-        return;
-      }
-
       try {
         setLoading(true);
         setError(null);
 
-        const characterDoc = await getDoc(doc(db, "characters", id));
-        if (!characterDoc.exists()) {
+        const stored = await getCharacter(characterId);
+        if (!stored) {
           throw new Error("Character not found");
         }
 
-        const characterData = characterDoc.data();
-        const campaignIds: string[] = characterData.campaignIds || [];
-        const userId = auth.currentUser.uid;
-        const isOwner = characterData.userId === userId;
-
-        const campaignDocs = await Promise.all(
-          campaignIds.map((campaignId) =>
-            getDoc(doc(db, "campaigns", campaignId)).catch(() => null)
-          )
-        );
-
-        // Non-owners can view if they're the DM or a player in a linked campaign
-        const canView =
-          isOwner ||
-          campaignDocs.some((campaignDoc) => {
-            if (!campaignDoc?.exists()) return false;
-            const campaign = campaignDoc.data();
-            const players: CampaignPlayer[] = campaign.players || [];
-            return (
-              campaign.userId === userId ||
-              players.some((p) => p.userId === userId)
-            );
-          });
-
-        if (!canView) {
-          throw new Error("You don't have permission to view this character");
-        }
-
+        const isOwner = stored.userId === user.uid;
         setCanEdit(isOwner);
-        setFormData(normaliseCharacter(characterData));
-        setLinkedCampaigns(
-          campaignIds.map((campaignId, i) => {
-            const campaignDoc = campaignDocs[i];
-            return {
-              id: campaignId,
-              name: campaignDoc?.exists()
-                ? campaignDoc.data().campaignName || "Unnamed Campaign"
-                : "Campaign Not Found",
-            };
-          })
-        );
+        setFormData(stored.character);
+        if (isOwner) {
+          setLinkedCampaigns(
+            await getCharacterCampaigns(characterId, user.uid)
+          );
+        }
       } catch (err: any) {
-        setError(err.message || "Failed to load character");
+        setError(
+          err.code === "permission-denied"
+            ? "You don't have permission to view this character"
+            : err.message || "Failed to load character"
+        );
         console.error("Error fetching character:", err);
       } finally {
         setLoading(false);
@@ -104,78 +71,29 @@ const ViewEditCharacter = () => {
     };
 
     fetchCharacter();
-  }, [id]);
+  }, [characterId, user.uid]);
 
   const setField = <K extends keyof CharacterData>(
     key: K,
     value: CharacterData[K]
   ) => setFormData((prev) => ({ ...prev, [key]: value }));
 
-  const removeFromCampaign = async (campaignId: string) => {
-    const campaignDoc = await getDoc(doc(db, "campaigns", campaignId));
-    // Nothing to clean up if the campaign has since been deleted
-    if (!campaignDoc.exists()) return;
-
-    const players: CampaignPlayer[] = campaignDoc.data().players || [];
-    const updatedPlayers = players.filter(
-      (p) => !(p.characterId === id && p.userId === auth.currentUser?.uid)
-    );
-    if (updatedPlayers.length !== players.length) {
-      await updateDoc(doc(db, "campaigns", campaignId), {
-        players: updatedPlayers,
-        updatedAt: serverTimestamp(),
-      });
-    }
-  };
-
   const handleLinkCampaign = async (campaignId: string) => {
-    if (formData.campaignIds.includes(campaignId)) {
-      setError("This character is already linked to this campaign");
-      return true;
-    }
-
     try {
       setError(null);
+      const summary = await findJoinableCampaign(campaignId, user.uid);
+      await joinCampaign(
+        characterId,
+        user.uid,
+        campaignId,
+        formData,
+        fallbackPlayerName(user)
+      );
 
-      if (!auth.currentUser || !id) {
-        throw new Error("User not authenticated or character ID missing");
-      }
-
-      const campaignDoc = await getDoc(doc(db, "campaigns", campaignId));
-      if (!campaignDoc.exists()) {
-        throw new Error("Campaign not found. Please check the Campaign ID.");
-      }
-
-      const updatedCampaignIds = [...formData.campaignIds, campaignId];
-      const playerInfo = {
-        userId: auth.currentUser.uid,
-        characterId: id,
-        characterName: formData.characterName || "Unnamed Character",
-        playerName:
-          formData.playerName ||
-          auth.currentUser.displayName ||
-          auth.currentUser.email ||
-          "Unknown Player",
-      };
-
-      await Promise.all([
-        updateDoc(doc(db, "campaigns", campaignId), {
-          players: arrayUnion(playerInfo),
-          updatedAt: serverTimestamp(),
-        }),
-        updateDoc(doc(db, "characters", id), {
-          campaignIds: updatedCampaignIds,
-          updatedAt: serverTimestamp(),
-        }),
-      ]);
-
-      setField("campaignIds", updatedCampaignIds);
+      setField("campaignIds", [...formData.campaignIds, campaignId]);
       setLinkedCampaigns((prev) => [
         ...prev,
-        {
-          id: campaignId,
-          name: campaignDoc.data().campaignName || "Unnamed Campaign",
-        },
+        { id: campaignId, name: summary.campaignName || "Unnamed Campaign" },
       ]);
       return true;
     } catch (err: any) {
@@ -186,25 +104,12 @@ const ViewEditCharacter = () => {
   };
 
   const handleUnlinkCampaign = async (campaignId: string) => {
-    if (!auth.currentUser || !id) {
-      setError("User not authenticated or character ID missing");
-      return;
-    }
-
     try {
-      const updatedCampaignIds = formData.campaignIds.filter(
-        (cid) => cid !== campaignId
+      await leaveCampaign(characterId, user.uid, campaignId);
+      setField(
+        "campaignIds",
+        formData.campaignIds.filter((cid) => cid !== campaignId)
       );
-
-      await Promise.all([
-        removeFromCampaign(campaignId),
-        updateDoc(doc(db, "characters", id), {
-          campaignIds: updatedCampaignIds,
-          updatedAt: serverTimestamp(),
-        }),
-      ]);
-
-      setField("campaignIds", updatedCampaignIds);
       setLinkedCampaigns((prev) => prev.filter((c) => c.id !== campaignId));
     } catch (err: any) {
       setError(err.message || "Failed to unlink campaign");
@@ -214,20 +119,16 @@ const ViewEditCharacter = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!id) return;
-
     setSaving(true);
     setError(null);
 
     try {
-      if (!auth.currentUser) {
-        throw new Error("You must be logged in to update a character");
-      }
-
-      await updateDoc(doc(db, "characters", id), {
-        ...formData,
-        updatedAt: serverTimestamp(),
-      });
+      await updateCharacter(
+        characterId,
+        user.uid,
+        formData,
+        fallbackPlayerName(user)
+      );
       navigate("/characters");
     } catch (err: any) {
       setError(err.message || "Failed to update character");
@@ -238,8 +139,6 @@ const ViewEditCharacter = () => {
   };
 
   const handleDelete = async () => {
-    if (!id || !auth.currentUser) return;
-
     if (deleteConfirmName !== formData.characterName) {
       setError(
         "Character name does not match. Please enter the exact character name to confirm deletion."
@@ -251,20 +150,7 @@ const ViewEditCharacter = () => {
     setError(null);
 
     try {
-      // Remove the character from linked campaigns, but don't let a failure
-      // there block deleting the character itself
-      await Promise.all(
-        formData.campaignIds.map((campaignId) =>
-          removeFromCampaign(campaignId).catch((err) =>
-            console.error(
-              `Error removing character from campaign ${campaignId}:`,
-              err
-            )
-          )
-        )
-      );
-
-      await deleteDoc(doc(db, "characters", id));
+      await deleteCharacter(characterId, user.uid);
       navigate("/characters");
     } catch (err: any) {
       setError(err.message || "Failed to delete character");

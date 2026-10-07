@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { auth, db } from "../../../firebaseSetup";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { auth } from "../../../firebaseSetup";
 import Header from "../../components/Header/Header";
 import NumberInput from "../../components/NumberInput/NumberInput";
+import { DEFAULT_CAMPAIGN, createCampaign } from "../../services/campaigns";
 import { formatDateInput } from "../../utils/formatDateInput";
 import "./CreateCampaign.scss";
 
@@ -11,24 +11,7 @@ const CreateCampaign = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
-    campaignName: "",
-    description: "",
-    setting: "",
-    dungeonMaster: "",
-    currentLevel: 1,
-    startDate: "",
-    status: "Active",
-    notes: "",
-    world: "",
-    theme: "",
-    players: [] as Array<{
-      userId: string;
-      characterId: string;
-      characterName: string;
-      playerName: string;
-    }>,
-  });
+  const [formData, setFormData] = useState({ ...DEFAULT_CAMPAIGN, notes: "" });
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -48,30 +31,10 @@ const CreateCampaign = () => {
     setError(null);
 
     try {
-      if (!auth.currentUser) {
-        throw new Error("You must be logged in to create a campaign");
-      }
-
-      const campaignData = {
-        campaignName: formData.campaignName,
-        description: formData.description,
-        setting: formData.setting,
-        dungeonMaster: formData.dungeonMaster,
-        currentLevel: formData.currentLevel,
-        startDate: formData.startDate,
-        status: formData.status,
-        notes: formData.notes,
-        world: formData.world,
-        theme: formData.theme,
-        players: [], // Players will be added when characters link to this campaign
-        userId: auth.currentUser.uid,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      };
-
-      const docRef = await addDoc(collection(db, "campaigns"), campaignData);
+      const { notes, ...details } = formData;
+      const id = await createCampaign(auth.currentUser!.uid, details, notes);
       // Navigate to the view/edit page where the campaign ID will be displayed
-      navigate(`/campaigns/${docRef.id}`);
+      navigate(`/campaigns/${id}`);
     } catch (err: any) {
       setError(err.message || "Failed to create campaign");
       console.error("Error creating campaign:", err);

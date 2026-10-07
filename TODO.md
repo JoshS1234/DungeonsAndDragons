@@ -5,48 +5,25 @@ a call from you before they can be done.
 
 ## Security / data problems
 
-- [ ] **Firestore security rules aren't in the repo (decision).** Every permission
-      check ("only the owner can edit", "only campaign members can view") happens
-      in the browser, so anyone signed in can bypass it from the console. Some
-      current features only work if the rules are wide open:
-      - joining a campaign writes to a campaign document owned by someone else
-      - a DM removing a player writes to that player's character document
-
-      Add `firestore.rules` + `firebase.json`, decide what each role is allowed
-      to write, and test the rules against the Firebase emulator (see Testing).
-- [ ] **DM notes can be read by players.** "This will not be shown to players"
-      only hides the notes in the UI; they're stored on the campaign document,
-      which players load. Move them to e.g. `campaigns/{id}/private/notes`, with
-      a rule that only lets the DM read it.
-- [ ] **Anyone with a campaign ID can join it (decision).** Should a DM approve
-      joins, or is the ID the invite?
-- [ ] **Two-document updates aren't atomic.** Linking/unlinking updates the
-      character and the campaign with `Promise.all`, so if one write fails the
-      two can disagree. Use `writeBatch`.
+- [ ] **Deploy the new rules and wipe old data.** Rules are written and tested
+      (`firestore.rules`, `npm run test:integration`) but not deployed. Data
+      in the old format won't show up in the new structure.
+- [ ] Rules check ownership and membership, but not field contents (e.g. an
+      owner could write a 10 MB character name). Add type/size checks if
+      sign-up is ever opened to strangers.
+- [ ] After a DM removes a player, that DM can still read the character until
+      its owner next saves it (that save tidies up `campaignIds`).
 - [ ] **Run `npm audit fix` / bump dependencies.** 6 known vulnerabilities
       (react-router high; protobufjs/websocket-driver critical, both via
       firebase). Not done in this pass, so the diff stays reviewable.
 
 ## Bugs / jank
 
-- [ ] **Refreshing any page sends you to Home.** `App.tsx` redirects to `/`
-      every time it mounts, which breaks refreshes and shared links. Recommended:
-      delete that effect and redirect only after a successful sign-in.
-- [ ] **Renaming a character leaves the old name in campaigns.** Campaigns keep
-      a copy of `characterName`/`playerName` in `players[]`, and saving a
-      character doesn't update it.
-- [ ] **Characters list is sorted Z→A** (`orderBy("characterName", "desc")`).
-      Probably meant to be A→Z, like campaigns.
-- [ ] **Password reset is disabled (decision).** The forgot-password form only
-      shows an alert. Enable `sendPasswordResetEmail` (the code is there,
-      commented out), or remove the button.
 - [ ] Login errors use `alert()` and show raw Firebase error text. Show them
       inline with friendly messages, like the Account page does.
 - [ ] Login email inputs are `type="text"`. Use `type="email"` with
       `autocomplete` attributes.
 - [ ] No 404 route: unknown URLs render a blank page.
-- [ ] `ViewEditCampaign`: `removingPlayer` isn't reset after a successful
-      removal.
 
 ## PDF export gaps
 
@@ -63,13 +40,9 @@ parts of the sheet:
 
 ## Refactoring
 
-- [ ] **Firestore service layer.** Firestore calls are spread across the pages,
-      and the link/unlink/remove-player logic exists in three places. Move it
-      into `src/services/{characters,campaigns}.ts`, with typed `Campaign` /
-      `CampaignPlayer` models in place of `any`.
-- [ ] **Auth context.** Some pages subscribe to `onAuthStateChanged`, others
-      read `auth.currentUser`. `App` only renders when signed in, so a
-      `useCurrentUser()` hook (or plain `auth.currentUser!`) would do.
+- [ ] **Auth context.** Pages now read `auth.currentUser!` directly (safe,
+      since `App` only renders when signed in). A `useCurrentUser()` hook would
+      be tidier and easier to mock in tests.
 - [ ] **Campaign form.** `CreateCampaign` and `ViewEditCampaign` duplicate their
       form fields, as the character pages did. Extract a `CampaignFormFields`
       component the same way.
@@ -89,25 +62,91 @@ parts of the sheet:
 
 ## Testing
 
-Vitest + Testing Library are set up (`npm test`, `npm run test:watch`) and run
-in CI before deploys. Still missing:
+Unit/component tests (`npm test`) and Firestore emulator tests of the rules
+and services (`npm run test:integration`, needs Java) both run in CI before
+deploys. Still missing:
 
-- [ ] **Integration tests against the Firebase emulator (decision).** Needs
-      `firebase-tools` as a dev dependency and the security rules above. Best
-      value: rules tests + service-layer tests.
 - [ ] **E2E tests with Playwright (decision).** Should run against the emulator
       rather than the real project. Suggested flows: sign up → create character
       → export PDF; DM creates campaign → player links character → DM views it.
 - [ ] Component tests for `ViewEditCharacter`, the campaign pages and the
-      characters list. These get much easier once Firestore calls live in a
-      service module that can be mocked.
+      characters list (mock `src/services/*`, as `CreateCharacter.test.tsx`
+      does).
+
+## Missing features
+
+- [ ] DMs can't delete a campaign.
+- [ ] **Password reset (revisit later).** Removed for now because the group
+      signs up with mock emails, so reset emails can't arrive. To bring it
+      back: a "Forgot password" form calling Firebase's
+      `sendPasswordResetEmail`, showing "if that email is registered, we've
+      sent a link" so it doesn't reveal which emails have accounts. Needs
+      real email addresses on accounts; changing the email from the Account
+      page would also help.
+
+## Style overhaul
+
+- [ ] **Visual refresh (decision: direction, deferred).** The current look is a gold-on-
+      dark-red theme layered on top of the Vite template's default styles
+      (`index.css` still sets the template's blue link colours, button styles
+      and a light-mode override). Suggested approach: define colour, spacing
+      and type tokens as CSS variables in one place, delete the template
+      styles, then restyle page by page. Mobile layouts need a pass too.
 
 ## Feature ideas
 
+In priority order (agreed October 2026).
+
+1. **Play mode + dice roller**
+   - [ ] Compact, phone-friendly character sheet for sessions: quick buttons
+         for damage, healing, temporary HP, death saves and spell slots,
+         instead of editing the whole form mid-session.
+   - [ ] Dice roller: any expression (`2d6+3`), advantage/disadvantage, and
+         one-tap rolls for skills, saves and attacks from the sheet.
+2. **DM party view + initiative**
+   - [ ] Each campaign shows its characters' HP, AC, passive perception and
+         conditions on one screen, updated live with `onSnapshot`.
+   - [ ] Initiative tracker, pre-filled with the party's initiative bonuses,
+         with monsters added by hand.
+3. **SRD lookups + inventory**
+   - [ ] Spell, equipment and monster details from the free 5e SRD API
+         (dnd5eapi.co), e.g. picking spells from a list instead of free text,
+         which would also let the PDF fill page 3.
+   - [ ] Inventory and currency (CP/SP/EP/GP/PP), weapons/attacks, languages
+         (also fills the remaining PDF fields).
+4. **Session log**
+   - [ ] Dated session notes per campaign: a shared recap plus DM-only notes.
+
+Smaller ideas, unprioritised:
+
 - [ ] Work out proficiency bonus from level, and initiative from DEX, instead
       of typing them in (perhaps with a manual override).
+- [ ] Character portraits (Firebase Storage).
+- [ ] Export/import a character as JSON, as a backup or to move it between
+      accounts.
 
 ## Done in this pass
+
+### Second pass
+
+- Firestore security rules (members-only reads, owner-only writes, DM-only
+  notes), deployed with the Firebase CLI and tested against the emulator,
+  including the attacks the old setup allowed.
+- New membership model: `campaigns/{id}/members/{uid}` replaces the
+  `players[]` array, so users no longer write to each other's documents.
+  Linking and unlinking are atomic batches. One character per player per
+  campaign.
+- DM notes moved to `campaigns/{id}/private/dm`, hidden from players.
+- All Firestore access goes through `src/services/{characters,campaigns}.ts`.
+- Refreshing a page now keeps you on it; signing out resets to Home so the
+  next sign-in starts there.
+- Removed the placeholder forgot-password flow (see Missing features).
+- Renaming a character now updates its name in campaigns; the characters list
+  is sorted A→Z.
+- Fixed narrow-screen layout being cut off on the right, and the horizontal
+  scrollbar on desktop (`min-width: 100vw` / `min-width: 320px`).
+
+### First pass
 
 - Fixed PDF export: it guessed field names, and most guesses didn't exist in
   the template (XP, proficiency bonus, HP, personality traits, saving throws,

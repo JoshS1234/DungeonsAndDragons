@@ -1,6 +1,5 @@
 import { useState } from "react";
-
-export type LinkedCampaign = { id: string; name: string };
+import type { LinkedCampaign } from "../../services/characters";
 
 type CampaignLinkerProps = {
   linkedCampaigns: LinkedCampaign[];

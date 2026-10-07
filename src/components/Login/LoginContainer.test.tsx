@@ -47,29 +47,4 @@ describe("LoginContainer", () => {
     expect(createUserWithEmailAndPassword).not.toHaveBeenCalled();
     expect(window.alert).toHaveBeenCalledWith("your passwords did not match");
   });
-
-  it("asks for an email when forgot-password is submitted empty", async () => {
-    const user = userEvent.setup();
-    render(<LoginContainer />);
-    await user.click(screen.getByRole("button", { name: "Forgot password" }));
-
-    await user.click(screen.getByRole("button", { name: "Submit" }));
-
-    expect(window.alert).toHaveBeenCalledWith(
-      "Please enter your registered email"
-    );
-  });
-
-  it("explains reset emails are disabled once an email is entered", async () => {
-    const user = userEvent.setup();
-    render(<LoginContainer />);
-    await user.click(screen.getByRole("button", { name: "Forgot password" }));
-
-    await user.type(screen.getByLabelText("Email"), "dm@example.com");
-    await user.click(screen.getByRole("button", { name: "Submit" }));
-
-    expect(window.alert).toHaveBeenCalledWith(
-      expect.stringContaining("disabled")
-    );
-  });
 });

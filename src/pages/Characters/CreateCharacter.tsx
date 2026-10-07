@@ -1,19 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { auth, db } from "../../../firebaseSetup";
-import {
-  collection,
-  addDoc,
-  serverTimestamp,
-  doc,
-  getDoc,
-  updateDoc,
-  arrayUnion,
-} from "firebase/firestore";
+import { auth } from "../../../firebaseSetup";
 import Header from "../../components/Header/Header";
 import CharacterFormFields from "../../components/CharacterForm/CharacterFormFields";
 import CampaignLinker from "../../components/CharacterForm/CampaignLinker";
-import type { LinkedCampaign } from "../../components/CharacterForm/CampaignLinker";
+import { findJoinableCampaign } from "../../services/campaigns";
+import { createCharacter, fallbackPlayerName } from "../../services/characters";
+import type { LinkedCampaign } from "../../services/characters";
 import { fillCharacterPDF } from "../../utils/fillCharacterPDF";
 import {
   ABILITIES,
@@ -51,18 +44,15 @@ const CreateCharacter = () => {
 
     try {
       setError(null);
-      const campaignDoc = await getDoc(doc(db, "campaigns", campaignId));
-      if (!campaignDoc.exists()) {
-        throw new Error("Campaign not found. Please check the Campaign ID.");
-      }
+      const summary = await findJoinableCampaign(
+        campaignId,
+        auth.currentUser!.uid
+      );
 
       setField("campaignIds", [...formData.campaignIds, campaignId]);
       setLinkedCampaigns((prev) => [
         ...prev,
-        {
-          id: campaignId,
-          name: campaignDoc.data().campaignName || "Unnamed Campaign",
-        },
+        { id: campaignId, name: summary.campaignName || "Unnamed Campaign" },
       ]);
       return true;
     } catch (err: any) {
@@ -101,39 +91,8 @@ const CreateCharacter = () => {
     setError(null);
 
     try {
-      if (!auth.currentUser) {
-        throw new Error("You must be logged in to create a character");
-      }
-
-      const characterRef = await addDoc(collection(db, "characters"), {
-        ...formData,
-        userId: auth.currentUser.uid,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-
-      if (formData.campaignIds.length > 0) {
-        const playerInfo = {
-          userId: auth.currentUser.uid,
-          characterId: characterRef.id,
-          characterName: formData.characterName || "Unnamed Character",
-          playerName:
-            formData.playerName ||
-            auth.currentUser.displayName ||
-            auth.currentUser.email ||
-            "Unknown Player",
-        };
-
-        await Promise.all(
-          formData.campaignIds.map((campaignId) =>
-            updateDoc(doc(db, "campaigns", campaignId), {
-              players: arrayUnion(playerInfo),
-              updatedAt: serverTimestamp(),
-            })
-          )
-        );
-      }
-
+      const user = auth.currentUser!;
+      await createCharacter(user.uid, formData, fallbackPlayerName(user));
       navigate("/characters");
     } catch (err: any) {
       setError(err.message || "Failed to create character");

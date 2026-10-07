@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { addDoc } from "firebase/firestore";
+import { createCharacter } from "../../services/characters";
 import CreateCharacter from "./CreateCharacter";
 
 vi.mock("../../../firebaseSetup", () => ({
@@ -10,14 +10,12 @@ vi.mock("../../../firebaseSetup", () => ({
   db: {},
 }));
 vi.mock("firebase/auth", () => ({ signOut: vi.fn() }));
-vi.mock("firebase/firestore", () => ({
-  collection: vi.fn(() => "characters-collection"),
-  addDoc: vi.fn(() => Promise.resolve({ id: "new-character" })),
-  serverTimestamp: vi.fn(() => "now"),
-  doc: vi.fn(),
-  getDoc: vi.fn(),
-  updateDoc: vi.fn(),
-  arrayUnion: vi.fn(),
+vi.mock("../../services/characters", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../services/characters")>()),
+  createCharacter: vi.fn(() => Promise.resolve("new-character")),
+}));
+vi.mock("../../services/campaigns", () => ({
+  findJoinableCampaign: vi.fn(),
 }));
 vi.mock("../../utils/dnd", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../../utils/dnd")>()),
@@ -72,16 +70,16 @@ describe("CreateCharacter", () => {
     await user.selectOptions(screen.getByLabelText("Race"), "Dwarf");
     await user.click(screen.getByRole("button", { name: "Create Character" }));
 
-    expect(addDoc).toHaveBeenCalledWith(
-      "characters-collection",
+    expect(createCharacter).toHaveBeenCalledWith(
+      "user-1",
       expect.objectContaining({
         characterName: "Bruenor",
         class: "Fighter",
         race: "Dwarf",
         strength: 10,
-        userId: "user-1",
         campaignIds: [],
-      })
+      }),
+      "Josh"
     );
   });
 });
