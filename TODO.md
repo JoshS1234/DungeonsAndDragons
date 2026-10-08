@@ -5,11 +5,9 @@ a call from you before they can be done.
 
 ## Security / data problems
 
-- [ ] Rules check ownership and membership, but not field contents (e.g. an
-      owner could write a 10 MB character name). Add type/size checks if
-      sign-up is ever opened to strangers.
-- [ ] After a DM removes a player, that DM can still read the character until
-      its owner next saves it (that save tidies up `campaignIds`).
+- [ ] **Deploy rules automatically (decision).** Rules changes currently need
+      `npm run deploy:rules` by hand after merging. CI could deploy them, but
+      it needs a Firebase service-account key stored as a GitHub secret.
 
 - [ ] **Remaining dependency advisories** (12, all moderate/high) are inside
       `firebase-tools`, which only runs on developer machines and CI. They
@@ -32,9 +30,6 @@ parts of the sheet:
 
 ## Refactoring
 
-- [ ] **Campaign form.** `CreateCampaign` and `ViewEditCampaign` duplicate their
-      form fields, as the character pages did. Extract a `CampaignFormFields`
-      component the same way.
 - [ ] **SCSS duplication.** `CreateCharacter.scss` (800 lines) and
       `CreateCampaign.scss` (400 lines) restyle the same form elements. Pull
       shared form styles and colour variables into one partial.
@@ -54,7 +49,6 @@ deploys. Still missing:
 
 ## Missing features
 
-- [ ] DMs can't delete a campaign.
 - [ ] **Password reset (revisit later).** Removed for now because the group
       signs up with mock emails, so reset emails can't arrive. To bring it
       back: a "Forgot password" form calling Firebase's
@@ -105,6 +99,15 @@ Smaller ideas, unprioritised:
       accounts.
 
 ## Done in this pass
+
+### Campaign management (PR 4)
+
+- DMs can delete a campaign (with a type-the-name confirmation shared with
+  character deletion).
+- Shared `CampaignFormFields` component for the create and edit pages.
+- Rules validate names (≤ 100 characters) and levels (1–20).
+- A DM who removes a player can no longer read that player's character
+  (characters can now be in at most 5 campaigns, enforced in the UI too).
 
 ### App shell (PR 3)
 

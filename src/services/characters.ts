@@ -17,6 +17,9 @@ import { normaliseCharacter } from "../utils/dnd";
 import type { CharacterData } from "../utils/dnd";
 import { getCampaignSummary } from "./campaigns";
 
+/** Enforced by the security rules too (see firestore.rules). */
+export const MAX_CAMPAIGNS_PER_CHARACTER = 5;
+
 export interface StoredCharacter {
   id: string;
   userId: string;
