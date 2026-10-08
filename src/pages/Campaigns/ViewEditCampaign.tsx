@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useCurrentUser } from "../../auth/currentUser";
 import {
   DEFAULT_CAMPAIGN,
@@ -167,6 +167,9 @@ const ViewEditCampaign = () => {
             {canEdit ? "Edit Campaign" : "View Campaign"}:{" "}
             {formData.campaignName || "Unnamed"}
           </h2>
+          <Link to={`/campaigns/${campaignId}/party`} className="back-button">
+            ⚔️ Party &amp; initiative
+          </Link>
           <button
             type="button"
             onClick={() => navigate("/campaigns")}

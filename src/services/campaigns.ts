@@ -227,6 +227,7 @@ export const deleteCampaign = async (campaignId: string) => {
   members.docs.forEach((member) => batch.delete(member.ref));
   batch.delete(summaryRef(campaignId));
   batch.delete(privateRef(campaignId));
+  batch.delete(doc(db, "campaigns", campaignId, "encounter", "current"));
   batch.delete(campaignRef(campaignId));
   await batch.commit();
 };

@@ -65,14 +65,11 @@ In priority order (agreed October 2026).
 1. **Play mode + dice roller**
    - [ ] Track remaining Hit Dice (short rests currently let you spend any
          number).
-2. **DM party view + initiative**
-   - [ ] Each campaign shows its characters' HP, AC, passive perception and
-         conditions on one screen, updated live with `onSnapshot`.
-   - [ ] Initiative tracker, pre-filled with the party's initiative bonuses,
-         with monsters added by hand.
+2. **DM party view + initiative**: done (PR 11).
+   - [ ] Let players roll their own initiative into the tracker (the DM
+         currently rolls for everyone, or types in what players call out).
 3. **SRD lookups + inventory**
-   - [ ] Monster details from the SRD (for the initiative tracker). Spells
-         (PR 8) and equipment/inventory (PR 10) are done.
+   - Spells (PR 8), equipment/inventory (PR 10) and monsters (PR 11) done.
    - [ ] Work out AC from equipped armour and shield.
 4. **Session log**
    - [ ] Dated session notes per campaign: a shared recap plus DM-only notes.
@@ -84,6 +81,15 @@ Smaller ideas, unprioritised:
       accounts.
 
 ## Done in this pass
+
+### Party view and initiative (PR 11)
+
+- Party page per campaign: every character's HP, AC, passive Perception,
+  conditions, death saves and spell slots, updating live.
+- Initiative tracker run by the DM and watched live by players: roll the
+  party in, add SRD monsters (numbered, with stat blocks) or custom
+  combatants, track monster HP, turns and rounds. Players see monsters as
+  Healthy / Bloodied / Down rather than exact HP.
 
 ### Inventory and attacks (PR 10)
 

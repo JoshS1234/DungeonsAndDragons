@@ -1,4 +1,4 @@
-// Snapshots the D&D 5e SRD (2014) spells, equipment and class tables from the free
+// Snapshots the D&D 5e SRD (2014) spells, equipment, monsters and class tables from the free
 // dnd5eapi.co API into src/data/srd/. Run with: node scripts/fetch-srd.mjs
 //
 // The SRD is published by Wizards of the Coast under CC-BY-4.0; see
@@ -98,6 +98,38 @@ const simplifyEquipment = (item) => ({
   }),
 });
 
+const simplifyMonster = (m) => ({
+  index: m.index,
+  name: m.name,
+  size: m.size,
+  type: m.subtype ? `${m.type} (${m.subtype})` : m.type,
+  alignment: m.alignment,
+  armorClass: m.armor_class?.[0]?.value ?? 10,
+  hitPoints: m.hit_points,
+  hitDice: m.hit_points_roll ?? m.hit_dice,
+  speed: Object.entries(m.speed ?? {})
+    .map(([kind, value]) => (kind === "walk" ? value : `${kind} ${value}`))
+    .join(", "),
+  abilities: [
+    m.strength,
+    m.dexterity,
+    m.constitution,
+    m.intelligence,
+    m.wisdom,
+    m.charisma,
+  ],
+  challengeRating: m.challenge_rating,
+  xp: m.xp,
+  traits: (m.special_abilities ?? []).map((a) => ({
+    name: a.name,
+    description: a.desc,
+  })),
+  actions: (m.actions ?? []).map((a) => ({
+    name: a.name,
+    description: a.desc,
+  })),
+});
+
 const fetchClass = async ({ index, name }) => {
   const [spellcasting, levels] = await Promise.all([
     get(`/api/2014/classes/${index}/spellcasting`),
@@ -153,6 +185,17 @@ const main = async () => {
     JSON.stringify(equipment) + "\n"
   );
   console.log(`equipment: ${equipment.length}`);
+
+  const monsterList = (await get("/api/2014/monsters")).results;
+  const monsters = await mapLimit(monsterList, 8, async ({ index }) =>
+    simplifyMonster(await get(`/api/2014/monsters/${index}`))
+  );
+  monsters.sort((a, b) => a.name.localeCompare(b.name));
+  await writeFile(
+    new URL("monsters.json", OUT),
+    JSON.stringify(monsters) + "\n"
+  );
+  console.log(`monsters: ${monsters.length}`);
 };
 
 await main();

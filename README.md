@@ -51,7 +51,7 @@ firestore.indexes.json  Firestore indexes
 
 ### SRD data
 
-Spells and class spellcasting tables come from the D&D 5e System Reference
+Spells, equipment, monsters and class spellcasting tables come from the D&D 5e System Reference
 Document 5.1 (CC-BY-4.0), snapshotted from dnd5eapi.co by
 `node scripts/fetch-srd.mjs`. The PDF's spell-page field mapping is generated
 by `node scripts/pdf-spell-fields.mjs`.
@@ -64,6 +64,8 @@ by `node scripts/pdf-spell-fields.mjs`.
 - `campaigns/{id}/public/summary` – campaign name, readable by anyone with the
   ID (used when joining).
 - `campaigns/{id}/private/dm` – DM-only notes.
+- `campaigns/{id}/encounter/current` – the initiative order (DM writes,
+  members read).
 
 The comments in `firestore.rules` describe exactly who can do what.
 

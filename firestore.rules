@@ -6,6 +6,7 @@ rules_version = '2';
 //   campaigns/{campaignId}/members/{uid}   one per member, role "dm" | "player"
 //   campaigns/{campaignId}/public/summary  name only, readable with the ID
 //   campaigns/{campaignId}/private/dm      DM-only notes
+//   campaigns/{campaignId}/encounter/current  initiative order
 //
 // Tested in src/services/*.integration.test.ts (`npm run test:integration`).
 
@@ -162,6 +163,17 @@ service cloud.firestore {
         allow get: if signedIn();
         allow create, update: if signedIn()
           && getAfter(campaign(campaignId)).data.userId == uid();
+        allow delete: if signedIn() && isDm(campaignId);
+      }
+
+      // The current initiative order: everyone in the campaign can watch it,
+      // only the DM runs it
+      match /encounter/{docId} {
+        allow get: if signedIn() && isMember(campaignId);
+        allow create, update: if signedIn()
+          && isDm(campaignId)
+          && request.resource.data.combatants is list
+          && request.resource.data.combatants.size() <= 100;
         allow delete: if signedIn() && isDm(campaignId);
       }
 

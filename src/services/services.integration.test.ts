@@ -50,6 +50,9 @@ import {
   updateCharacterFields,
   watchCharacter,
 } from "./characters";
+import { endEncounter, saveEncounter, watchEncounter } from "./encounters";
+import { NEW_ENCOUNTER } from "../utils/encounter";
+import type { Encounter } from "../utils/encounter";
 
 // The services import `db` from firebaseSetup; point it at whichever test
 // user is currently acting.
@@ -321,6 +324,75 @@ describe("play mode", () => {
     await assertFails(
       updateCharacterFields(characterId, { currentHitPoints: 0 })
     );
+  });
+});
+
+describe("encounters", () => {
+  const goblin = {
+    id: "g1",
+    name: "Goblin",
+    initiative: 12,
+    kind: "monster" as const,
+    hitPoints: 7,
+    maxHitPoints: 7,
+  };
+
+  it("lets the DM run an encounter that players can watch", async () => {
+    const { campaignId } = await setUpParty();
+    as("alice");
+    await saveEncounter(campaignId, {
+      ...NEW_ENCOUNTER,
+      combatants: [goblin],
+    });
+
+    as("bob");
+    const seen: Array<Encounter | null> = [];
+    const stop = watchEncounter(
+      campaignId,
+      (e) => seen.push(e),
+      (err) => {
+        throw err;
+      }
+    );
+    await vi.waitFor(() =>
+      expect(seen.at(-1)?.combatants[0].name).toBe("Goblin")
+    );
+    stop();
+
+    await assertFails(
+      saveEncounter(campaignId, { ...NEW_ENCOUNTER, round: 99 })
+    );
+    await assertFails(endEncounter(campaignId));
+
+    as("alice");
+    await endEncounter(campaignId);
+  });
+
+  it("hides encounters from people outside the campaign", async () => {
+    const { campaignId } = await setUpParty();
+    as("alice");
+    await saveEncounter(campaignId, NEW_ENCOUNTER);
+
+    const db = as("carol");
+    await assertFails(
+      getDoc(doc(db, "campaigns", campaignId, "encounter", "current"))
+    );
+  });
+
+  it("is removed with the campaign", async () => {
+    const { campaignId } = await setUpParty();
+    as("alice");
+    await saveEncounter(campaignId, NEW_ENCOUNTER);
+    await deleteCampaign(campaignId);
+
+    let exists = true;
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const db = context.firestore() as unknown as Firestore;
+      exists = (
+        await getDoc(doc(db, "campaigns", campaignId, "encounter", "current"))
+      ).exists();
+    });
+    expect(exists).toBe(false);
   });
 });
 
