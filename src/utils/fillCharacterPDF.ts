@@ -9,6 +9,7 @@ import {
 } from "./dnd";
 import type { AbilityKey, CharacterData } from "./dnd";
 import { spellcastingFor } from "./spellcasting";
+import { attackBonus, damageExpression, inventoryText } from "./inventory";
 import spellPageFields from "./pdfSpellFields.json";
 
 export type { CharacterData } from "./dnd";
@@ -67,6 +68,13 @@ const SKILL_FIELDS: Record<string, { value: string; checkbox: string }> = {
   Survival: { value: "Survival", checkbox: "Check Box 40" },
 };
 
+// Weapon rows on page 1 (some names really do have trailing spaces)
+const WEAPON_ROWS = [
+  { name: "Wpn Name 1", bonus: "Wpn1 AtkBonus", damage: "Wpn1 Damage" },
+  { name: "Wpn Name 2", bonus: "Wpn2 AtkBonus ", damage: "Wpn2 Damage " },
+  { name: "Wpn Name 3", bonus: "Wpn3 AtkBonus  ", damage: "Wpn3 Damage " },
+];
+
 // Large free-text boxes default to auto-sized text, which renders short
 // entries enormously. Give them a fixed size instead.
 const LONG_TEXT_FIELDS = new Set([
@@ -78,6 +86,7 @@ const LONG_TEXT_FIELDS = new Set([
   "Features and Traits",
   "Equipment",
   "AttacksSpellcasting",
+  "ProficienciesLang",
 ]);
 const LONG_TEXT_FONT_SIZE = 9;
 
@@ -118,8 +127,13 @@ export const buildPdfFieldValues = (
     Flaws: c.flaws,
     Allies: c.alliesAndOrganizations,
     "Features and Traits": c.additionalFeaturesAndTraits,
-    Equipment: c.equipment,
-    AttacksSpellcasting: c.spells,
+    Equipment: inventoryText(c),
+    ProficienciesLang: c.proficienciesAndLanguages,
+    CP: String(c.currency.cp),
+    SP: String(c.currency.sp),
+    EP: String(c.currency.ep),
+    GP: String(c.currency.gp),
+    PP: String(c.currency.pp),
   };
   const checkboxes: Record<string, boolean> = {};
 
@@ -153,6 +167,23 @@ export const buildPdfFieldValues = (
     checkboxes[box] = i < c.deathSaveFailures;
   });
   if (c.inspiration) text.Inspiration = "Yes";
+
+  // The weapons table has three rows; any further attacks go in the box below
+  c.attacks.slice(0, WEAPON_ROWS.length).forEach((attack, i) => {
+    const row = WEAPON_ROWS[i];
+    text[row.name] = attack.name;
+    text[row.bonus] = formatModifier(attackBonus(c, attack));
+    text[row.damage] =
+      `${damageExpression(c, attack)} ${attack.damageType}`.trim();
+  });
+  const extraAttacks = c.attacks
+    .slice(WEAPON_ROWS.length)
+    .map((attack) =>
+      `${attack.name}: ${formatModifier(attackBonus(c, attack))}, ${damageExpression(c, attack)} ${attack.damageType}`.trim()
+    );
+  text.AttacksSpellcasting = [...extraAttacks, c.spells]
+    .filter(Boolean)
+    .join("\n");
 
   addSpellPage(c, text, checkboxes);
 

@@ -23,8 +23,6 @@ parts of the sheet:
 - [ ] Character appearance (the template has no text field for it; it could go
       in "Backstory" on page 2, or into Age/Height/Eyes/etc. if the app adds
       those fields)
-- [ ] Weapons/attacks table, currency (CP/SP/EP/GP/PP), proficiencies &
-      languages
 
 ## Refactoring
 
@@ -65,8 +63,6 @@ New features should come with tests at the appropriate level.
 In priority order (agreed October 2026).
 
 1. **Play mode + dice roller**
-   - [ ] One-tap **attack** rolls (needs weapons, item 3). Dice roller (PR 7)
-         and play mode (PR 9) are done.
    - [ ] Track remaining Hit Dice (short rests currently let you spend any
          number).
 2. **DM party view + initiative**
@@ -75,9 +71,9 @@ In priority order (agreed October 2026).
    - [ ] Initiative tracker, pre-filled with the party's initiative bonuses,
          with monsters added by hand.
 3. **SRD lookups + inventory**
-   - [ ] Equipment and monster details from the SRD (spells done in PR 8).
-   - [ ] Inventory and currency (CP/SP/EP/GP/PP), weapons/attacks, languages
-         (also fills the remaining PDF fields).
+   - [ ] Monster details from the SRD (for the initiative tracker). Spells
+         (PR 8) and equipment/inventory (PR 10) are done.
+   - [ ] Work out AC from equipped armour and shield.
 4. **Session log**
    - [ ] Dated session notes per campaign: a shared recap plus DM-only notes.
 
@@ -88,6 +84,19 @@ Smaller ideas, unprioritised:
       accounts.
 
 ## Done in this pass
+
+### Inventory and attacks (PR 10)
+
+- Coins, an inventory list (SRD equipment picker or custom items, with
+  quantities) and free-text "other equipment".
+- Attacks with computed to-hit and damage; adding an SRD weapon creates one
+  using the right ability (ranged → DEX, finesse → better of STR/DEX).
+  One-tap attack and damage rolls in quick rolls and play mode.
+- Proficiencies & languages field.
+- PDF: weapons table (extra attacks go in the box below), coins, languages
+  and equipment.
+- Fixed form grids overflowing their sections at medium widths (Combat
+  Statistics at ~800px), now covered by an E2E check.
 
 ### Play mode (PR 9)
 
