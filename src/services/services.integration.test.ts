@@ -47,6 +47,8 @@ import {
   joinCampaign,
   leaveCampaign,
   updateCharacter,
+  updateCharacterFields,
+  watchCharacter,
 } from "./characters";
 
 // The services import `db` from firebaseSetup; point it at whichever test
@@ -286,6 +288,39 @@ describe("characters", () => {
 
     as("alice");
     expect((await getCampaign(campaignId, "alice"))?.players).toEqual([]);
+  });
+});
+
+describe("play mode", () => {
+  it("saves session changes and streams them to campaign-mates", async () => {
+    const { characterId } = await setUpParty();
+
+    as("alice");
+    const seen: number[] = [];
+    const stop = watchCharacter(
+      characterId,
+      (c) => c && seen.push(c.character.currentHitPoints),
+      (err) => {
+        throw err;
+      }
+    );
+
+    as("bob");
+    await updateCharacterFields(characterId, {
+      currentHitPoints: 3,
+      conditions: ["Poisoned"],
+    });
+
+    await vi.waitFor(() => expect(seen).toContain(3));
+    stop();
+  });
+
+  it("stops the DM changing a player's HP", async () => {
+    const { characterId } = await setUpParty();
+    as("alice");
+    await assertFails(
+      updateCharacterFields(characterId, { currentHitPoints: 0 })
+    );
   });
 });
 

@@ -145,6 +145,15 @@ export const buildPdfFieldValues = (
   const perception = SKILLS.find((s) => s.name === "Perception")!;
   text.Passive = String(10 + skillModifier(c, perception));
 
+  // Death save circles: three successes then three failures
+  ["Check Box 12", "Check Box 13", "Check Box 14"].forEach((box, i) => {
+    checkboxes[box] = i < c.deathSaveSuccesses;
+  });
+  ["Check Box 15", "Check Box 16", "Check Box 17"].forEach((box, i) => {
+    checkboxes[box] = i < c.deathSaveFailures;
+  });
+  if (c.inspiration) text.Inspiration = "Yes";
+
   addSpellPage(c, text, checkboxes);
 
   return { text, checkboxes };
