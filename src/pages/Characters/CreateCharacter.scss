@@ -127,7 +127,8 @@
       border-radius: 8px;
       cursor: pointer;
       transition: all 0.3s ease;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4),
+      box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.4),
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -145,7 +146,8 @@
         border-color: #ffd700;
         color: #fffacd;
         transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5),
+        box-shadow:
+          0 6px 16px rgba(0, 0, 0, 0.5),
           inset 0 1px 0 rgba(255, 255, 255, 0.2),
           0 0 20px rgba(255, 215, 0, 0.3);
       }
@@ -382,7 +384,8 @@
   .character-form__submit {
     background: linear-gradient(135deg, #8b4513 0%, #6b3410 50%, #8b4513 100%);
     color: #ffd700;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4),
+    box-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.4),
       inset 0 1px 0 rgba(255, 255, 255, 0.1);
 
     &:hover {
@@ -395,8 +398,10 @@
       border-color: #ffed4e;
       color: #fffacd;
       transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 20px rgba(255, 215, 0, 0.3);
+      box-shadow:
+        0 6px 16px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        0 0 20px rgba(255, 215, 0, 0.3);
     }
 
     &:active {
@@ -443,7 +448,8 @@
     background: linear-gradient(135deg, #2d5016 0%, #1f370e 50%, #2d5016 100%);
     color: #90ee90;
     border-color: #4ade80;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4),
+    box-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.4),
       inset 0 1px 0 rgba(255, 255, 255, 0.1);
 
     &:hover:not(:disabled) {
@@ -456,8 +462,10 @@
       border-color: #6ade80;
       color: #a0ffa0;
       transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 20px rgba(74, 222, 128, 0.3);
+      box-shadow:
+        0 6px 16px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        0 0 20px rgba(74, 222, 128, 0.3);
     }
 
     &:active:not(:disabled) {
@@ -496,7 +504,8 @@
       max-width: 500px;
       width: 90%;
       z-index: 1001;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8),
+      box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.8),
         0 0 20px rgba(255, 68, 68, 0.3);
 
       h3 {
