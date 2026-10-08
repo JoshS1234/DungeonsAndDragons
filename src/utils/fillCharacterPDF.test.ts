@@ -9,8 +9,8 @@ import spellPageFields from "./pdfSpellFields.json";
 import {
   PDF_TEMPLATE_FILE,
   buildPdfFieldValues,
-  fillCharacterPDF,
   fillPdfTemplate,
+  generateCharacterPdf,
 } from "./fillCharacterPDF";
 
 const templateBytes = readFileSync(
@@ -217,6 +217,46 @@ describe("spell page", () => {
   });
 });
 
+describe("portrait", () => {
+  it("puts the portrait in the character image box", async () => {
+    // A copy: small Buffers from readFileSync share Node's memory pool, and
+    // pdf-lib reads the whole underlying buffer
+    const portrait = new Uint8Array(
+      readFileSync(resolve(__dirname, "../test/portrait.jpg"))
+    );
+    const filled = await PDFDocument.load(
+      await fillPdfTemplate(templateBytes, character, { portrait })
+    );
+    const button = filled.getForm().getButton("CHARACTER IMAGE");
+    // setImage gives the button a normal appearance stream
+    expect(
+      button.acroField.getWidgets()[0].getNormalAppearance()
+    ).toBeDefined();
+  });
+
+  it("still exports when the portrait can't be downloaded", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url: string) =>
+        url.includes("portrait")
+          ? Promise.reject(new TypeError("Failed to fetch"))
+          : Promise.resolve(new Response(templateBytes))
+      )
+    );
+
+    const bytes = await generateCharacterPdf({
+      ...character,
+      portraitUrl: "https://example.com/portrait",
+    });
+
+    const form = (await PDFDocument.load(bytes)).getForm();
+    expect(form.getTextField("CharacterName").getText()).toBe(
+      "Thalia Brightwood"
+    );
+    vi.unstubAllGlobals();
+  });
+});
+
 describe("fillCharacterPDF", () => {
   afterEach(() => vi.unstubAllGlobals());
 
@@ -226,7 +266,7 @@ describe("fillCharacterPDF", () => {
       vi.fn().mockRejectedValue(new TypeError("Failed to fetch"))
     );
 
-    await expect(fillCharacterPDF(character)).rejects.toThrow(
+    await expect(generateCharacterPdf(character)).rejects.toThrow(
       "Couldn't load the character sheet template"
     );
   });
@@ -237,6 +277,6 @@ describe("fillCharacterPDF", () => {
       vi.fn().mockResolvedValue(new Response(null, { status: 404 }))
     );
 
-    await expect(fillCharacterPDF(character)).rejects.toThrow("(404)");
+    await expect(generateCharacterPdf(character)).rejects.toThrow("(404)");
   });
 });

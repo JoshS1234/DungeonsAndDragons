@@ -10,6 +10,7 @@ import type { StoredCharacter } from "../../services/characters";
 import { fillCharacterPDF } from "../../utils/fillCharacterPDF";
 import { parseCharacterFile } from "../../utils/characterFile";
 import { readTextFile } from "../../utils/download";
+import Portrait from "../../components/Portrait/Portrait";
 import "./Characters.scss";
 import { errorMessage } from "../../utils/errors";
 
@@ -120,6 +121,10 @@ const Characters = () => {
                       to={`/characters/${id}`}
                       className="character-card__link"
                     >
+                      <Portrait
+                        url={character.portraitUrl}
+                        name={character.characterName}
+                      />
                       <h4>{character.characterName || "Unnamed Character"}</h4>
                       <div className="character-card__details">
                         <p>

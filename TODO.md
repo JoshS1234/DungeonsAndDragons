@@ -5,6 +5,9 @@ a call from you before they can be done.
 
 ## Security / data problems
 
+- [ ] **Portrait setup (you):** upgrade to Blaze, enable Storage, deploy
+      rules, and apply `cors.json` (see README → Portraits).
+
 - [ ] **Deploy rules automatically (decision).** Rules changes currently need
       `npm run deploy:rules` by hand after merging. CI could deploy them, but
       it needs a Firebase service-account key stored as a GitHub secret.
@@ -75,9 +78,15 @@ In priority order (agreed October 2026).
 
 Smaller ideas, unprioritised:
 
-- [ ] Character portraits (Firebase Storage).
-
 ## Done in this pass
+
+### Portraits (PR 14)
+
+- Upload a portrait per character (shrunk to ≤ 512px JPEG in the browser),
+  stored in Firebase Storage; shown on the character page, list, play mode
+  and party view, and embedded in the PDF's character image box.
+- Storage rules: only the owner can change a portrait (checked against
+  Firestore), images under 2 MB only; any signed-in user can view.
 
 ### Character backups (PR 13)
 

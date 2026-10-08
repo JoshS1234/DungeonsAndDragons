@@ -21,7 +21,8 @@ export const toCharacterFile = (character: CharacterData): string =>
     {
       format: FORMAT,
       version: VERSION,
-      character: { ...character, campaignIds: [] },
+      // The portrait file belongs to this character's storage, not the backup
+      character: { ...character, campaignIds: [], portraitUrl: "" },
     },
     null,
     2
@@ -68,6 +69,7 @@ export const parseCharacterFile = (text: string): CharacterData => {
   character.inventory = character.inventory.slice(0, 300);
   character.attacks = character.attacks.slice(0, 50);
   character.campaignIds = [];
+  character.portraitUrl = "";
 
   if (!character.characterName.trim()) {
     throw new Error("The character in that file has no name.");

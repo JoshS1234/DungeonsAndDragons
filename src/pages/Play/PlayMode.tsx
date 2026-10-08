@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useCurrentUser } from "../../auth/currentUser";
+import Portrait from "../../components/Portrait/Portrait";
 import QuickRolls from "../../components/Dice/QuickRolls";
 import { useDice } from "../../components/Dice/diceContext";
 import {
@@ -146,7 +147,8 @@ const PlayMode = () => {
   return (
     <div className="play">
       <div className="play__header">
-        <div>
+        <Portrait url={c.portraitUrl} name={c.characterName} />
+        <div className="play__title">
           <h2>{c.characterName || "Unnamed"}</h2>
           <p>
             Level {c.level} {c.race} {c.class}

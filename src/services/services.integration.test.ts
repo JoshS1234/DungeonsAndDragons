@@ -18,6 +18,9 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import type { Firestore } from "firebase/firestore";
+import { getBytes, ref, uploadBytes } from "firebase/storage";
+import type { FirebaseStorage } from "firebase/storage";
+import { getModularInstance } from "@firebase/util";
 import {
   afterAll,
   beforeAll,
@@ -50,26 +53,35 @@ import {
   updateCharacterFields,
   watchCharacter,
 } from "./characters";
+import { removePortrait, uploadPortrait } from "./portraits";
 import { endEncounter, saveEncounter, watchEncounter } from "./encounters";
 import { deleteSession, listSessions, saveSession } from "./sessions";
 import { NEW_ENCOUNTER } from "../utils/encounter";
 import type { Encounter } from "../utils/encounter";
 
-// The services import `db` from firebaseSetup; point it at whichever test
-// user is currently acting.
+// The services import `db` and `storage` from firebaseSetup; point them at
+// whichever test user is currently acting.
 let currentDb: Firestore;
+let currentStorage!: FirebaseStorage;
 vi.mock("../../firebaseSetup", () => ({
   get db() {
     return currentDb;
+  },
+  get storage() {
+    return currentStorage;
   },
 }));
 
 let testEnv: RulesTestEnvironment;
 
 const as = (uid: string) => {
-  currentDb = testEnv
-    .authenticatedContext(uid)
-    .firestore() as unknown as Firestore;
+  const context = testEnv.authenticatedContext(uid);
+  currentDb = context.firestore() as unknown as Firestore;
+  // The test context hands back compat instances; Storage's modular API
+  // needs the underlying modular one
+  currentStorage = getModularInstance(
+    context.storage()
+  ) as unknown as FirebaseStorage;
   return currentDb;
 };
 
@@ -115,11 +127,14 @@ beforeAll(async () => {
     firestore: {
       rules: readFileSync(resolve(__dirname, "../../firestore.rules"), "utf8"),
     },
+    storage: {
+      rules: readFileSync(resolve(__dirname, "../../storage.rules"), "utf8"),
+    },
   });
 });
 
 beforeEach(async () => {
-  await testEnv.clearFirestore();
+  await Promise.all([testEnv.clearFirestore(), testEnv.clearStorage()]);
 });
 
 afterAll(async () => {
@@ -458,6 +473,63 @@ describe("session log", () => {
       ).size;
     });
     expect(remaining).toBe(0);
+  });
+});
+
+describe("portraits", () => {
+  const jpeg = new Uint8Array(
+    readFileSync(resolve(__dirname, "../test/portrait.jpg"))
+  );
+  const image = new Blob([jpeg], { type: "image/jpeg" });
+
+  it("lets owners upload a portrait that campaign-mates can view", async () => {
+    const { characterId } = await setUpParty();
+    as("bob");
+    const url = await uploadPortrait(characterId, image);
+    expect(url).toContain(`portraits%2F${characterId}`);
+    expect((await getCharacter(characterId))?.character.portraitUrl).toBe(url);
+
+    as("alice");
+    const bytes = await getBytes(
+      ref(currentStorage, `portraits/${characterId}`)
+    );
+    expect(bytes.byteLength).toBe(jpeg.byteLength);
+  });
+
+  it("stops anyone else changing a character's portrait", async () => {
+    const { characterId } = await setUpParty();
+    as("alice");
+    await assertFails(
+      uploadBytes(ref(currentStorage, `portraits/${characterId}`), image, {
+        contentType: "image/jpeg",
+      })
+    );
+  });
+
+  it("only accepts images", async () => {
+    const { characterId } = await setUpParty();
+    as("bob");
+    await assertFails(
+      uploadBytes(
+        ref(currentStorage, `portraits/${characterId}`),
+        new Blob(["hello"], { type: "text/plain" }),
+        { contentType: "text/plain" }
+      )
+    );
+  });
+
+  it("removes the portrait, including when the character is deleted", async () => {
+    const { characterId } = await setUpParty();
+    as("bob");
+    await uploadPortrait(characterId, image);
+    await removePortrait(characterId);
+    expect((await getCharacter(characterId))?.character.portraitUrl).toBe("");
+
+    await uploadPortrait(characterId, image);
+    await deleteCharacter(characterId, "bob");
+    await expect(
+      getBytes(ref(currentStorage, `portraits/${characterId}`))
+    ).rejects.toMatchObject({ code: "storage/object-not-found" });
   });
 });
 

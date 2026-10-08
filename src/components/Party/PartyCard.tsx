@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import Portrait from "../Portrait/Portrait";
 import type { StoredCharacter } from "../../services/characters";
 import { SKILLS, skillModifier } from "../../utils/dnd";
 import { deathState } from "../../utils/play";
@@ -25,13 +26,16 @@ const PartyCard = ({
 
   return (
     <article className="party-card" aria-label={c.characterName}>
-      <header>
-        <Link to={`/characters/${stored.id}/play`}>
-          <h3>{c.characterName || "Unnamed"}</h3>
-        </Link>
-        <p>
-          {playerName} · Level {c.level} {c.class}
-        </p>
+      <header className="party-card__header">
+        <Portrait url={c.portraitUrl} name={c.characterName} size="small" />
+        <div>
+          <Link to={`/characters/${stored.id}/play`}>
+            <h3>{c.characterName || "Unnamed"}</h3>
+          </Link>
+          <p>
+            {playerName} · Level {c.level} {c.class}
+          </p>
+        </div>
       </header>
       <div className="party-card__hp">
         <span aria-label={`${c.characterName} hit points`}>

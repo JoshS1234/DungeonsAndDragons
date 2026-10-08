@@ -80,6 +80,8 @@ export const ALIGNMENTS = [
 export interface CharacterData {
   // Basic Information
   characterName: string;
+  /** Download URL of the uploaded portrait, or "". */
+  portraitUrl: string;
   class: string;
   level: number;
   background: string;
@@ -140,6 +142,7 @@ export interface CharacterData {
 
 export const DEFAULT_CHARACTER: CharacterData = {
   characterName: "",
+  portraitUrl: "",
   class: "",
   level: 1,
   background: "",
