@@ -38,11 +38,8 @@ parts of the sheet:
 
 Unit/component tests (`npm test`), Firestore emulator tests of the rules and
 services (`npm run test:integration`) and Playwright end-to-end tests
-(`npm run test:e2e`) all run in CI on every pull request and before deploys. Still missing:
-
-- [ ] Component tests for `ViewEditCharacter`, the campaign pages and the
-      characters list (mock `src/services/*`, as `CreateCharacter.test.tsx`
-      does).
+(`npm run test:e2e`) all run in CI on every pull request and before deploys.
+New features should come with tests at the appropriate level.
 
 ## Missing features
 
@@ -96,6 +93,16 @@ Smaller ideas, unprioritised:
       accounts.
 
 ## Done in this pass
+
+### Page tests (PR 6)
+
+- Component tests for every page (services mocked), covering loading,
+  empty, error, owner/DM and read-only states.
+- Pages that can't load (not found / no access) now show only the error
+  and a way back, instead of an empty form underneath.
+- Error messages on the character and campaign pages were never styled (the
+  CSS was nested under the form they sit outside); fixed.
+- Remove-player buttons have descriptive accessible names.
 
 ### End-to-end tests (PR 5)
 

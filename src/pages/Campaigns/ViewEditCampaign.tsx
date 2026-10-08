@@ -24,6 +24,8 @@ const ViewEditCampaign = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Set when the page can't be shown at all (not found / no access)
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [formData, setFormData] = useState({ ...DEFAULT_CAMPAIGN, notes: "" });
   const [linkedPlayers, setLinkedPlayers] = useState<CampaignMember[]>([]);
   const [removingPlayer, setRemovingPlayer] = useState<string | null>(null);
@@ -35,7 +37,7 @@ const ViewEditCampaign = () => {
     const fetchCampaign = async () => {
       try {
         setLoading(true);
-        setError(null);
+        setLoadError(null);
 
         const loaded = await getCampaign(campaignId, user.uid);
         if (!loaded) {
@@ -48,7 +50,7 @@ const ViewEditCampaign = () => {
         setFormData({ ...details, notes });
         setLinkedPlayers(players);
       } catch (err) {
-        setError(
+        setLoadError(
           isPermissionDenied(err)
             ? "You don't have permission to view this campaign"
             : errorMessage(err, "Failed to load campaign")
@@ -137,6 +139,26 @@ const ViewEditCampaign = () => {
     );
   }
 
+  if (loadError) {
+    return (
+      <div className="campaign-creation-page">
+        <div className="campaign-creation-page__container">
+          <h2>Campaign unavailable</h2>
+          <div className="campaign-form__error" role="alert">
+            {loadError}
+          </div>
+          <button
+            type="button"
+            className="back-button"
+            onClick={() => navigate("/campaigns")}
+          >
+            ← Back to Campaigns
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="campaign-creation-page">
       <div className="campaign-creation-page__container">
@@ -196,44 +218,47 @@ const ViewEditCampaign = () => {
               <div className="players-list">
                 <h4>Linked Players ({linkedPlayers.length})</h4>
                 <div className="players-list__items">
-                  {linkedPlayers.map((player) => (
-                    <div key={player.userId} className="players-list__item">
-                      <div
-                        className="players-list__info players-list__info--clickable"
-                        onClick={() =>
-                          navigate(`/characters/${player.characterId}`, {
-                            state: { fromCampaign: id },
-                          })
-                        }
-                        title="Click to view character sheet"
-                      >
-                        <span className="players-list__name">
-                          {player.playerName}
-                        </span>
-                        <span className="players-list__character">
-                          Character: {player.characterName}
-                        </span>
-                      </div>
-                      {(canEdit || player.userId === user.uid) && (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRemovePlayer(player);
-                          }}
-                          className="players-list__remove"
-                          title={
-                            canEdit
-                              ? "Remove player from campaign"
-                              : "Remove yourself from this campaign"
+                  {linkedPlayers.map((player) => {
+                    const removeLabel =
+                      player.userId === user.uid
+                        ? "Remove yourself from this campaign"
+                        : `Remove ${player.characterName} from campaign`;
+                    return (
+                      <div key={player.userId} className="players-list__item">
+                        <div
+                          className="players-list__info players-list__info--clickable"
+                          onClick={() =>
+                            navigate(`/characters/${player.characterId}`, {
+                              state: { fromCampaign: id },
+                            })
                           }
-                          disabled={removingPlayer === player.userId}
+                          title="Click to view character sheet"
                         >
-                          {removingPlayer === player.userId ? "..." : "✕"}
-                        </button>
-                      )}
-                    </div>
-                  ))}
+                          <span className="players-list__name">
+                            {player.playerName}
+                          </span>
+                          <span className="players-list__character">
+                            Character: {player.characterName}
+                          </span>
+                        </div>
+                        {(canEdit || player.userId === user.uid) && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemovePlayer(player);
+                            }}
+                            className="players-list__remove"
+                            title={removeLabel}
+                            aria-label={removeLabel}
+                            disabled={removingPlayer === player.userId}
+                          >
+                            {removingPlayer === player.userId ? "..." : "✕"}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             ) : (

@@ -108,16 +108,6 @@
   flex-direction: column;
   gap: 2rem;
 
-  .campaign-form__error {
-    background-color: rgba(128, 0, 0, 0.3);
-    border: 2px solid #ff4444;
-    color: #ffaaaa;
-    padding: 1rem;
-    border-radius: 8px;
-    margin-bottom: 1.5rem;
-    font-weight: 600;
-  }
-
   .campaign-form__section {
     background: rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(255, 215, 0, 0.2);
@@ -425,4 +415,15 @@
   font-size: 0.85em;
   font-style: italic;
   color: #ffd700;
+}
+
+// Rendered outside the form, so not nested under it
+.campaign-form__error {
+  background-color: rgba(128, 0, 0, 0.3);
+  border: 2px solid #ff4444;
+  color: #ffaaaa;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
 }
