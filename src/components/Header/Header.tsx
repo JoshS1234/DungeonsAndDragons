@@ -1,13 +1,17 @@
 import { signOut } from "firebase/auth";
 import { auth } from "../../../firebaseSetup";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import "./Header.scss";
 
 const Header = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const isHomePage = location.pathname === "/";
 
   const handleSignOut = () => {
+    // Start the next sign-in on the home page rather than wherever this
+    // session ended
+    navigate("/", { replace: true });
     signOut(auth);
   };
 

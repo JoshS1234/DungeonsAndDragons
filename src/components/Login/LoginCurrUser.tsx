@@ -4,12 +4,10 @@ import "./LoginStyles.scss";
 type LoginCurrUserProps = {
   handleSignIn: (e: FormEvent) => void;
   handleSwitchToNewUser: () => void;
-  handleSwitchToForgotPass: () => void;
 };
 
 const LoginCurrUser = ({
   handleSignIn,
-  handleSwitchToForgotPass,
   handleSwitchToNewUser,
 }: LoginCurrUserProps) => {
   return (
@@ -30,6 +28,7 @@ const LoginCurrUser = ({
         type="password"
         className="login-page__form-textbox"
         name="password"
+        id="password"
       />
       <button type="submit" className="login-page__form-button">
         Submit
@@ -40,13 +39,6 @@ const LoginCurrUser = ({
         onClick={handleSwitchToNewUser}
       >
         New user
-      </button>
-      <button
-        type="button"
-        className="login-page__form-button"
-        onClick={handleSwitchToForgotPass}
-      >
-        Forgot password
       </button>
     </form>
   );

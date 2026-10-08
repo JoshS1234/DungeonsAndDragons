@@ -1,0 +1,140 @@
+rules_version = '2';
+
+// Data model
+//   characters/{characterId}               owned by `userId`
+//   campaigns/{campaignId}                 owned by `userId` (the DM)
+//   campaigns/{campaignId}/members/{uid}   one per member, role "dm" | "player"
+//   campaigns/{campaignId}/public/summary  name only, readable with the ID
+//   campaigns/{campaignId}/private/dm      DM-only notes
+//
+// Tested in src/services/*.integration.test.ts (`npm run test:integration`).
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function uid() {
+      return request.auth.uid;
+    }
+
+    function campaign(campaignId) {
+      return /databases/$(database)/documents/campaigns/$(campaignId);
+    }
+
+    function isMember(campaignId) {
+      return exists(/databases/$(database)/documents/campaigns/$(campaignId)/members/$(uid()));
+    }
+
+    function isDm(campaignId) {
+      return get(campaign(campaignId)).data.userId == uid();
+    }
+
+    // A character can be linked to at most 10 campaigns, so each one can be
+    // checked within the 10-lookup limit per request.
+    function sharesCampaign(ids) {
+      return (ids.size() > 0 && isMember(ids[0]))
+        || (ids.size() > 1 && isMember(ids[1]))
+        || (ids.size() > 2 && isMember(ids[2]))
+        || (ids.size() > 3 && isMember(ids[3]))
+        || (ids.size() > 4 && isMember(ids[4]))
+        || (ids.size() > 5 && isMember(ids[5]))
+        || (ids.size() > 6 && isMember(ids[6]))
+        || (ids.size() > 7 && isMember(ids[7]))
+        || (ids.size() > 8 && isMember(ids[8]))
+        || (ids.size() > 9 && isMember(ids[9]));
+    }
+
+    function validCharacter(data) {
+      return data.userId == uid()
+        && data.get('campaignIds', []) is list
+        && data.get('campaignIds', []).size() <= 10;
+    }
+
+    match /characters/{characterId} {
+      // `resource == null` lets the app tell "not found" apart from "no access"
+      allow get: if signedIn() && (
+        resource == null
+        || resource.data.userId == uid()
+        || sharesCampaign(resource.data.get('campaignIds', []))
+      );
+      allow list: if signedIn() && resource.data.userId == uid();
+      allow create: if signedIn() && validCharacter(request.resource.data);
+      allow update: if signedIn()
+        && resource.data.userId == uid()
+        && validCharacter(request.resource.data);
+      allow delete: if signedIn() && resource.data.userId == uid();
+    }
+
+    match /campaigns/{campaignId} {
+      allow get: if signedIn() && (
+        resource == null || resource.data.userId == uid() || isMember(campaignId)
+      );
+      // A new campaign must be created together with the DM's membership
+      allow create: if signedIn()
+        && request.resource.data.userId == uid()
+        && getAfter(/databases/$(database)/documents/campaigns/$(campaignId)/members/$(uid())).data.role == 'dm';
+      allow update: if signedIn()
+        && resource.data.userId == uid()
+        && request.resource.data.userId == uid();
+      allow delete: if signedIn() && resource.data.userId == uid();
+
+      match /members/{memberId} {
+        allow get: if signedIn() && (memberId == uid() || isMember(campaignId));
+        allow list: if signedIn() && isMember(campaignId);
+
+        allow create: if signedIn()
+          && memberId == uid()
+          && request.resource.data.userId == uid()
+          && request.resource.data.keys().hasOnly(
+            ['userId', 'role', 'characterId', 'characterName', 'playerName', 'joinedAt'])
+          && (
+            // The DM, alongside creating the campaign
+            (request.resource.data.role == 'dm'
+              && getAfter(campaign(campaignId)).data.userId == uid())
+            // A player joining with one of their own characters, which must
+            // record the campaign in the same write
+            || (request.resource.data.role == 'player'
+              && exists(campaign(campaignId))
+              && getAfter(/databases/$(database)/documents/characters/$(request.resource.data.characterId)).data.userId == uid()
+              && campaignId in getAfter(/databases/$(database)/documents/characters/$(request.resource.data.characterId)).data.campaignIds)
+          );
+
+        // Players keep their character/player name in sync
+        allow update: if signedIn()
+          && resource.data.userId == uid()
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['characterName', 'playerName']);
+
+        // Players can leave; the DM can remove players (or anyone when
+        // deleting the whole campaign)
+        allow delete: if signedIn() && (
+          (memberId == uid() && resource.data.role == 'player')
+          || isDm(campaignId)
+        );
+      }
+
+      match /public/{docId} {
+        allow get: if signedIn();
+        allow create, update: if signedIn()
+          && getAfter(campaign(campaignId)).data.userId == uid();
+        allow delete: if signedIn() && isDm(campaignId);
+      }
+
+      match /private/{docId} {
+        allow get: if signedIn() && isDm(campaignId);
+        allow create, update: if signedIn()
+          && getAfter(campaign(campaignId)).data.userId == uid();
+        allow delete: if signedIn() && isDm(campaignId);
+      }
+    }
+
+    // Collection-group queries over memberships: "my campaigns" and "which
+    // campaigns is my character in"
+    match /{path=**}/members/{memberId} {
+      allow list: if signedIn() && resource.data.userId == uid();
+    }
+  }
+}

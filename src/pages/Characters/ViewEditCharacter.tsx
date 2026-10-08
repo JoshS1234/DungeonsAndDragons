@@ -1,25 +1,34 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { auth, db, storage } from "../../../firebaseSetup";
-import {
-  doc,
-  getDoc,
-  updateDoc,
-  deleteDoc,
-  serverTimestamp,
-  arrayUnion,
-} from "firebase/firestore";
-import { ref, deleteObject } from "firebase/storage";
+import { auth } from "../../../firebaseSetup";
 import Header from "../../components/Header/Header";
+import CharacterFormFields from "../../components/CharacterForm/CharacterFormFields";
+import CampaignLinker from "../../components/CharacterForm/CampaignLinker";
+import { findJoinableCampaign } from "../../services/campaigns";
+import {
+  deleteCharacter,
+  fallbackPlayerName,
+  getCharacter,
+  getCharacterCampaigns,
+  joinCampaign,
+  leaveCampaign,
+  updateCharacter,
+} from "../../services/characters";
+import type { LinkedCampaign } from "../../services/characters";
 import { fillCharacterPDF } from "../../utils/fillCharacterPDF";
+import { DEFAULT_CHARACTER } from "../../utils/dnd";
+import type { CharacterData } from "../../utils/dnd";
 import "./CreateCharacter.scss";
 
 const ViewEditCharacter = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams<{ id: string }>();
+  const characterId = id!;
+  const user = auth.currentUser!;
+  const campaignIdFromState = (location.state as { fromCampaign?: string })
+    ?.fromCampaign;
   const [loading, setLoading] = useState(true);
-  const campaignIdFromState = (location.state as any)?.fromCampaign;
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [exportingPDF, setExportingPDF] = useState(false);
@@ -27,243 +36,34 @@ const ViewEditCharacter = () => {
   const [canEdit, setCanEdit] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
-  const [formData, setFormData] = useState({
-    // Basic Information
-    characterName: "",
-    class: "",
-    level: 1,
-    background: "",
-    playerName: "",
-    race: "",
-    alignment: "",
-    experiencePoints: 0,
-
-    // Ability Scores
-    strength: 10,
-    dexterity: 10,
-    constitution: 10,
-    intelligence: 10,
-    wisdom: 10,
-    charisma: 10,
-
-    // Combat Stats
-    armorClass: 10,
-    initiative: 0,
-    speed: 30,
-    maxHitPoints: 8,
-    currentHitPoints: 8,
-    temporaryHitPoints: 0,
-    hitDice: "1d8",
-
-    // Proficiency
-    proficiencyBonus: 2,
-    savingThrowProficiencies: [] as string[],
-    skillProficiencies: [] as string[],
-
-    // Other
-    personalityTraits: "",
-    ideals: "",
-    bonds: "",
-    flaws: "",
-    characterAppearance: "",
-    alliesAndOrganizations: "",
-    additionalFeaturesAndTraits: "",
-    equipment: "",
-    spells: "",
-    campaignIds: [] as string[],
-  });
-  const [newCampaignId, setNewCampaignId] = useState("");
-  const [linkingCampaign, setLinkingCampaign] = useState(false);
-  const [linkedCampaigns, setLinkedCampaigns] = useState<
-    Array<{ id: string; name: string }>
-  >([]);
-  const [abilityScoreInputs, setAbilityScoreInputs] = useState<{
-    [key: string]: string;
-  }>({
-    strength: "10",
-    dexterity: "10",
-    constitution: "10",
-    intelligence: "10",
-    wisdom: "10",
-    charisma: "10",
-  });
-  const [combatStatInputs, setCombatStatInputs] = useState<{
-    [key: string]: string;
-  }>({
-    armorClass: "10",
-    initiative: "0",
-    speed: "30",
-    maxHitPoints: "8",
-    currentHitPoints: "8",
-    temporaryHitPoints: "0",
-    proficiencyBonus: "2",
-  });
+  const [formData, setFormData] = useState<CharacterData>(DEFAULT_CHARACTER);
+  const [linkedCampaigns, setLinkedCampaigns] = useState<LinkedCampaign[]>([]);
 
   useEffect(() => {
     const fetchCharacter = async () => {
-      if (!id || !auth.currentUser) {
-        setError("Character ID missing or user not authenticated");
-        setLoading(false);
-        return;
-      }
-
       try {
         setLoading(true);
         setError(null);
 
-        const characterDoc = await getDoc(doc(db, "characters", id));
-
-        if (!characterDoc.exists()) {
+        const stored = await getCharacter(characterId);
+        if (!stored) {
           throw new Error("Character not found");
         }
 
-        const characterData = characterDoc.data();
-
-        // Check if user owns the character
-        const isOwner = characterData.userId === auth.currentUser.uid;
-
-        // Check if character is linked to a campaign where user is DM or player
-        let canView = isOwner;
-        if (
-          !isOwner &&
-          auth.currentUser &&
-          characterData.campaignIds &&
-          characterData.campaignIds.length > 0
-        ) {
-          const userId = auth.currentUser.uid;
-          const campaignChecks = await Promise.all(
-            characterData.campaignIds.map(async (campaignId: string) => {
-              try {
-                const campaignDoc = await getDoc(
-                  doc(db, "campaigns", campaignId)
-                );
-                if (campaignDoc.exists()) {
-                  const campaignData = campaignDoc.data();
-                  // Check if user is the DM
-                  const isDm = campaignData.userId === userId;
-                  // Check if user is a player in the campaign
-                  const players = campaignData.players || [];
-                  const isPlayer = players.some(
-                    (p: any) => p.userId === userId
-                  );
-                  return isDm || isPlayer;
-                }
-                return false;
-              } catch {
-                return false;
-              }
-            })
-          );
-          canView = campaignChecks.some((hasAccess) => hasAccess);
-        }
-
-        // Allow viewing if user owns the character OR is in a shared campaign (DM or player)
-        if (!canView) {
-          throw new Error("You don't have permission to view this character");
-        }
-
+        const isOwner = stored.userId === user.uid;
         setCanEdit(isOwner);
-
-        // Populate form with character data
-        const strength = characterData.strength || 10;
-        const dexterity = characterData.dexterity || 10;
-        const constitution = characterData.constitution || 10;
-        const intelligence = characterData.intelligence || 10;
-        const wisdom = characterData.wisdom || 10;
-        const charisma = characterData.charisma || 10;
-        const armorClass = characterData.armorClass || 10;
-        const initiative = characterData.initiative || 0;
-        const speed = characterData.speed || 30;
-        const maxHitPoints = characterData.maxHitPoints || 8;
-        const currentHitPoints = characterData.currentHitPoints || 8;
-        const temporaryHitPoints = characterData.temporaryHitPoints || 0;
-        const proficiencyBonus = characterData.proficiencyBonus || 2;
-
-        setFormData({
-          characterName: characterData.characterName || "",
-          class: characterData.class || "",
-          level: characterData.level || 1,
-          background: characterData.background || "",
-          playerName: characterData.playerName || "",
-          race: characterData.race || "",
-          alignment: characterData.alignment || "",
-          experiencePoints: characterData.experiencePoints || 0,
-          strength,
-          dexterity,
-          constitution,
-          intelligence,
-          wisdom,
-          charisma,
-          armorClass,
-          initiative,
-          speed,
-          maxHitPoints,
-          currentHitPoints,
-          temporaryHitPoints,
-          hitDice: characterData.hitDice || "1d8",
-          proficiencyBonus,
-          savingThrowProficiencies:
-            characterData.savingThrowProficiencies || [],
-          skillProficiencies: characterData.skillProficiencies || [],
-          personalityTraits: characterData.personalityTraits || "",
-          ideals: characterData.ideals || "",
-          bonds: characterData.bonds || "",
-          flaws: characterData.flaws || "",
-          characterAppearance: characterData.characterAppearance || "",
-          alliesAndOrganizations: characterData.alliesAndOrganizations || "",
-          additionalFeaturesAndTraits:
-            characterData.additionalFeaturesAndTraits || "",
-          equipment: characterData.equipment || "",
-          spells: characterData.spells || "",
-          campaignIds: characterData.campaignIds || [],
-        });
-
-        // Update ability score inputs
-        setAbilityScoreInputs({
-          strength: String(strength),
-          dexterity: String(dexterity),
-          constitution: String(constitution),
-          intelligence: String(intelligence),
-          wisdom: String(wisdom),
-          charisma: String(charisma),
-        });
-
-        // Update combat stat inputs
-        setCombatStatInputs({
-          armorClass: String(armorClass),
-          initiative: String(initiative),
-          speed: String(speed),
-          maxHitPoints: String(maxHitPoints),
-          currentHitPoints: String(currentHitPoints),
-          temporaryHitPoints: String(temporaryHitPoints),
-          proficiencyBonus: String(proficiencyBonus),
-        });
-
-        // Fetch campaign names for linked campaigns
-        if (characterData.campaignIds && characterData.campaignIds.length > 0) {
-          const campaignPromises = characterData.campaignIds.map(
-            async (campaignId: string) => {
-              try {
-                const campaignDoc = await getDoc(
-                  doc(db, "campaigns", campaignId)
-                );
-                if (campaignDoc.exists()) {
-                  return {
-                    id: campaignId,
-                    name: campaignDoc.data().campaignName || "Unnamed Campaign",
-                  };
-                }
-                return { id: campaignId, name: "Campaign Not Found" };
-              } catch {
-                return { id: campaignId, name: "Campaign Not Found" };
-              }
-            }
+        setFormData(stored.character);
+        if (isOwner) {
+          setLinkedCampaigns(
+            await getCharacterCampaigns(characterId, user.uid)
           );
-          const campaigns = await Promise.all(campaignPromises);
-          setLinkedCampaigns(campaigns);
         }
       } catch (err: any) {
-        setError(err.message || "Failed to load character");
+        setError(
+          err.code === "permission-denied"
+            ? "You don't have permission to view this character"
+            : err.message || "Failed to load character"
+        );
         console.error("Error fetching character:", err);
       } finally {
         setLoading(false);
@@ -271,175 +71,46 @@ const ViewEditCharacter = () => {
     };
 
     fetchCharacter();
-  }, [id]);
+  }, [characterId, user.uid]);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  const setField = <K extends keyof CharacterData>(
+    key: K,
+    value: CharacterData[K]
+  ) => setFormData((prev) => ({ ...prev, [key]: value }));
 
-  const handleNumberChange = (name: string, value: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleCheckboxChange = (category: string, value: string) => {
-    setFormData((prev) => {
-      const currentArray =
-        category === "savingThrow"
-          ? prev.savingThrowProficiencies
-          : prev.skillProficiencies;
-      const newArray = currentArray.includes(value)
-        ? currentArray.filter((item) => item !== value)
-        : [...currentArray, value];
-
-      return {
-        ...prev,
-        [category === "savingThrow"
-          ? "savingThrowProficiencies"
-          : "skillProficiencies"]: newArray,
-      };
-    });
-  };
-
-  const calculateModifier = (score: number): number => {
-    return Math.floor((score - 10) / 2);
-  };
-
-  const handleLinkCampaign = async () => {
-    if (!newCampaignId.trim()) return;
-
-    const campaignId = newCampaignId.trim();
-
-    // Check if already linked
-    if (formData.campaignIds.includes(campaignId)) {
-      setError("This character is already linked to this campaign");
-      setNewCampaignId("");
-      return;
-    }
-
+  const handleLinkCampaign = async (campaignId: string) => {
     try {
-      setLinkingCampaign(true);
       setError(null);
+      const summary = await findJoinableCampaign(campaignId, user.uid);
+      await joinCampaign(
+        characterId,
+        user.uid,
+        campaignId,
+        formData,
+        fallbackPlayerName(user)
+      );
 
-      if (!auth.currentUser || !id) {
-        throw new Error("User not authenticated or character ID missing");
-      }
-
-      // Validate campaign exists
-      const campaignDoc = await getDoc(doc(db, "campaigns", campaignId));
-      if (!campaignDoc.exists()) {
-        throw new Error("Campaign not found. Please check the Campaign ID.");
-      }
-
-      const campaignData = campaignDoc.data();
-      const updatedCampaignIds = [...formData.campaignIds, campaignId];
-
-      // Prepare player info for campaign
-      const playerInfo = {
-        userId: auth.currentUser.uid,
-        characterId: id,
-        characterName: formData.characterName || "Unnamed Character",
-        playerName:
-          formData.playerName ||
-          auth.currentUser.displayName ||
-          auth.currentUser.email ||
-          "Unknown Player",
-      };
-
-      // Update both campaign's players array and character's campaignIds array
-      await Promise.all([
-        updateDoc(doc(db, "campaigns", campaignId), {
-          players: arrayUnion(playerInfo),
-          updatedAt: serverTimestamp(),
-        }),
-        updateDoc(doc(db, "characters", id), {
-          campaignIds: updatedCampaignIds,
-          updatedAt: serverTimestamp(),
-        }),
-      ]);
-
-      // Update character's campaignIds array in local state
-      setFormData((prev) => ({
+      setField("campaignIds", [...formData.campaignIds, campaignId]);
+      setLinkedCampaigns((prev) => [
         ...prev,
-        campaignIds: updatedCampaignIds,
-      }));
-
-      // Update linked campaigns display
-      setLinkedCampaigns([
-        ...linkedCampaigns,
-        {
-          id: campaignId,
-          name: campaignData.campaignName || "Unnamed Campaign",
-        },
+        { id: campaignId, name: summary.campaignName || "Unnamed Campaign" },
       ]);
-
-      setNewCampaignId("");
+      return true;
     } catch (err: any) {
       setError(err.message || "Failed to link campaign");
       console.error("Error linking campaign:", err);
-    } finally {
-      setLinkingCampaign(false);
+      return false;
     }
   };
 
   const handleUnlinkCampaign = async (campaignId: string) => {
-    if (!auth.currentUser || !id) {
-      setError("User not authenticated or character ID missing");
-      return;
-    }
-
     try {
-      // Get current campaign data
-      const campaignDoc = await getDoc(doc(db, "campaigns", campaignId));
-      if (!campaignDoc.exists()) {
-        throw new Error("Campaign not found");
-      }
-
-      const campaignData = campaignDoc.data();
-      const currentPlayers = campaignData.players || [];
-
-      // Filter out this character from players array
-      const updatedPlayers = currentPlayers.filter(
-        (player: any) =>
-          !(
-            player.characterId === id && player.userId === auth.currentUser?.uid
-          )
+      await leaveCampaign(characterId, user.uid, campaignId);
+      setField(
+        "campaignIds",
+        formData.campaignIds.filter((cid) => cid !== campaignId)
       );
-
-      const updatedCampaignIds = formData.campaignIds.filter(
-        (cid) => cid !== campaignId
-      );
-
-      // Remove from both campaign's players array and character's campaignIds array
-      await Promise.all([
-        updateDoc(doc(db, "campaigns", campaignId), {
-          players: updatedPlayers,
-          updatedAt: serverTimestamp(),
-        }),
-        updateDoc(doc(db, "characters", id), {
-          campaignIds: updatedCampaignIds,
-          updatedAt: serverTimestamp(),
-        }),
-      ]);
-
-      // Update local state
-      setFormData((prev) => ({
-        ...prev,
-        campaignIds: updatedCampaignIds,
-      }));
-      setLinkedCampaigns(
-        linkedCampaigns.filter((campaign) => campaign.id !== campaignId)
-      );
+      setLinkedCampaigns((prev) => prev.filter((c) => c.id !== campaignId));
     } catch (err: any) {
       setError(err.message || "Failed to unlink campaign");
       console.error("Error unlinking campaign:", err);
@@ -448,22 +119,16 @@ const ViewEditCharacter = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!id) return;
-
     setSaving(true);
     setError(null);
 
     try {
-      if (!auth.currentUser) {
-        throw new Error("You must be logged in to update a character");
-      }
-
-      const characterData = {
-        ...formData,
-        updatedAt: serverTimestamp(),
-      };
-
-      await updateDoc(doc(db, "characters", id), characterData);
+      await updateCharacter(
+        characterId,
+        user.uid,
+        formData,
+        fallbackPlayerName(user)
+      );
       navigate("/characters");
     } catch (err: any) {
       setError(err.message || "Failed to update character");
@@ -474,9 +139,6 @@ const ViewEditCharacter = () => {
   };
 
   const handleDelete = async () => {
-    if (!id || !auth.currentUser) return;
-
-    // Verify confirmation name matches
     if (deleteConfirmName !== formData.characterName) {
       setError(
         "Character name does not match. Please enter the exact character name to confirm deletion."
@@ -488,84 +150,19 @@ const ViewEditCharacter = () => {
     setError(null);
 
     try {
-      // Get character data to handle cleanup
-      const characterDoc = await getDoc(doc(db, "characters", id));
-      if (!characterDoc.exists()) {
-        throw new Error("Character not found");
-      }
-
-      const characterData = characterDoc.data();
-
-      // Remove character from all linked campaigns
-      if (
-        characterData.campaignIds &&
-        Array.isArray(characterData.campaignIds)
-      ) {
-        const campaignUpdatePromises = characterData.campaignIds.map(
-          async (campaignId: string) => {
-            try {
-              const campaignDoc = await getDoc(
-                doc(db, "campaigns", campaignId)
-              );
-              if (campaignDoc.exists()) {
-                const campaignData = campaignDoc.data();
-                const players = campaignData.players || [];
-                const updatedPlayers = players.filter(
-                  (p: any) =>
-                    !(
-                      p.characterId === id && p.userId === auth.currentUser?.uid
-                    )
-                );
-
-                if (updatedPlayers.length !== players.length) {
-                  await updateDoc(doc(db, "campaigns", campaignId), {
-                    players: updatedPlayers,
-                    updatedAt: serverTimestamp(),
-                  });
-                }
-              }
-            } catch (err) {
-              console.error(
-                `Error removing character from campaign ${campaignId}:`,
-                err
-              );
-              // Continue with deletion even if campaign update fails
-            }
-          }
-        );
-        await Promise.all(campaignUpdatePromises);
-      }
-
-      // Delete character image from storage if it exists
-      if (characterData.imageUrl) {
-        try {
-          // Extract the file path from the URL
-          const urlParts = characterData.imageUrl.split("/");
-          const imagePathIndex = urlParts.findIndex(
-            (part: string) => part === "o"
-          );
-          if (imagePathIndex !== -1 && imagePathIndex < urlParts.length - 1) {
-            const encodedPath = urlParts.slice(imagePathIndex + 1).join("/");
-            const decodedPath = decodeURIComponent(encodedPath).split("?")[0];
-            const imageRef = ref(storage, decodedPath);
-            await deleteObject(imageRef);
-          }
-        } catch (err) {
-          console.error("Error deleting character image:", err);
-          // Continue with character deletion even if image deletion fails
-        }
-      }
-
-      // Delete the character document
-      await deleteDoc(doc(db, "characters", id));
-
-      // Navigate back to characters list
+      await deleteCharacter(characterId, user.uid);
       navigate("/characters");
     } catch (err: any) {
       setError(err.message || "Failed to delete character");
       console.error("Error deleting character:", err);
       setDeleting(false);
     }
+  };
+
+  const closeDeleteConfirm = () => {
+    setShowDeleteConfirm(false);
+    setDeleteConfirmName("");
+    setError(null);
   };
 
   const handleExportPDF = async () => {
@@ -582,35 +179,7 @@ const ViewEditCharacter = () => {
     }
   };
 
-  const abilities = [
-    { name: "Strength", key: "strength", abbrev: "STR" },
-    { name: "Dexterity", key: "dexterity", abbrev: "DEX" },
-    { name: "Constitution", key: "constitution", abbrev: "CON" },
-    { name: "Intelligence", key: "intelligence", abbrev: "INT" },
-    { name: "Wisdom", key: "wisdom", abbrev: "WIS" },
-    { name: "Charisma", key: "charisma", abbrev: "CHA" },
-  ];
-
-  const skills = [
-    { name: "Acrobatics", ability: "DEX" },
-    { name: "Animal Handling", ability: "WIS" },
-    { name: "Arcana", ability: "INT" },
-    { name: "Athletics", ability: "STR" },
-    { name: "Deception", ability: "CHA" },
-    { name: "History", ability: "INT" },
-    { name: "Insight", ability: "WIS" },
-    { name: "Intimidation", ability: "CHA" },
-    { name: "Investigation", ability: "INT" },
-    { name: "Medicine", ability: "WIS" },
-    { name: "Nature", ability: "INT" },
-    { name: "Perception", ability: "WIS" },
-    { name: "Performance", ability: "CHA" },
-    { name: "Persuasion", ability: "CHA" },
-    { name: "Religion", ability: "INT" },
-    { name: "Sleight of Hand", ability: "DEX" },
-    { name: "Stealth", ability: "DEX" },
-    { name: "Survival", ability: "WIS" },
-  ];
+  const busy = saving || deleting || exportingPDF;
 
   if (loading) {
     return (
@@ -630,17 +199,8 @@ const ViewEditCharacter = () => {
       <Header />
       <div className="character-creation-page">
         <div className="character-creation-page__container">
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: "1rem",
-              flexWrap: "wrap",
-              gap: "1rem",
-            }}
-          >
-            <h2 style={{ margin: 0 }}>
+          <div className="page-title-row">
+            <h2>
               {canEdit ? "Edit Character" : "View Character"}:{" "}
               {formData.characterName || "Unnamed"}
             </h2>
@@ -648,813 +208,51 @@ const ViewEditCharacter = () => {
               <button
                 type="button"
                 onClick={() => navigate(`/campaigns/${campaignIdFromState}`)}
-                className="character-form__back-button"
-                style={{
-                  padding: "0.5rem 1rem",
-                  fontSize: "1em",
-                  fontWeight: 600,
-                  background: "rgba(139, 0, 0, 0.5)",
-                  color: "#fff",
-                  border: "2px solid #ffd700",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  transition: "all 0.3s ease",
-                  fontFamily: '"Cinzel", "Times New Roman", serif',
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "rgba(139, 0, 0, 0.7)";
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "rgba(139, 0, 0, 0.5)";
-                  e.currentTarget.style.transform = "translateY(0)";
-                }}
+                className="back-button"
               >
                 ← Back to Campaign
               </button>
             )}
           </div>
           {!canEdit && (
-            <p
-              style={{
-                color: "#ffd700",
-                fontStyle: "italic",
-                marginBottom: "1rem",
-              }}
-            >
+            <p className="view-only-note">
               View-only mode: This character is linked to a campaign you're part
               of
             </p>
           )}
           {error && <div className="character-form__error">{error}</div>}
           <form onSubmit={handleSubmit} className="character-form">
-            {/* Basic Information Section */}
-            <section className="character-form__section">
-              <h3>Basic Information</h3>
-              <div className="character-form__grid character-form__grid--2">
-                <div className="character-form__group">
-                  <label htmlFor="characterName">Character Name</label>
-                  <input
-                    type="text"
-                    id="characterName"
-                    name="characterName"
-                    value={formData.characterName}
-                    onChange={handleInputChange}
-                    disabled={!canEdit}
-                    required
-                  />
-                </div>
-                <div className="character-form__group">
-                  <label htmlFor="class">Class</label>
-                  <select
-                    id="class"
-                    name="class"
-                    value={formData.class}
-                    onChange={handleInputChange}
-                    disabled={!canEdit}
-                    required
-                  >
-                    <option value="">Select Class</option>
-                    <option value="Barbarian">Barbarian</option>
-                    <option value="Bard">Bard</option>
-                    <option value="Cleric">Cleric</option>
-                    <option value="Druid">Druid</option>
-                    <option value="Fighter">Fighter</option>
-                    <option value="Monk">Monk</option>
-                    <option value="Paladin">Paladin</option>
-                    <option value="Ranger">Ranger</option>
-                    <option value="Rogue">Rogue</option>
-                    <option value="Sorcerer">Sorcerer</option>
-                    <option value="Warlock">Warlock</option>
-                    <option value="Wizard">Wizard</option>
-                  </select>
-                </div>
-                <div className="character-form__group">
-                  <label htmlFor="level">Level</label>
-                  <input
-                    type="number"
-                    id="level"
-                    name="level"
-                    value={formData.level}
-                    onChange={(e) =>
-                      handleNumberChange("level", parseInt(e.target.value) || 1)
-                    }
-                    disabled={!canEdit}
-                    min="1"
-                    max="20"
-                    required
-                  />
-                </div>
-                <div className="character-form__group">
-                  <label htmlFor="race">Race</label>
-                  <select
-                    id="race"
-                    name="race"
-                    value={formData.race}
-                    onChange={handleInputChange}
-                    disabled={!canEdit}
-                    required
-                  >
-                    <option value="">Select Race</option>
-                    <option value="Dragonborn">Dragonborn</option>
-                    <option value="Dwarf">Dwarf</option>
-                    <option value="Elf">Elf</option>
-                    <option value="Gnome">Gnome</option>
-                    <option value="Half-Elf">Half-Elf</option>
-                    <option value="Half-Orc">Half-Orc</option>
-                    <option value="Halfling">Halfling</option>
-                    <option value="Human">Human</option>
-                    <option value="Tiefling">Tiefling</option>
-                  </select>
-                </div>
-                <div className="character-form__group">
-                  <label htmlFor="background">Background</label>
-                  <input
-                    type="text"
-                    id="background"
-                    name="background"
-                    value={formData.background}
-                    onChange={handleInputChange}
-                    disabled={!canEdit}
-                  />
-                </div>
-                <div className="character-form__group">
-                  <label htmlFor="alignment">Alignment</label>
-                  <select
-                    id="alignment"
-                    name="alignment"
-                    value={formData.alignment}
-                    onChange={handleInputChange}
-                    disabled={!canEdit}
-                  >
-                    <option value="">Select Alignment</option>
-                    <option value="Lawful Good">Lawful Good</option>
-                    <option value="Neutral Good">Neutral Good</option>
-                    <option value="Chaotic Good">Chaotic Good</option>
-                    <option value="Lawful Neutral">Lawful Neutral</option>
-                    <option value="Neutral">Neutral</option>
-                    <option value="Chaotic Neutral">Chaotic Neutral</option>
-                    <option value="Lawful Evil">Lawful Evil</option>
-                    <option value="Neutral Evil">Neutral Evil</option>
-                    <option value="Chaotic Evil">Chaotic Evil</option>
-                  </select>
-                </div>
-                <div className="character-form__group">
-                  <label htmlFor="playerName">Player Name</label>
-                  <input
-                    type="text"
-                    id="playerName"
-                    name="playerName"
-                    value={formData.playerName}
-                    onChange={handleInputChange}
-                    disabled={!canEdit}
-                  />
-                </div>
-                <div className="character-form__group">
-                  <label htmlFor="experiencePoints">Experience Points</label>
-                  <input
-                    type="number"
-                    id="experiencePoints"
-                    name="experiencePoints"
-                    value={formData.experiencePoints}
-                    onChange={(e) =>
-                      handleNumberChange(
-                        "experiencePoints",
-                        parseInt(e.target.value) || 0
-                      )
-                    }
-                    disabled={!canEdit}
-                    min="0"
-                  />
-                </div>
-              </div>
-            </section>
+            <CharacterFormFields
+              character={formData}
+              onFieldChange={setField}
+              disabled={!canEdit}
+            />
 
-            {/* Ability Scores Section */}
-            <section className="character-form__section">
-              <h3>Ability Scores</h3>
-              <div className="character-form__grid character-form__grid--3">
-                {abilities.map((ability) => {
-                  const score = formData[
-                    ability.key as keyof typeof formData
-                  ] as number;
-                  const modifier = calculateModifier(score);
-                  const inputValue =
-                    abilityScoreInputs[ability.key] ?? String(score);
-                  return (
-                    <div key={ability.key} className="ability-score-group">
-                      <label htmlFor={ability.key}>
-                        {ability.name} ({ability.abbrev})
-                      </label>
-                      <input
-                        type="number"
-                        id={ability.key}
-                        name={ability.key}
-                        value={inputValue}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          setAbilityScoreInputs((prev) => ({
-                            ...prev,
-                            [ability.key]: value,
-                          }));
-                          if (value !== "") {
-                            const numValue = parseInt(value);
-                            if (!isNaN(numValue)) {
-                              handleNumberChange(ability.key, numValue);
-                            }
-                          }
-                        }}
-                        onBlur={(e) => {
-                          const value = e.target.value;
-                          const numValue = parseInt(value);
-                          if (value === "" || isNaN(numValue) || numValue < 1) {
-                            handleNumberChange(ability.key, 10);
-                            setAbilityScoreInputs((prev) => ({
-                              ...prev,
-                              [ability.key]: "10",
-                            }));
-                          } else {
-                            const clampedValue = Math.min(
-                              Math.max(numValue, 1),
-                              30
-                            );
-                            handleNumberChange(ability.key, clampedValue);
-                            setAbilityScoreInputs((prev) => ({
-                              ...prev,
-                              [ability.key]: String(clampedValue),
-                            }));
-                          }
-                        }}
-                        disabled={!canEdit}
-                        min="1"
-                        max="30"
-                      />
-                      <div className="ability-modifier">
-                        Modifier: {modifier >= 0 ? "+" : ""}
-                        {modifier}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-
-            {/* Combat Stats Section */}
-            <section className="character-form__section">
-              <h3>Combat Statistics</h3>
-              <div className="character-form__grid character-form__grid--4">
-                <div className="character-form__group">
-                  <label htmlFor="armorClass">Armor Class</label>
-                  <input
-                    type="number"
-                    id="armorClass"
-                    name="armorClass"
-                    value={
-                      combatStatInputs.armorClass ?? String(formData.armorClass)
-                    }
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setCombatStatInputs((prev) => ({
-                        ...prev,
-                        armorClass: value,
-                      }));
-                      if (value !== "") {
-                        const numValue = parseInt(value);
-                        if (!isNaN(numValue)) {
-                          handleNumberChange("armorClass", numValue);
-                        }
-                      }
-                    }}
-                    onBlur={(e) => {
-                      const value = e.target.value;
-                      const numValue = parseInt(value);
-                      if (value === "" || isNaN(numValue)) {
-                        handleNumberChange("armorClass", 10);
-                        setCombatStatInputs((prev) => ({
-                          ...prev,
-                          armorClass: "10",
-                        }));
-                      } else {
-                        setCombatStatInputs((prev) => ({
-                          ...prev,
-                          armorClass: String(numValue),
-                        }));
-                      }
-                    }}
-                    disabled={!canEdit}
-                  />
-                </div>
-                <div className="character-form__group">
-                  <label htmlFor="initiative">Initiative</label>
-                  <input
-                    type="number"
-                    id="initiative"
-                    name="initiative"
-                    value={
-                      combatStatInputs.initiative ?? String(formData.initiative)
-                    }
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setCombatStatInputs((prev) => ({
-                        ...prev,
-                        initiative: value,
-                      }));
-                      if (value !== "") {
-                        const numValue = parseInt(value);
-                        if (!isNaN(numValue)) {
-                          handleNumberChange("initiative", numValue);
-                        }
-                      }
-                    }}
-                    onBlur={(e) => {
-                      const value = e.target.value;
-                      const numValue = parseInt(value);
-                      if (value === "" || isNaN(numValue)) {
-                        handleNumberChange("initiative", 0);
-                        setCombatStatInputs((prev) => ({
-                          ...prev,
-                          initiative: "0",
-                        }));
-                      } else {
-                        setCombatStatInputs((prev) => ({
-                          ...prev,
-                          initiative: String(numValue),
-                        }));
-                      }
-                    }}
-                    disabled={!canEdit}
-                  />
-                </div>
-                <div className="character-form__group">
-                  <label htmlFor="speed">Speed</label>
-                  <input
-                    type="number"
-                    id="speed"
-                    name="speed"
-                    value={combatStatInputs.speed ?? String(formData.speed)}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setCombatStatInputs((prev) => ({
-                        ...prev,
-                        speed: value,
-                      }));
-                      if (value !== "") {
-                        const numValue = parseInt(value);
-                        if (!isNaN(numValue)) {
-                          handleNumberChange("speed", numValue);
-                        }
-                      }
-                    }}
-                    onBlur={(e) => {
-                      const value = e.target.value;
-                      const numValue = parseInt(value);
-                      if (value === "" || isNaN(numValue)) {
-                        handleNumberChange("speed", 30);
-                        setCombatStatInputs((prev) => ({
-                          ...prev,
-                          speed: "30",
-                        }));
-                      } else {
-                        setCombatStatInputs((prev) => ({
-                          ...prev,
-                          speed: String(numValue),
-                        }));
-                      }
-                    }}
-                    disabled={!canEdit}
-                  />
-                </div>
-                <div className="character-form__group">
-                  <label htmlFor="hitDice">Hit Dice</label>
-                  <input
-                    type="text"
-                    id="hitDice"
-                    name="hitDice"
-                    value={formData.hitDice}
-                    onChange={handleInputChange}
-                    disabled={!canEdit}
-                    placeholder="1d8"
-                  />
-                </div>
-                <div className="character-form__group">
-                  <label htmlFor="maxHitPoints">Max Hit Points</label>
-                  <input
-                    type="number"
-                    id="maxHitPoints"
-                    name="maxHitPoints"
-                    value={
-                      combatStatInputs.maxHitPoints ??
-                      String(formData.maxHitPoints)
-                    }
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setCombatStatInputs((prev) => ({
-                        ...prev,
-                        maxHitPoints: value,
-                      }));
-                      if (value !== "") {
-                        const numValue = parseInt(value);
-                        if (!isNaN(numValue)) {
-                          handleNumberChange("maxHitPoints", numValue);
-                        }
-                      }
-                    }}
-                    onBlur={(e) => {
-                      const value = e.target.value;
-                      const numValue = parseInt(value);
-                      if (value === "" || isNaN(numValue)) {
-                        handleNumberChange("maxHitPoints", 8);
-                        setCombatStatInputs((prev) => ({
-                          ...prev,
-                          maxHitPoints: "8",
-                        }));
-                      } else {
-                        setCombatStatInputs((prev) => ({
-                          ...prev,
-                          maxHitPoints: String(numValue),
-                        }));
-                      }
-                    }}
-                    disabled={!canEdit}
-                  />
-                </div>
-                <div className="character-form__group">
-                  <label htmlFor="currentHitPoints">Current Hit Points</label>
-                  <input
-                    type="number"
-                    id="currentHitPoints"
-                    name="currentHitPoints"
-                    value={
-                      combatStatInputs.currentHitPoints ??
-                      String(formData.currentHitPoints)
-                    }
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setCombatStatInputs((prev) => ({
-                        ...prev,
-                        currentHitPoints: value,
-                      }));
-                      if (value !== "") {
-                        const numValue = parseInt(value);
-                        if (!isNaN(numValue)) {
-                          handleNumberChange("currentHitPoints", numValue);
-                        }
-                      }
-                    }}
-                    onBlur={(e) => {
-                      const value = e.target.value;
-                      const numValue = parseInt(value);
-                      if (value === "" || isNaN(numValue)) {
-                        handleNumberChange("currentHitPoints", 8);
-                        setCombatStatInputs((prev) => ({
-                          ...prev,
-                          currentHitPoints: "8",
-                        }));
-                      } else {
-                        setCombatStatInputs((prev) => ({
-                          ...prev,
-                          currentHitPoints: String(numValue),
-                        }));
-                      }
-                    }}
-                    disabled={!canEdit}
-                  />
-                </div>
-                <div className="character-form__group">
-                  <label htmlFor="temporaryHitPoints">
-                    Temporary Hit Points
-                  </label>
-                  <input
-                    type="number"
-                    id="temporaryHitPoints"
-                    name="temporaryHitPoints"
-                    value={
-                      combatStatInputs.temporaryHitPoints ??
-                      String(formData.temporaryHitPoints)
-                    }
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setCombatStatInputs((prev) => ({
-                        ...prev,
-                        temporaryHitPoints: value,
-                      }));
-                      if (value !== "") {
-                        const numValue = parseInt(value);
-                        if (!isNaN(numValue)) {
-                          handleNumberChange("temporaryHitPoints", numValue);
-                        }
-                      }
-                    }}
-                    onBlur={(e) => {
-                      const value = e.target.value;
-                      const numValue = parseInt(value);
-                      if (value === "" || isNaN(numValue)) {
-                        handleNumberChange("temporaryHitPoints", 0);
-                        setCombatStatInputs((prev) => ({
-                          ...prev,
-                          temporaryHitPoints: "0",
-                        }));
-                      } else {
-                        setCombatStatInputs((prev) => ({
-                          ...prev,
-                          temporaryHitPoints: String(numValue),
-                        }));
-                      }
-                    }}
-                    disabled={!canEdit}
-                    min="0"
-                  />
-                </div>
-                <div className="character-form__group">
-                  <label htmlFor="proficiencyBonus">Proficiency Bonus</label>
-                  <input
-                    type="number"
-                    id="proficiencyBonus"
-                    name="proficiencyBonus"
-                    value={
-                      combatStatInputs.proficiencyBonus ??
-                      String(formData.proficiencyBonus)
-                    }
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setCombatStatInputs((prev) => ({
-                        ...prev,
-                        proficiencyBonus: value,
-                      }));
-                      if (value !== "") {
-                        const numValue = parseInt(value);
-                        if (!isNaN(numValue)) {
-                          handleNumberChange("proficiencyBonus", numValue);
-                        }
-                      }
-                    }}
-                    onBlur={(e) => {
-                      const value = e.target.value;
-                      const numValue = parseInt(value);
-                      if (value === "" || isNaN(numValue)) {
-                        handleNumberChange("proficiencyBonus", 2);
-                        setCombatStatInputs((prev) => ({
-                          ...prev,
-                          proficiencyBonus: "2",
-                        }));
-                      } else {
-                        setCombatStatInputs((prev) => ({
-                          ...prev,
-                          proficiencyBonus: String(numValue),
-                        }));
-                      }
-                    }}
-                    disabled={!canEdit}
-                  />
-                </div>
-              </div>
-            </section>
-
-            {/* Saving Throws Section */}
-            <section className="character-form__section">
-              <h3>Saving Throw Proficiencies</h3>
-              <div className="character-form__checkbox-group">
-                {abilities.map((ability) => (
-                  <label key={ability.key} className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={formData.savingThrowProficiencies.includes(
-                        ability.abbrev
-                      )}
-                      onChange={() =>
-                        handleCheckboxChange("savingThrow", ability.abbrev)
-                      }
-                      disabled={!canEdit}
-                    />
-                    {ability.name} ({ability.abbrev})
-                  </label>
-                ))}
-              </div>
-            </section>
-
-            {/* Skills Section */}
-            <section className="character-form__section">
-              <h3>Skill Proficiencies</h3>
-              <div className="character-form__checkbox-group">
-                {skills.map((skill) => (
-                  <label key={skill.name} className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={formData.skillProficiencies.includes(skill.name)}
-                      onChange={() => handleCheckboxChange("skill", skill.name)}
-                      disabled={!canEdit}
-                    />
-                    {skill.name} ({skill.ability})
-                  </label>
-                ))}
-              </div>
-            </section>
-
-            {/* Personality Section */}
-            <section className="character-form__section">
-              <h3>Personality</h3>
-              <div className="character-form__grid character-form__grid--2">
-                <div className="character-form__group">
-                  <label htmlFor="personalityTraits">Personality Traits</label>
-                  <textarea
-                    id="personalityTraits"
-                    name="personalityTraits"
-                    value={formData.personalityTraits}
-                    onChange={handleInputChange}
-                    disabled={!canEdit}
-                    rows={4}
-                  />
-                </div>
-                <div className="character-form__group">
-                  <label htmlFor="ideals">Ideals</label>
-                  <textarea
-                    id="ideals"
-                    name="ideals"
-                    value={formData.ideals}
-                    onChange={handleInputChange}
-                    disabled={!canEdit}
-                    rows={4}
-                  />
-                </div>
-                <div className="character-form__group">
-                  <label htmlFor="bonds">Bonds</label>
-                  <textarea
-                    id="bonds"
-                    name="bonds"
-                    value={formData.bonds}
-                    onChange={handleInputChange}
-                    disabled={!canEdit}
-                    rows={4}
-                  />
-                </div>
-                <div className="character-form__group">
-                  <label htmlFor="flaws">Flaws</label>
-                  <textarea
-                    id="flaws"
-                    name="flaws"
-                    value={formData.flaws}
-                    onChange={handleInputChange}
-                    disabled={!canEdit}
-                    rows={4}
-                  />
-                </div>
-              </div>
-            </section>
-
-            {/* Additional Information Section */}
-            <section className="character-form__section">
-              <h3>Additional Information</h3>
-              <div className="character-form__group">
-                <label htmlFor="characterAppearance">
-                  Character Appearance
-                </label>
-                <textarea
-                  id="characterAppearance"
-                  name="characterAppearance"
-                  value={formData.characterAppearance}
-                  onChange={handleInputChange}
-                  rows={4}
-                />
-              </div>
-              <div className="character-form__group">
-                <label htmlFor="alliesAndOrganizations">
-                  Allies & Organizations
-                </label>
-                <textarea
-                  id="alliesAndOrganizations"
-                  name="alliesAndOrganizations"
-                  value={formData.alliesAndOrganizations}
-                  onChange={handleInputChange}
-                  rows={4}
-                />
-              </div>
-              <div className="character-form__group">
-                <label htmlFor="additionalFeaturesAndTraits">
-                  Additional Features & Traits
-                </label>
-                <textarea
-                  id="additionalFeaturesAndTraits"
-                  name="additionalFeaturesAndTraits"
-                  value={formData.additionalFeaturesAndTraits}
-                  onChange={handleInputChange}
-                  rows={6}
-                />
-              </div>
-              <div className="character-form__group">
-                <label htmlFor="equipment">Equipment</label>
-                <textarea
-                  id="equipment"
-                  name="equipment"
-                  value={formData.equipment}
-                  onChange={handleInputChange}
-                  rows={6}
-                />
-              </div>
-              <div className="character-form__group">
-                <label htmlFor="spells">Spells</label>
-                <textarea
-                  id="spells"
-                  name="spells"
-                  value={formData.spells}
-                  onChange={handleInputChange}
-                  rows={6}
-                />
-              </div>
-            </section>
-
-            {/* Campaign Linking Section - Only show if user can edit */}
             {canEdit && (
-              <section className="character-form__section">
-                <h3>Linked Campaigns</h3>
-                <div className="character-form__group">
-                  <label htmlFor="campaignId">Link to Campaign</label>
-                  <p className="campaign-link-hint">
-                    Enter a Campaign ID to link this character to a campaign.
-                    You can link this character to multiple campaigns.
-                  </p>
-                  <div className="campaign-link-container">
-                    <input
-                      type="text"
-                      id="campaignId"
-                      value={newCampaignId}
-                      onChange={(e) => setNewCampaignId(e.target.value)}
-                      placeholder="Paste Campaign ID here"
-                      onKeyPress={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          handleLinkCampaign();
-                        }
-                      }}
-                    />
-                    <button
-                      type="button"
-                      onClick={handleLinkCampaign}
-                      className="campaign-link-button"
-                      disabled={!newCampaignId.trim() || linkingCampaign}
-                    >
-                      {linkingCampaign ? "Linking..." : "Link Campaign"}
-                    </button>
-                  </div>
-                </div>
-                {formData.campaignIds.length > 0 ? (
-                  <div className="linked-campaigns-list">
-                    <h4>Linked Campaigns ({formData.campaignIds.length})</h4>
-                    <div className="linked-campaigns-list__items">
-                      {linkedCampaigns.map((campaign) => (
-                        <div
-                          key={campaign.id}
-                          className="linked-campaigns-list__item"
-                        >
-                          <div className="linked-campaigns-list__info">
-                            <span className="linked-campaigns-list__name">
-                              {campaign.name}
-                            </span>
-                            <code className="linked-campaigns-list__id">
-                              {campaign.id}
-                            </code>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleUnlinkCampaign(campaign.id)}
-                            className="linked-campaigns-list__remove"
-                            title="Unlink campaign"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <p className="linked-campaigns-empty">
-                    No campaigns linked yet. Add a Campaign ID to link this
-                    character to a campaign.
-                  </p>
-                )}
-              </section>
+              <CampaignLinker
+                linkedCampaigns={linkedCampaigns}
+                onLink={handleLinkCampaign}
+                onUnlink={handleUnlinkCampaign}
+              />
             )}
 
-            {/* Export PDF Button - Available to all viewers */}
             <div className="character-form__actions">
               <button
                 type="button"
                 className="character-form__export-pdf"
                 onClick={handleExportPDF}
-                disabled={exportingPDF || saving || deleting}
+                disabled={busy}
               >
                 {exportingPDF ? "Exporting..." : "Export PDF"}
               </button>
             </div>
 
-            {/* Submit Buttons - Only show if user can edit */}
             {canEdit && (
               <div className="character-form__actions">
                 <button
                   type="submit"
                   className="character-form__submit"
-                  disabled={saving || deleting || exportingPDF}
+                  disabled={busy}
                 >
                   {saving ? "Saving..." : "Save Changes"}
                 </button>
@@ -1462,7 +260,7 @@ const ViewEditCharacter = () => {
                   type="button"
                   className="character-form__cancel"
                   onClick={() => navigate("/characters")}
-                  disabled={saving || deleting || exportingPDF}
+                  disabled={busy}
                 >
                   Cancel
                 </button>
@@ -1470,23 +268,18 @@ const ViewEditCharacter = () => {
                   type="button"
                   className="character-form__delete"
                   onClick={() => setShowDeleteConfirm(true)}
-                  disabled={saving || deleting || exportingPDF}
+                  disabled={busy}
                 >
                   Delete Character
                 </button>
               </div>
             )}
 
-            {/* Delete Confirmation Modal */}
             {showDeleteConfirm && canEdit && (
               <div className="delete-confirm-modal">
                 <div
                   className="delete-confirm-modal__overlay"
-                  onClick={() => {
-                    setShowDeleteConfirm(false);
-                    setDeleteConfirmName("");
-                    setError(null);
-                  }}
+                  onClick={closeDeleteConfirm}
                 />
                 <div className="delete-confirm-modal__content">
                   <h3>Delete Character</h3>
@@ -1513,11 +306,7 @@ const ViewEditCharacter = () => {
                     <button
                       type="button"
                       className="delete-confirm-modal__cancel"
-                      onClick={() => {
-                        setShowDeleteConfirm(false);
-                        setDeleteConfirmName("");
-                        setError(null);
-                      }}
+                      onClick={closeDeleteConfirm}
                       disabled={deleting}
                     >
                       Cancel
