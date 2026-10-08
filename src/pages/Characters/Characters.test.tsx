@@ -2,12 +2,17 @@ import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Characters from "./Characters";
-import { listMyCharacters } from "../../services/characters";
+import { createCharacter, listMyCharacters } from "../../services/characters";
+import { toCharacterFile } from "../../utils/characterFile";
+import { makeCharacter, storedCharacter } from "../../test/fixtures";
 import { fillCharacterPDF } from "../../utils/fillCharacterPDF";
 import { renderSignedIn } from "../../test/renderSignedIn";
-import { storedCharacter } from "../../test/fixtures";
 
-vi.mock("../../services/characters", () => ({ listMyCharacters: vi.fn() }));
+vi.mock("../../services/characters", () => ({
+  listMyCharacters: vi.fn(),
+  createCharacter: vi.fn(),
+  fallbackPlayerName: () => "Josh",
+}));
 vi.mock("../../utils/fillCharacterPDF", () => ({
   fillCharacterPDF: vi.fn(),
 }));
@@ -60,5 +65,44 @@ describe("Characters", () => {
     );
 
     expect(fillCharacterPDF).toHaveBeenCalledWith(thalia.character);
+  });
+
+  it("imports a character from a backup file", async () => {
+    const user = userEvent.setup();
+    vi.mocked(listMyCharacters).mockResolvedValue([]);
+    vi.mocked(createCharacter).mockResolvedValue("new-id");
+    renderSignedIn(<Characters />);
+    const file = new File(
+      [toCharacterFile(makeCharacter({ characterName: "Vex" }))],
+      "Vex.json",
+      { type: "application/json" }
+    );
+
+    await user.upload(await screen.findByLabelText("Import character"), file);
+
+    expect(createCharacter).toHaveBeenCalledWith(
+      "user-1",
+      expect.objectContaining({ characterName: "Vex" }),
+      "Josh"
+    );
+    expect(
+      await screen.findByText("Navigated to another page")
+    ).toBeInTheDocument();
+  });
+
+  it("explains files it can't import", async () => {
+    const user = userEvent.setup();
+    vi.mocked(listMyCharacters).mockResolvedValue([]);
+    renderSignedIn(<Characters />);
+
+    await user.upload(
+      await screen.findByLabelText("Import character"),
+      new File(["{}"], "random.json", { type: "application/json" })
+    );
+
+    expect(
+      await screen.findByText(/doesn't look like a character file/)
+    ).toBeInTheDocument();
+    expect(createCharacter).not.toHaveBeenCalled();
   });
 });

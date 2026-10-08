@@ -1,9 +1,15 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useCurrentUser } from "../../auth/currentUser";
-import { listMyCharacters } from "../../services/characters";
+import {
+  createCharacter,
+  fallbackPlayerName,
+  listMyCharacters,
+} from "../../services/characters";
 import type { StoredCharacter } from "../../services/characters";
 import { fillCharacterPDF } from "../../utils/fillCharacterPDF";
+import { parseCharacterFile } from "../../utils/characterFile";
+import { readTextFile } from "../../utils/download";
 import "./Characters.scss";
 import { errorMessage } from "../../utils/errors";
 
@@ -13,6 +19,8 @@ const Characters = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [exportingPDF, setExportingPDF] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     listMyCharacters(user.uid)
@@ -25,6 +33,27 @@ const Characters = () => {
       })
       .finally(() => setLoading(false));
   }, [user.uid]);
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow picking the same file again
+    if (!file) return;
+
+    setImporting(true);
+    setError(null);
+    try {
+      const character = parseCharacterFile(await readTextFile(file));
+      const id = await createCharacter(
+        user.uid,
+        character,
+        fallbackPlayerName(user)
+      );
+      navigate(`/characters/${id}`);
+    } catch (err) {
+      setError(errorMessage(err, "Couldn't import that file"));
+      setImporting(false);
+    }
+  };
 
   const handleExportPDF = async ({ id, character }: StoredCharacter) => {
     setExportingPDF(id);
@@ -45,9 +74,20 @@ const Characters = () => {
       <h2>👥 Characters</h2>
       <p>Create and track your characters</p>
       <div className="page-content__section">
-        <Link to="/characters/create" className="create-character-button">
-          Create New Character
-        </Link>
+        <div className="characters__actions">
+          <Link to="/characters/create" className="create-character-button">
+            Create New Character
+          </Link>
+          <label className="create-character-button characters__import">
+            {importing ? "Importing..." : "Import character"}
+            <input
+              type="file"
+              accept="application/json,.json"
+              onChange={handleImport}
+              disabled={importing}
+            />
+          </label>
+        </div>
 
         {error && (
           <div className="info-card info-card--error">

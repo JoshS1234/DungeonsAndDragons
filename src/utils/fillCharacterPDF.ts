@@ -11,6 +11,7 @@ import type { AbilityKey, CharacterData } from "./dnd";
 import { spellcastingFor } from "./spellcasting";
 import { attackBonus, damageExpression, inventoryText } from "./inventory";
 import spellPageFields from "./pdfSpellFields.json";
+import { downloadFile, fileNameFor } from "./download";
 
 export type { CharacterData } from "./dnd";
 
@@ -251,18 +252,6 @@ export const fillPdfTemplate = async (
   return pdfDoc.save({ updateFieldAppearances: false });
 };
 
-const downloadBytes = (bytes: Uint8Array, fileName: string) => {
-  const blob = new Blob([bytes as BlobPart], { type: "application/pdf" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-};
-
 export const fillCharacterPDF = async (character: Partial<CharacterData>) => {
   const templateError =
     "Couldn't load the character sheet template. Check your connection and try again.";
@@ -280,8 +269,9 @@ export const fillCharacterPDF = async (character: Partial<CharacterData>) => {
     await response.arrayBuffer(),
     character
   );
-  downloadBytes(
-    pdfBytes,
-    `${character.characterName || "Character"}_Sheet.pdf`
+  downloadFile(
+    pdfBytes as BlobPart,
+    `${fileNameFor(character.characterName ?? "", "Character")}_Sheet.pdf`,
+    "application/pdf"
   );
 };

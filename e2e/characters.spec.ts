@@ -41,3 +41,29 @@ test("exports a filled PDF character sheet", async ({ page }) => {
   const bytes = await readFile((await download.path())!);
   expect(bytes.subarray(0, 5).toString()).toBe("%PDF-");
 });
+
+test("back up a character to JSON and import it again", async ({ page }) => {
+  await signUp(page, "player@example.com");
+  await createCharacter(page, "Thalia");
+  await page.getByRole("heading", { name: "Thalia" }).click();
+
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download backup (JSON)" }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe("Thalia.json");
+  const backup = (await download.path())!;
+
+  await page.getByRole("button", { name: "Delete Character" }).click();
+  await page.getByLabel("Name to confirm deletion").fill("Thalia");
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Delete Character" })
+    .click();
+  await expect(page.getByText("No characters created yet.")).toBeVisible();
+
+  await page.getByLabel("Import character").setInputFiles(backup);
+  await expect(
+    page.getByRole("heading", { name: "Edit Character: Thalia" })
+  ).toBeVisible();
+  await expect(page.getByLabel("Class", { exact: true })).toHaveValue("Rogue");
+});

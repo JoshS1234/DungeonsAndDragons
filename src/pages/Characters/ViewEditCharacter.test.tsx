@@ -12,9 +12,14 @@ import {
   updateCharacter,
 } from "../../services/characters";
 import { renderSignedIn } from "../../test/renderSignedIn";
+import { downloadFile } from "../../utils/download";
 import { permissionDenied, storedCharacter } from "../../test/fixtures";
 
 vi.mock("../../services/campaigns", () => ({ findJoinableCampaign: vi.fn() }));
+vi.mock("../../utils/download", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../utils/download")>()),
+  downloadFile: vi.fn(),
+}));
 vi.mock("../../services/characters", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../../services/characters")>()),
   getCharacter: vi.fn(),
@@ -152,6 +157,22 @@ describe("ViewEditCharacter", () => {
       expect(screen.queryByText("Curse of Strahd")).not.toBeInTheDocument();
     });
 
+    it("downloads a JSON backup", async () => {
+      const user = userEvent.setup();
+      renderPage();
+
+      await user.click(
+        await screen.findByRole("button", { name: "Download backup (JSON)" })
+      );
+
+      const [contents, fileName, type] = vi.mocked(downloadFile).mock.lastCall!;
+      expect(fileName).toBe("Thalia.json");
+      expect(type).toBe("application/json");
+      expect(JSON.parse(contents as string).character.characterName).toBe(
+        "Thalia"
+      );
+    });
+
     it("deletes after the name is confirmed", async () => {
       const user = userEvent.setup();
       renderPage();
@@ -186,6 +207,9 @@ describe("ViewEditCharacter", () => {
       screen.queryByRole("button", { name: "Save Changes" })
     ).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Link to Campaign")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Download backup (JSON)" })
+    ).not.toBeInTheDocument();
     expect(getCharacterCampaigns).not.toHaveBeenCalled();
   });
 
