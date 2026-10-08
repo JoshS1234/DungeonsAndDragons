@@ -58,7 +58,8 @@ by `node scripts/pdf-spell-fields.mjs`.
 
 ### Data model
 
-- `characters/{id}` – owned by `userId`.
+- `characters/{id}` – owned by `userId`; its portrait is stored at
+  `portraits/{id}` in Storage.
 - `campaigns/{id}` – owned by the DM (`userId`).
 - `campaigns/{id}/members/{uid}` – one per member, `role: "dm" | "player"`.
 - `campaigns/{id}/public/summary` – campaign name, readable by anyone with the
@@ -89,7 +90,21 @@ One-off setup (already done for this repo):
 The app uses `HashRouter` (URLs look like `/#/characters`) because GitHub
 Pages can't rewrite routes to `index.html`.
 
-Firestore rules are deployed separately, with `npm run deploy:rules`.
+Firestore and Storage rules are deployed separately, with
+`npm run deploy:rules`.
+
+### Portraits (Firebase Storage)
+
+Portraits need Firebase Storage, which requires the Blaze (pay-as-you-go)
+plan. One-off setup:
+
+1. Firebase console → upgrade to Blaze, then **Storage → Get started**.
+2. `npm run deploy:rules` (includes `storage.rules`; accept the prompt to let
+   Storage rules read Firestore, which they use to check ownership).
+3. Allow the site to download portraits for PDF export (displaying them
+   works without this):
+   `gcloud storage buckets update gs://<bucket> --cors-file=cors.json`
+   (the bucket is `VITE_FIREBASE_STORAGE_BUCKET` in `.env`).
 
 ### Troubleshooting
 

@@ -226,7 +226,8 @@ const addSpellPage = (
 
 export const fillPdfTemplate = async (
   templateBytes: ArrayBuffer | Uint8Array,
-  character: Partial<CharacterData>
+  character: Partial<CharacterData>,
+  { portrait }: { portrait?: ArrayBuffer | Uint8Array } = {}
 ): Promise<Uint8Array> => {
   // Loaded on demand: pdf-lib is large and only needed when exporting
   const { PDFDocument, StandardFonts } = await import("pdf-lib");
@@ -247,12 +248,33 @@ export const fillPdfTemplate = async (
     if (checked) form.getCheckBox(name).check();
   }
 
+  if (portrait) {
+    // Portraits are always saved as JPEG (see utils/image.ts)
+    const image = await pdfDoc.embedJpg(portrait);
+    form.getButton("CHARACTER IMAGE").setImage(image);
+  }
+
   // pdf-lib's default appearance regeneration redraws every checkbox with a
   // square border, so it's disabled here and text fields are updated above.
   return pdfDoc.save({ updateFieldAppearances: false });
 };
 
-export const fillCharacterPDF = async (character: Partial<CharacterData>) => {
+/** The portrait's bytes, or undefined if there isn't one or it won't load. */
+const fetchPortrait = async (url?: string) => {
+  if (!url) return undefined;
+  try {
+    const response = await fetch(url);
+    return response.ok ? await response.arrayBuffer() : undefined;
+  } catch {
+    // The rest of the sheet is still worth exporting
+    return undefined;
+  }
+};
+
+/** Download the template and portrait, and fill in the sheet. */
+export const generateCharacterPdf = async (
+  character: Partial<CharacterData>
+): Promise<Uint8Array> => {
   const templateError =
     "Couldn't load the character sheet template. Check your connection and try again.";
   let response: Response;
@@ -265,13 +287,14 @@ export const fillCharacterPDF = async (character: Partial<CharacterData>) => {
     throw new Error(`${templateError} (${response.status})`);
   }
 
-  const pdfBytes = await fillPdfTemplate(
-    await response.arrayBuffer(),
-    character
-  );
+  return fillPdfTemplate(await response.arrayBuffer(), character, {
+    portrait: await fetchPortrait(character.portraitUrl),
+  });
+};
+
+export const fillCharacterPDF = async (character: Partial<CharacterData>) =>
   downloadFile(
-    pdfBytes as BlobPart,
+    (await generateCharacterPdf(character)) as BlobPart,
     `${fileNameFor(character.characterName ?? "", "Character")}_Sheet.pdf`,
     "application/pdf"
   );
-};

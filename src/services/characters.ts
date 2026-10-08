@@ -18,6 +18,7 @@ import { db } from "../../firebaseSetup";
 import { normaliseCharacter } from "../utils/dnd";
 import type { CharacterData } from "../utils/dnd";
 import { getCampaignSummary } from "./campaigns";
+import { deletePortraitFile } from "./portraits";
 
 /** Enforced by the security rules too (see firestore.rules). */
 export const MAX_CAMPAIGNS_PER_CHARACTER = 5;
@@ -184,8 +185,12 @@ export const updateCharacter = async (
   await batch.commit();
 };
 
-/** Deletes the character and leaves every campaign it's in. */
+/** Deletes the character (and portrait) and leaves every campaign it's in. */
 export const deleteCharacter = async (characterId: string, uid: string) => {
+  // Before the document goes: the storage rules check it to confirm ownership
+  await deletePortraitFile(characterId).catch((err) =>
+    console.error("Couldn't delete portrait:", err)
+  );
   const campaignIds = await membershipCampaignIds(characterId, uid);
   const batch = writeBatch(db);
   for (const campaignId of campaignIds) {

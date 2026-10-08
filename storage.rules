@@ -1,0 +1,21 @@
+rules_version = '2';
+
+// Character portraits live at portraits/{characterId}.
+// Tested in src/services/services.integration.test.ts.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /portraits/{characterId} {
+      // Portraits are low-sensitivity and their paths are unguessable IDs,
+      // so any signed-in user may view one (party view, DM, etc.)
+      allow read: if request.auth != null;
+
+      // Only the character's owner can upload or remove its portrait: small
+      // images only
+      allow write: if request.auth != null
+        && firestore.get(/databases/(default)/documents/characters/$(characterId)).data.userId == request.auth.uid
+        && (request.resource == null
+          || (request.resource.size < 2 * 1024 * 1024
+            && request.resource.contentType.matches('image/.*')));
+    }
+  }
+}

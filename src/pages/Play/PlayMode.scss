@@ -27,9 +27,12 @@
 
   &__header {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     gap: 1rem;
+  }
+
+  &__title {
+    flex: 1;
   }
 
   &__stats {

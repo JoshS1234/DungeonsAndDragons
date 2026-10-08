@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import { useCurrentUser } from "../../auth/currentUser";
 import CharacterFormFields from "../../components/CharacterForm/CharacterFormFields";
 import ConfirmDeleteDialog from "../../components/ConfirmDeleteDialog/ConfirmDeleteDialog";
+import PortraitUpload from "../../components/Portrait/PortraitUpload";
 import QuickRolls from "../../components/Dice/QuickRolls";
 import CampaignLinker from "../../components/CharacterForm/CampaignLinker";
 import { findJoinableCampaign } from "../../services/campaigns";
@@ -255,6 +256,13 @@ const ViewEditCharacter = () => {
           </summary>
           <QuickRolls character={formData} />
         </details>
+        <PortraitUpload
+          characterId={characterId}
+          name={formData.characterName}
+          url={formData.portraitUrl}
+          onChange={(url) => setField("portraitUrl", url)}
+          canEdit={canEdit}
+        />
         <form onSubmit={handleSubmit} className="character-form">
           <CharacterFormFields
             character={formData}
