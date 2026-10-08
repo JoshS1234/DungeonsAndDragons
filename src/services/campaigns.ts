@@ -218,13 +218,17 @@ export const findJoinableCampaign = async (
   return summary;
 };
 
-/** DM deletes their campaign, including every membership. */
+/** DM deletes their campaign, with its memberships, sessions and encounter. */
 export const deleteCampaign = async (campaignId: string) => {
-  const members = await getDocs(
-    collection(db, "campaigns", campaignId, "members")
+  const [members, sessions, sessionNotes] = await Promise.all(
+    ["members", "sessions", "sessionNotes"].map((name) =>
+      getDocs(collection(db, "campaigns", campaignId, name))
+    )
   );
   const batch = writeBatch(db);
-  members.docs.forEach((member) => batch.delete(member.ref));
+  for (const snapshot of [members, sessions, sessionNotes]) {
+    snapshot.docs.forEach((d) => batch.delete(d.ref));
+  }
   batch.delete(summaryRef(campaignId));
   batch.delete(privateRef(campaignId));
   batch.delete(doc(db, "campaigns", campaignId, "encounter", "current"));

@@ -66,6 +66,8 @@ by `node scripts/pdf-spell-fields.mjs`.
 - `campaigns/{id}/private/dm` – DM-only notes.
 - `campaigns/{id}/encounter/current` – the initiative order (DM writes,
   members read).
+- `campaigns/{id}/sessions/{id}` and `sessionNotes/{id}` – session recaps
+  (members read) and DM-only notes.
 
 The comments in `firestore.rules` describe exactly who can do what.
 

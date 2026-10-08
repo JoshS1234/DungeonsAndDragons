@@ -24,6 +24,9 @@ vi.mock("../../services/campaigns", async (importOriginal) => ({
   deleteCampaign: vi.fn(),
 }));
 vi.mock("../../services/characters", () => ({ leaveCampaign: vi.fn() }));
+vi.mock("../../services/sessions", () => ({
+  listSessions: vi.fn(() => Promise.resolve([])),
+}));
 vi.mock("../../../firebaseSetup", () => ({ db: {} }));
 
 const renderPage = () =>

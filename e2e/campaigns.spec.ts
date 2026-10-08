@@ -64,3 +64,22 @@ test("a stranger can't open a campaign by URL", async ({ browser }) => {
     stranger.getByText("You don't have permission to view this campaign")
   ).toBeVisible();
 });
+
+test("the DM logs sessions; players read recaps but not notes", async ({
+  browser,
+}) => {
+  const dm = await newUser(browser, "dm@example.com");
+  const campaignId = await createCampaign(dm, "Curse of Strahd");
+  await dm.getByRole("button", { name: "New session" }).click();
+  await dm.getByLabel("Title").fill("Into the mists");
+  await dm.getByLabel("Recap (everyone sees this)").fill("We reached Barovia.");
+  await dm.getByLabel("DM notes (only you see these)").fill("Strahd watches");
+  await dm.getByRole("button", { name: "Save session" }).click();
+  await expect(dm.getByText("Strahd watches")).toBeVisible();
+
+  const player = await newUser(browser, "player@example.com");
+  await createCharacter(player, "Thalia", { campaignId });
+  await player.goto(`/#/campaigns/${campaignId}`);
+  await expect(player.getByText("We reached Barovia.")).toBeVisible();
+  await expect(player.getByText("Strahd watches")).toHaveCount(0);
+});

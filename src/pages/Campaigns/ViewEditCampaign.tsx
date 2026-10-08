@@ -10,6 +10,7 @@ import {
 } from "../../services/campaigns";
 import type { CampaignMember } from "../../services/campaigns";
 import { leaveCampaign } from "../../services/characters";
+import SessionLog from "../../components/Sessions/SessionLog";
 import ConfirmDeleteDialog from "../../components/ConfirmDeleteDialog/ConfirmDeleteDialog";
 import CampaignFormFields from "../../components/CampaignForm/CampaignFormFields";
 import type { CampaignFormValues } from "../../components/CampaignForm/CampaignFormFields";
@@ -271,6 +272,8 @@ const ViewEditCampaign = () => {
               </p>
             )}
           </section>
+
+          <SessionLog campaignId={campaignId} isDm={canEdit} />
 
           {canEdit && (
             <div className="campaign-form__actions">
