@@ -32,25 +32,57 @@ service cloud.firestore {
       return get(campaign(campaignId)).data.userId == uid();
     }
 
-    // A character can be linked to at most 10 campaigns, so each one can be
-    // checked within the 10-lookup limit per request.
-    function sharesCampaign(ids) {
-      return (ids.size() > 0 && isMember(ids[0]))
-        || (ids.size() > 1 && isMember(ids[1]))
-        || (ids.size() > 2 && isMember(ids[2]))
-        || (ids.size() > 3 && isMember(ids[3]))
-        || (ids.size() > 4 && isMember(ids[4]))
-        || (ids.size() > 5 && isMember(ids[5]))
-        || (ids.size() > 6 && isMember(ids[6]))
-        || (ids.size() > 7 && isMember(ids[7]))
-        || (ids.size() > 8 && isMember(ids[8]))
-        || (ids.size() > 9 && isMember(ids[9]));
+    function memberDoc(campaignId, memberUid) {
+      return /databases/$(database)/documents/campaigns/$(campaignId)/members/$(memberUid);
+    }
+
+    // The requester and the character are both (still) in this campaign.
+    // Two lookups per campaign, so a character can be linked to at most 5
+    // campaigns within the 10-lookup limit per request.
+    function sharedVia(campaignId, character, characterId) {
+      return isMember(campaignId)
+        && get(memberDoc(campaignId, character.userId)).data.characterId == characterId;
+    }
+
+    function sharesCampaign(character, characterId) {
+      let ids = character.get('campaignIds', []);
+      return (ids.size() > 0 && sharedVia(ids[0], character, characterId))
+        || (ids.size() > 1 && sharedVia(ids[1], character, characterId))
+        || (ids.size() > 2 && sharedVia(ids[2], character, characterId))
+        || (ids.size() > 3 && sharedVia(ids[3], character, characterId))
+        || (ids.size() > 4 && sharedVia(ids[4], character, characterId));
+    }
+
+    function shortText(data, field) {
+      return data.get(field, '') is string && data.get(field, '').size() <= 100;
+    }
+
+    function levelField(data, field) {
+      return data.get(field, 1) is int
+        && data.get(field, 1) >= 1
+        && data.get(field, 1) <= 20;
     }
 
     function validCharacter(data) {
       return data.userId == uid()
         && data.get('campaignIds', []) is list
-        && data.get('campaignIds', []).size() <= 10;
+        && data.get('campaignIds', []).size() <= 5
+        && shortText(data, 'characterName')
+        && shortText(data, 'playerName')
+        && shortText(data, 'class')
+        && shortText(data, 'race')
+        && shortText(data, 'background')
+        && shortText(data, 'alignment')
+        && levelField(data, 'level');
+    }
+
+    function validCampaign(data) {
+      return data.userId == uid()
+        && data.get('campaignName', '') is string
+        && data.get('campaignName', '').size() > 0
+        && shortText(data, 'campaignName')
+        && shortText(data, 'dungeonMaster')
+        && levelField(data, 'currentLevel');
     }
 
     match /characters/{characterId} {
@@ -58,7 +90,7 @@ service cloud.firestore {
       allow get: if signedIn() && (
         resource == null
         || resource.data.userId == uid()
-        || sharesCampaign(resource.data.get('campaignIds', []))
+        || sharesCampaign(resource.data, characterId)
       );
       allow list: if signedIn() && resource.data.userId == uid();
       allow create: if signedIn() && validCharacter(request.resource.data);
@@ -74,11 +106,11 @@ service cloud.firestore {
       );
       // A new campaign must be created together with the DM's membership
       allow create: if signedIn()
-        && request.resource.data.userId == uid()
-        && getAfter(/databases/$(database)/documents/campaigns/$(campaignId)/members/$(uid())).data.role == 'dm';
+        && validCampaign(request.resource.data)
+        && getAfter(memberDoc(campaignId, uid())).data.role == 'dm';
       allow update: if signedIn()
         && resource.data.userId == uid()
-        && request.resource.data.userId == uid();
+        && validCampaign(request.resource.data);
       allow delete: if signedIn() && resource.data.userId == uid();
 
       match /members/{memberId} {
@@ -90,6 +122,8 @@ service cloud.firestore {
           && request.resource.data.userId == uid()
           && request.resource.data.keys().hasOnly(
             ['userId', 'role', 'characterId', 'characterName', 'playerName', 'joinedAt'])
+          && shortText(request.resource.data, 'characterName')
+          && shortText(request.resource.data, 'playerName')
           && (
             // The DM, alongside creating the campaign
             (request.resource.data.role == 'dm'
@@ -106,7 +140,9 @@ service cloud.firestore {
         allow update: if signedIn()
           && resource.data.userId == uid()
           && request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['characterName', 'playerName']);
+            .hasOnly(['characterName', 'playerName'])
+          && shortText(request.resource.data, 'characterName')
+          && shortText(request.resource.data, 'playerName');
 
         // Players can leave; the DM can remove players (or anyone when
         // deleting the whole campaign)

@@ -4,7 +4,11 @@ import { useCurrentUser } from "../../auth/currentUser";
 import CharacterFormFields from "../../components/CharacterForm/CharacterFormFields";
 import CampaignLinker from "../../components/CharacterForm/CampaignLinker";
 import { findJoinableCampaign } from "../../services/campaigns";
-import { createCharacter, fallbackPlayerName } from "../../services/characters";
+import {
+  createCharacter,
+  fallbackPlayerName,
+  MAX_CAMPAIGNS_PER_CHARACTER,
+} from "../../services/characters";
 import type { LinkedCampaign } from "../../services/characters";
 import { fillCharacterPDF } from "../../utils/fillCharacterPDF";
 import {
@@ -38,6 +42,12 @@ const CreateCharacter = () => {
   ) => setFormData((prev) => ({ ...prev, [key]: value }));
 
   const handleLinkCampaign = async (campaignId: string) => {
+    if (formData.campaignIds.length >= MAX_CAMPAIGNS_PER_CHARACTER) {
+      setError(
+        `A character can be in at most ${MAX_CAMPAIGNS_PER_CHARACTER} campaigns.`
+      );
+      return false;
+    }
     if (formData.campaignIds.includes(campaignId)) {
       setError("This character is already linked to this campaign");
       return true;

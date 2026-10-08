@@ -25,6 +25,8 @@ export interface CampaignDetails {
   theme: string;
 }
 
+export const CAMPAIGN_STATUSES = ["Active", "On Hold", "Completed", "Planning"];
+
 export const DEFAULT_CAMPAIGN: CampaignDetails = {
   campaignName: "",
   description: "",
@@ -214,4 +216,17 @@ export const findJoinableCampaign = async (
     );
   }
   return summary;
+};
+
+/** DM deletes their campaign, including every membership. */
+export const deleteCampaign = async (campaignId: string) => {
+  const members = await getDocs(
+    collection(db, "campaigns", campaignId, "members")
+  );
+  const batch = writeBatch(db);
+  members.docs.forEach((member) => batch.delete(member.ref));
+  batch.delete(summaryRef(campaignId));
+  batch.delete(privateRef(campaignId));
+  batch.delete(campaignRef(campaignId));
+  await batch.commit();
 };

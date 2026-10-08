@@ -1,16 +1,18 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCurrentUser } from "../../auth/currentUser";
-import NumberInput from "../../components/NumberInput/NumberInput";
 import {
   DEFAULT_CAMPAIGN,
+  deleteCampaign,
   getCampaign,
   removePlayer,
   updateCampaign,
 } from "../../services/campaigns";
 import type { CampaignMember } from "../../services/campaigns";
 import { leaveCampaign } from "../../services/characters";
-import { formatDateInput } from "../../utils/formatDateInput";
+import ConfirmDeleteDialog from "../../components/ConfirmDeleteDialog/ConfirmDeleteDialog";
+import CampaignFormFields from "../../components/CampaignForm/CampaignFormFields";
+import type { CampaignFormValues } from "../../components/CampaignForm/CampaignFormFields";
 import "./CreateCampaign.scss";
 import { errorMessage, isPermissionDenied } from "../../utils/errors";
 
@@ -26,6 +28,8 @@ const ViewEditCampaign = () => {
   const [linkedPlayers, setLinkedPlayers] = useState<CampaignMember[]>([]);
   const [removingPlayer, setRemovingPlayer] = useState<string | null>(null);
   const [canEdit, setCanEdit] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const fetchCampaign = async () => {
@@ -58,17 +62,10 @@ const ViewEditCampaign = () => {
     fetchCampaign();
   }, [campaignId, user.uid]);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === "startDate" ? formatDateInput(value) : value,
-    }));
-  };
+  const setField = <K extends keyof CampaignFormValues>(
+    key: K,
+    value: CampaignFormValues[K]
+  ) => setFormData((prev) => ({ ...prev, [key]: value }));
 
   const handleCopyCampaignId = () => {
     navigator.clipboard.writeText(campaignId);
@@ -97,6 +94,19 @@ const ViewEditCampaign = () => {
       console.error("Error removing player:", err);
     } finally {
       setRemovingPlayer(null);
+    }
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    setError(null);
+    try {
+      await deleteCampaign(campaignId);
+      navigate("/campaigns");
+    } catch (err) {
+      setError(errorMessage(err, "Failed to delete campaign"));
+      console.error("Error deleting campaign:", err);
+      setDeleting(false);
     }
   };
 
@@ -169,149 +179,12 @@ const ViewEditCampaign = () => {
         </div>
         {error && <div className="campaign-form__error">{error}</div>}
         <form onSubmit={handleSubmit} className="campaign-form">
-          <section className="campaign-form__section">
-            <h3>Campaign Information</h3>
-            <div className="campaign-form__grid campaign-form__grid--2">
-              <div className="campaign-form__group">
-                <label htmlFor="campaignName">Campaign Name *</label>
-                <input
-                  type="text"
-                  id="campaignName"
-                  name="campaignName"
-                  value={formData.campaignName}
-                  onChange={handleInputChange}
-                  disabled={!canEdit}
-                  required
-                  placeholder="Enter campaign name"
-                />
-              </div>
-              <div className="campaign-form__group">
-                <label htmlFor="dungeonMaster">Dungeon Master</label>
-                <input
-                  type="text"
-                  id="dungeonMaster"
-                  name="dungeonMaster"
-                  value={formData.dungeonMaster}
-                  onChange={handleInputChange}
-                  disabled={!canEdit}
-                  placeholder="DM name"
-                />
-              </div>
-              <div className="campaign-form__group">
-                <label htmlFor="setting">Setting / World</label>
-                <input
-                  type="text"
-                  id="setting"
-                  name="setting"
-                  value={formData.setting}
-                  onChange={handleInputChange}
-                  disabled={!canEdit}
-                  placeholder="e.g., Forgotten Realms, Homebrew"
-                />
-              </div>
-              <div className="campaign-form__group">
-                <label htmlFor="currentLevel">Current Party Level</label>
-                <NumberInput
-                  id="currentLevel"
-                  name="currentLevel"
-                  value={formData.currentLevel}
-                  onChange={(currentLevel) =>
-                    setFormData((prev) => ({ ...prev, currentLevel }))
-                  }
-                  fallback={1}
-                  min={1}
-                  max={20}
-                  disabled={!canEdit}
-                />
-              </div>
-              <div className="campaign-form__group">
-                <label htmlFor="startDate">Start Date (DD/MM/YYYY)</label>
-                <input
-                  type="text"
-                  id="startDate"
-                  name="startDate"
-                  value={formData.startDate}
-                  onChange={handleInputChange}
-                  disabled={!canEdit}
-                  placeholder="DD/MM/YYYY"
-                  pattern="^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\d{4}$"
-                  title="Please enter date in DD/MM/YYYY format"
-                />
-              </div>
-              <div className="campaign-form__group">
-                <label htmlFor="status">Status</label>
-                <select
-                  id="status"
-                  name="status"
-                  value={formData.status}
-                  onChange={handleInputChange}
-                  disabled={!canEdit}
-                >
-                  <option value="Active">Active</option>
-                  <option value="On Hold">On Hold</option>
-                  <option value="Completed">Completed</option>
-                  <option value="Planning">Planning</option>
-                </select>
-              </div>
-            </div>
-          </section>
-
-          <section className="campaign-form__section">
-            <h3>Campaign Details</h3>
-            <div className="campaign-form__group">
-              <label htmlFor="description">Description</label>
-              <textarea
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                disabled={!canEdit}
-                rows={6}
-                placeholder="Describe your campaign, its story, and key events..."
-              />
-            </div>
-            <div className="campaign-form__group">
-              <label htmlFor="theme">Theme</label>
-              <input
-                type="text"
-                id="theme"
-                name="theme"
-                value={formData.theme}
-                onChange={handleInputChange}
-                placeholder="e.g., Mystery, Exploration, Political Intrigue"
-              />
-            </div>
-            <div className="campaign-form__group">
-              <label htmlFor="world">World Information</label>
-              <textarea
-                id="world"
-                name="world"
-                value={formData.world}
-                onChange={handleInputChange}
-                disabled={!canEdit}
-                rows={4}
-                placeholder="World-building details, locations, important places..."
-              />
-            </div>
-            {canEdit && (
-              <div className="campaign-form__group">
-                <label htmlFor="notes">
-                  DM Notes{" "}
-                  <span className="campaign-form__label-note">
-                    *This will not be shown to players*
-                  </span>
-                </label>
-                <textarea
-                  id="notes"
-                  name="notes"
-                  value={formData.notes}
-                  onChange={handleInputChange}
-                  rows={6}
-                  placeholder="Private notes, plot ideas, NPCs, future plans..."
-                />
-              </div>
-            )}
-          </section>
+          <CampaignFormFields
+            values={formData}
+            onFieldChange={setField}
+            disabled={!canEdit}
+            showNotes={canEdit}
+          />
 
           <section className="campaign-form__section">
             <h3>Players</h3>
@@ -388,7 +261,29 @@ const ViewEditCampaign = () => {
               >
                 Cancel
               </button>
+              <button
+                type="button"
+                className="campaign-form__delete"
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={saving}
+              >
+                Delete Campaign
+              </button>
             </div>
+          )}
+          {showDeleteConfirm && canEdit && (
+            <ConfirmDeleteDialog
+              title="Delete Campaign"
+              description="This action cannot be undone. The campaign, its DM notes and every player's membership will be permanently deleted. Players keep their characters."
+              confirmName={formData.campaignName}
+              deleting={deleting}
+              error={error}
+              onConfirm={handleDelete}
+              onCancel={() => {
+                setShowDeleteConfirm(false);
+                setError(null);
+              }}
+            />
           )}
           {!canEdit && (
             <div className="campaign-form__actions">

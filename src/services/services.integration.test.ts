@@ -32,6 +32,7 @@ import type { CharacterData } from "../utils/dnd";
 import {
   DEFAULT_CAMPAIGN,
   createCampaign,
+  deleteCampaign,
   findJoinableCampaign,
   getCampaign,
   listMyCampaigns,
@@ -266,6 +267,8 @@ describe("characters", () => {
     as("alice");
 
     await removePlayer(campaignId, "bob");
+    // The DM loses access straight away, before Bob's next save
+    await assertFails(getCharacter(characterId));
 
     as("bob");
     expect(await getCharacterCampaigns(characterId, "bob")).toEqual([]);
@@ -283,6 +286,72 @@ describe("characters", () => {
 
     as("alice");
     expect((await getCampaign(campaignId, "alice"))?.players).toEqual([]);
+  });
+});
+
+describe("deleting campaigns", () => {
+  it("lets the DM delete a campaign and its memberships", async () => {
+    const { campaignId, characterId } = await setUpParty();
+    as("alice");
+
+    await deleteCampaign(campaignId);
+
+    expect(await getCampaign(campaignId, "alice")).toBeNull();
+    as("bob");
+    expect(await getCharacterCampaigns(characterId, "bob")).toEqual([]);
+    expect((await listMyCampaigns("bob")).playing).toEqual([]);
+  });
+
+  it("stops players deleting the campaign", async () => {
+    const { campaignId } = await setUpParty();
+    as("bob");
+
+    await assertFails(deleteCampaign(campaignId));
+  });
+});
+
+describe("validation", () => {
+  it("rejects overlong names and impossible levels", async () => {
+    const db = as("bob");
+
+    await assertFails(
+      setDoc(doc(db, "characters", "long"), {
+        ...character("x".repeat(101)),
+        userId: "bob",
+      })
+    );
+    await assertFails(
+      setDoc(doc(db, "characters", "level"), {
+        ...character("Ok"),
+        level: 25,
+        userId: "bob",
+      })
+    );
+    await assertSucceeds(
+      setDoc(doc(db, "characters", "fine"), {
+        ...character("Ok"),
+        level: 20,
+        userId: "bob",
+      })
+    );
+  });
+
+  it("rejects a campaign without a name", async () => {
+    as("alice");
+    await assertFails(
+      createCampaign("alice", { ...DEFAULT_CAMPAIGN, campaignName: "" }, "")
+    );
+  });
+
+  it("limits a character to five campaigns", async () => {
+    const db = as("bob");
+    await assertFails(
+      setDoc(doc(db, "characters", "busy"), {
+        ...character("Busy"),
+        campaignIds: ["a", "b", "c", "d", "e", "f"],
+        userId: "bob",
+      })
+    );
   });
 });
 

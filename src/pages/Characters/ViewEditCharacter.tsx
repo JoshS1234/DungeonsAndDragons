@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useCurrentUser } from "../../auth/currentUser";
 import CharacterFormFields from "../../components/CharacterForm/CharacterFormFields";
+import ConfirmDeleteDialog from "../../components/ConfirmDeleteDialog/ConfirmDeleteDialog";
 import CampaignLinker from "../../components/CharacterForm/CampaignLinker";
 import { findJoinableCampaign } from "../../services/campaigns";
 import {
@@ -12,6 +13,7 @@ import {
   joinCampaign,
   leaveCampaign,
   updateCharacter,
+  MAX_CAMPAIGNS_PER_CHARACTER,
 } from "../../services/characters";
 import type { LinkedCampaign } from "../../services/characters";
 import { fillCharacterPDF } from "../../utils/fillCharacterPDF";
@@ -35,7 +37,6 @@ const ViewEditCharacter = () => {
   const [error, setError] = useState<string | null>(null);
   const [canEdit, setCanEdit] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleteConfirmName, setDeleteConfirmName] = useState("");
   const [formData, setFormData] = useState<CharacterData>(DEFAULT_CHARACTER);
   const [linkedCampaigns, setLinkedCampaigns] = useState<LinkedCampaign[]>([]);
 
@@ -79,6 +80,12 @@ const ViewEditCharacter = () => {
   ) => setFormData((prev) => ({ ...prev, [key]: value }));
 
   const handleLinkCampaign = async (campaignId: string) => {
+    if (formData.campaignIds.length >= MAX_CAMPAIGNS_PER_CHARACTER) {
+      setError(
+        `A character can be in at most ${MAX_CAMPAIGNS_PER_CHARACTER} campaigns.`
+      );
+      return false;
+    }
     try {
       setError(null);
       const summary = await findJoinableCampaign(campaignId, user.uid);
@@ -139,13 +146,6 @@ const ViewEditCharacter = () => {
   };
 
   const handleDelete = async () => {
-    if (deleteConfirmName !== formData.characterName) {
-      setError(
-        "Character name does not match. Please enter the exact character name to confirm deletion."
-      );
-      return;
-    }
-
     setDeleting(true);
     setError(null);
 
@@ -161,7 +161,6 @@ const ViewEditCharacter = () => {
 
   const closeDeleteConfirm = () => {
     setShowDeleteConfirm(false);
-    setDeleteConfirmName("");
     setError(null);
   };
 
@@ -271,54 +270,15 @@ const ViewEditCharacter = () => {
           )}
 
           {showDeleteConfirm && canEdit && (
-            <div className="delete-confirm-modal">
-              <div
-                className="delete-confirm-modal__overlay"
-                onClick={closeDeleteConfirm}
-              />
-              <div className="delete-confirm-modal__content">
-                <h3>Delete Character</h3>
-                <p>
-                  This action cannot be undone. This will permanently delete
-                  your character and remove them from all linked campaigns.
-                </p>
-                <p>
-                  To confirm, please enter the character name:{" "}
-                  <strong>{formData.characterName}</strong>
-                </p>
-                <input
-                  type="text"
-                  className="delete-confirm-modal__input"
-                  value={deleteConfirmName}
-                  onChange={(e) => setDeleteConfirmName(e.target.value)}
-                  placeholder="Enter character name to confirm"
-                  autoFocus
-                />
-                {error && (
-                  <div className="delete-confirm-modal__error">{error}</div>
-                )}
-                <div className="delete-confirm-modal__actions">
-                  <button
-                    type="button"
-                    className="delete-confirm-modal__cancel"
-                    onClick={closeDeleteConfirm}
-                    disabled={deleting}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    className="delete-confirm-modal__confirm"
-                    onClick={handleDelete}
-                    disabled={
-                      deleting || deleteConfirmName !== formData.characterName
-                    }
-                  >
-                    {deleting ? "Deleting..." : "Delete Character"}
-                  </button>
-                </div>
-              </div>
-            </div>
+            <ConfirmDeleteDialog
+              title="Delete Character"
+              description="This action cannot be undone. This will permanently delete your character and remove them from all linked campaigns."
+              confirmName={formData.characterName}
+              deleting={deleting}
+              error={error}
+              onConfirm={handleDelete}
+              onCancel={closeDeleteConfirm}
+            />
           )}
         </form>
       </div>
