@@ -51,6 +51,7 @@ import {
   watchCharacter,
 } from "./characters";
 import { endEncounter, saveEncounter, watchEncounter } from "./encounters";
+import { deleteSession, listSessions, saveSession } from "./sessions";
 import { NEW_ENCOUNTER } from "../utils/encounter";
 import type { Encounter } from "../utils/encounter";
 
@@ -393,6 +394,70 @@ describe("encounters", () => {
       ).exists();
     });
     expect(exists).toBe(false);
+  });
+});
+
+describe("session log", () => {
+  const session = {
+    date: "2026-10-08",
+    title: "Into the mists",
+    recap: "The party reached Barovia.",
+    dmNotes: "Strahd is watching",
+  };
+
+  it("shares recaps with players but keeps DM notes private", async () => {
+    const { campaignId } = await setUpParty();
+    as("alice");
+    const id = await saveSession(campaignId, session);
+    expect(await listSessions(campaignId, true)).toEqual([{ id, ...session }]);
+
+    const db = as("bob");
+    expect(await listSessions(campaignId, false)).toEqual([
+      { id, ...session, dmNotes: "" },
+    ]);
+    await assertFails(
+      getDoc(doc(db, "campaigns", campaignId, "sessionNotes", id))
+    );
+    await assertFails(saveSession(campaignId, { ...session, title: "Mine" }));
+    await assertFails(deleteSession(campaignId, id));
+
+    as("carol");
+    await assertFails(listSessions(campaignId, false));
+  });
+
+  it("lets the DM edit and delete sessions", async () => {
+    const { campaignId } = await setUpParty();
+    as("alice");
+    const id = await saveSession(campaignId, session);
+    await saveSession(campaignId, { ...session, id, title: "Renamed" });
+    expect((await listSessions(campaignId, true))[0].title).toBe("Renamed");
+
+    await deleteSession(campaignId, id);
+    expect(await listSessions(campaignId, true)).toEqual([]);
+  });
+
+  it("rejects overlong titles", async () => {
+    const { campaignId } = await setUpParty();
+    as("alice");
+    await assertFails(
+      saveSession(campaignId, { ...session, title: "x".repeat(101) })
+    );
+  });
+
+  it("is removed with the campaign", async () => {
+    const { campaignId } = await setUpParty();
+    as("alice");
+    await saveSession(campaignId, session);
+    await deleteCampaign(campaignId);
+
+    let remaining = -1;
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const db = context.firestore() as unknown as Firestore;
+      remaining = (
+        await getDocs(collection(db, "campaigns", campaignId, "sessions"))
+      ).size;
+    });
+    expect(remaining).toBe(0);
   });
 });
 

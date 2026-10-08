@@ -71,8 +71,7 @@ In priority order (agreed October 2026).
 3. **SRD lookups + inventory**
    - Spells (PR 8), equipment/inventory (PR 10) and monsters (PR 11) done.
    - [ ] Work out AC from equipped armour and shield.
-4. **Session log**
-   - [ ] Dated session notes per campaign: a shared recap plus DM-only notes.
+4. **Session log**: done (PR 12).
 
 Smaller ideas, unprioritised:
 
@@ -81,6 +80,12 @@ Smaller ideas, unprioritised:
       accounts.
 
 ## Done in this pass
+
+### Session log (PR 12)
+
+- Dated sessions on each campaign page: a recap everyone in the campaign
+  can read, plus DM-only notes stored separately so players can't read
+  them. The DM adds, edits and deletes entries.
 
 ### Party view and initiative (PR 11)
 

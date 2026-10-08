@@ -7,6 +7,8 @@ rules_version = '2';
 //   campaigns/{campaignId}/public/summary  name only, readable with the ID
 //   campaigns/{campaignId}/private/dm      DM-only notes
 //   campaigns/{campaignId}/encounter/current  initiative order
+//   campaigns/{campaignId}/sessions/{id}      session recaps
+//   campaigns/{campaignId}/sessionNotes/{id}  DM-only session notes
 //
 // Tested in src/services/*.integration.test.ts (`npm run test:integration`).
 
@@ -175,6 +177,23 @@ service cloud.firestore {
           && request.resource.data.combatants is list
           && request.resource.data.combatants.size() <= 100;
         allow delete: if signedIn() && isDm(campaignId);
+      }
+
+      // Session log: recaps for everyone in the campaign, notes for the DM
+      match /sessions/{sessionId} {
+        allow read: if signedIn() && isMember(campaignId);
+        allow create, update: if signedIn()
+          && isDm(campaignId)
+          && request.resource.data.date is string
+          && request.resource.data.title is string
+          && request.resource.data.title.size() <= 100
+          && request.resource.data.recap is string
+          && request.resource.data.recap.size() <= 20000;
+        allow delete: if signedIn() && isDm(campaignId);
+      }
+
+      match /sessionNotes/{sessionId} {
+        allow read, write: if signedIn() && isDm(campaignId);
       }
 
       match /private/{docId} {
