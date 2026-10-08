@@ -23,8 +23,8 @@ parts of the sheet:
 - [ ] Character appearance (the template has no text field for it; it could go
       in "Backstory" on page 2, or into Age/Height/Eyes/etc. if the app adds
       those fields)
-- [ ] Weapons/attacks table, currency (CP/SP/EP/GP/PP), inspiration,
-      proficiencies & languages, death saves
+- [ ] Weapons/attacks table, currency (CP/SP/EP/GP/PP), proficiencies &
+      languages
 
 ## Refactoring
 
@@ -65,11 +65,10 @@ New features should come with tests at the appropriate level.
 In priority order (agreed October 2026).
 
 1. **Play mode + dice roller**
-   - [ ] Compact, phone-friendly character sheet for sessions: quick buttons
-         for damage, healing, temporary HP, death saves and spell slots,
-         instead of editing the whole form mid-session.
-   - [ ] One-tap **attack** rolls (needs weapons, item 3). Dice roller with
-         ability/save/skill/initiative rolls is done (PR 7).
+   - [ ] One-tap **attack** rolls (needs weapons, item 3). Dice roller (PR 7)
+         and play mode (PR 9) are done.
+   - [ ] Track remaining Hit Dice (short rests currently let you spend any
+         number).
 2. **DM party view + initiative**
    - [ ] Each campaign shows its characters' HP, AC, passive perception and
          conditions on one screen, updated live with `onSnapshot`.
@@ -89,6 +88,14 @@ Smaller ideas, unprioritised:
       accounts.
 
 ## Done in this pass
+
+### Play mode (PR 9)
+
+- Phone-friendly play screen per character: damage (temp HP first),
+  healing, temp HP, death saves (with a roll button), spell slot tracking,
+  conditions, inspiration, short rest (spend a Hit Die) and long rest.
+  Changes save immediately and update live.
+- Death saves and inspiration export to the PDF.
 
 ### Spells (PR 8)
 

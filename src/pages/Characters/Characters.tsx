@@ -112,14 +112,22 @@ const Characters = () => {
                         )}
                       </div>
                     </Link>
-                    <button
-                      className="character-card__export-pdf"
-                      onClick={() => handleExportPDF(stored)}
-                      disabled={exportingPDF === id}
-                      title="Export PDF"
-                    >
-                      {exportingPDF === id ? "Exporting..." : "📄 Export PDF"}
-                    </button>
+                    <div className="character-card__actions">
+                      <Link
+                        to={`/characters/${id}/play`}
+                        className="character-card__export-pdf"
+                      >
+                        ▶ Play
+                      </Link>
+                      <button
+                        className="character-card__export-pdf"
+                        onClick={() => handleExportPDF(stored)}
+                        disabled={exportingPDF === id}
+                        title="Export PDF"
+                      >
+                        {exportingPDF === id ? "Exporting..." : "📄 Export PDF"}
+                      </button>
+                    </div>
                   </div>
                 );
               })}

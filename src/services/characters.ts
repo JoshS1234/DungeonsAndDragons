@@ -6,9 +6,11 @@ import {
   doc,
   getDoc,
   getDocs,
+  onSnapshot,
   orderBy,
   query,
   serverTimestamp,
+  updateDoc,
   where,
   writeBatch,
 } from "firebase/firestore";
@@ -91,6 +93,40 @@ export const getCharacter = async (
     character: normaliseCharacter(snapshot.data()),
   };
 };
+
+/**
+ * Live updates for one character. Calls `onChange(null)` if it's deleted.
+ * Returns an unsubscribe function.
+ */
+export const watchCharacter = (
+  characterId: string,
+  onChange: (character: StoredCharacter | null) => void,
+  onError: (error: Error) => void
+) =>
+  onSnapshot(
+    characterRef(characterId),
+    (snapshot) =>
+      onChange(
+        snapshot.exists()
+          ? {
+              id: snapshot.id,
+              userId: snapshot.data().userId,
+              character: normaliseCharacter(snapshot.data()),
+            }
+          : null
+      ),
+    onError
+  );
+
+/** Save a few fields (e.g. HP during play) without touching the rest. */
+export const updateCharacterFields = (
+  characterId: string,
+  fields: Partial<CharacterData>
+) =>
+  updateDoc(characterRef(characterId), {
+    ...fields,
+    updatedAt: serverTimestamp(),
+  });
 
 /** Creates the character and joins every campaign in `campaignIds`. */
 export const createCharacter = async (

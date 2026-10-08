@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import { useCurrentUser } from "../../auth/currentUser";
 import CharacterFormFields from "../../components/CharacterForm/CharacterFormFields";
 import ConfirmDeleteDialog from "../../components/ConfirmDeleteDialog/ConfirmDeleteDialog";
@@ -227,6 +227,9 @@ const ViewEditCharacter = () => {
             {canEdit ? "Edit Character" : "View Character"}:{" "}
             {formData.characterName || "Unnamed"}
           </h2>
+          <Link to={`/characters/${characterId}/play`} className="back-button">
+            ▶ Play mode
+          </Link>
           {campaignIdFromState && (
             <button
               type="button"

@@ -61,6 +61,20 @@ describe("buildPdfFieldValues", () => {
     expect(checkboxes["Check Box 39"]).toBe(true);
   });
 
+  it("fills death saves and inspiration", () => {
+    const values = buildPdfFieldValues({
+      ...character,
+      deathSaveSuccesses: 2,
+      deathSaveFailures: 1,
+      inspiration: true,
+    });
+    expect(values.checkboxes["Check Box 13"]).toBe(true);
+    expect(values.checkboxes["Check Box 14"]).toBe(false);
+    expect(values.checkboxes["Check Box 15"]).toBe(true);
+    expect(values.checkboxes["Check Box 16"]).toBe(false);
+    expect(values.text.Inspiration).toBe("Yes");
+  });
+
   it("keeps 0 current hit points", () => {
     expect(text.HPCurrent).toBe("0");
   });

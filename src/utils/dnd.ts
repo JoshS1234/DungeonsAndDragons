@@ -104,6 +104,14 @@ export interface CharacterData {
   temporaryHitPoints: number;
   hitDice: string;
 
+  // Session state (play mode)
+  deathSaveSuccesses: number;
+  deathSaveFailures: number;
+  /** Slots used per spell level, index 0 = 1st level. */
+  spellSlotsUsed: number[];
+  conditions: string[];
+  inspiration: boolean;
+
   // Proficiency
   proficiencyBonus: number;
   savingThrowProficiencies: string[];
@@ -148,6 +156,12 @@ export const DEFAULT_CHARACTER: CharacterData = {
   currentHitPoints: 8,
   temporaryHitPoints: 0,
   hitDice: "1d8",
+
+  deathSaveSuccesses: 0,
+  deathSaveFailures: 0,
+  spellSlotsUsed: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+  conditions: [],
+  inspiration: false,
 
   proficiencyBonus: 2,
   savingThrowProficiencies: [],
