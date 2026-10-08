@@ -10,6 +10,7 @@ import {
   where,
   writeBatch,
 } from "firebase/firestore";
+import type { DocumentData } from "firebase/firestore";
 import { db } from "../../firebaseSetup";
 
 export interface CampaignDetails {
@@ -69,7 +70,7 @@ const toSummary = (details: CampaignDetails): CampaignSummary => ({
   dungeonMaster: details.dungeonMaster,
 });
 
-const toCampaign = (id: string, data: Record<string, any>): Campaign => {
+const toCampaign = (id: string, data: DocumentData): Campaign => {
   const campaign = { ...DEFAULT_CAMPAIGN, id, userId: data.userId };
   for (const key of Object.keys(
     DEFAULT_CAMPAIGN

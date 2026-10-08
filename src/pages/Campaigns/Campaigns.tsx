@@ -5,6 +5,7 @@ import Header from "../../components/Header/Header";
 import { listMyCampaigns } from "../../services/campaigns";
 import type { Campaign } from "../../services/campaigns";
 import "./Campaigns.scss";
+import { errorMessage } from "../../utils/errors";
 
 const CampaignCard = ({
   campaign,
@@ -91,7 +92,9 @@ const Campaigns = () => {
       })
       .catch((err) => {
         console.error("Error fetching campaigns:", err);
-        setError(err.message || "Failed to load campaigns. Please try again.");
+        setError(
+          errorMessage(err, "Failed to load campaigns. Please try again.")
+        );
       })
       .finally(() => setLoading(false));
   }, []);

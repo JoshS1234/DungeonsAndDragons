@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { auth } from "../../../firebaseSetup";
 import {
   updateProfile,
@@ -8,10 +8,13 @@ import {
 } from "firebase/auth";
 import Header from "../../components/Header/Header";
 import "./Account.scss";
+import { errorMessage } from "../../utils/errors";
 
 const Account = () => {
-  const [displayName, setDisplayName] = useState("");
-  const [email, setEmail] = useState("");
+  const [displayName, setDisplayName] = useState(
+    auth.currentUser?.displayName || ""
+  );
+  const email = auth.currentUser?.email || "";
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -20,13 +23,6 @@ const Account = () => {
     type: "success" | "error";
     text: string;
   } | null>(null);
-
-  useEffect(() => {
-    if (auth.currentUser) {
-      setDisplayName(auth.currentUser.displayName || "");
-      setEmail(auth.currentUser.email || "");
-    }
-  }, []);
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,10 +36,10 @@ const Account = () => {
         displayName: displayName,
       });
       setMessage({ type: "success", text: "Profile updated successfully!" });
-    } catch (error: any) {
+    } catch (error) {
       setMessage({
         type: "error",
-        text: error.message || "Failed to update profile",
+        text: errorMessage(error, "Failed to update profile"),
       });
     } finally {
       setLoading(false);
@@ -81,10 +77,10 @@ const Account = () => {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-    } catch (error: any) {
+    } catch (error) {
       setMessage({
         type: "error",
-        text: error.message || "Failed to update password",
+        text: errorMessage(error, "Failed to update password"),
       });
     } finally {
       setLoading(false);

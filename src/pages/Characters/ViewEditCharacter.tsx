@@ -19,6 +19,7 @@ import { fillCharacterPDF } from "../../utils/fillCharacterPDF";
 import { DEFAULT_CHARACTER } from "../../utils/dnd";
 import type { CharacterData } from "../../utils/dnd";
 import "./CreateCharacter.scss";
+import { errorMessage, isPermissionDenied } from "../../utils/errors";
 
 const ViewEditCharacter = () => {
   const navigate = useNavigate();
@@ -58,11 +59,11 @@ const ViewEditCharacter = () => {
             await getCharacterCampaigns(characterId, user.uid)
           );
         }
-      } catch (err: any) {
+      } catch (err) {
         setError(
-          err.code === "permission-denied"
+          isPermissionDenied(err)
             ? "You don't have permission to view this character"
-            : err.message || "Failed to load character"
+            : errorMessage(err, "Failed to load character")
         );
         console.error("Error fetching character:", err);
       } finally {
@@ -96,8 +97,8 @@ const ViewEditCharacter = () => {
         { id: campaignId, name: summary.campaignName || "Unnamed Campaign" },
       ]);
       return true;
-    } catch (err: any) {
-      setError(err.message || "Failed to link campaign");
+    } catch (err) {
+      setError(errorMessage(err, "Failed to link campaign"));
       console.error("Error linking campaign:", err);
       return false;
     }
@@ -111,8 +112,8 @@ const ViewEditCharacter = () => {
         formData.campaignIds.filter((cid) => cid !== campaignId)
       );
       setLinkedCampaigns((prev) => prev.filter((c) => c.id !== campaignId));
-    } catch (err: any) {
-      setError(err.message || "Failed to unlink campaign");
+    } catch (err) {
+      setError(errorMessage(err, "Failed to unlink campaign"));
       console.error("Error unlinking campaign:", err);
     }
   };
@@ -130,8 +131,8 @@ const ViewEditCharacter = () => {
         fallbackPlayerName(user)
       );
       navigate("/characters");
-    } catch (err: any) {
-      setError(err.message || "Failed to update character");
+    } catch (err) {
+      setError(errorMessage(err, "Failed to update character"));
       console.error("Error updating character:", err);
     } finally {
       setSaving(false);
@@ -152,8 +153,8 @@ const ViewEditCharacter = () => {
     try {
       await deleteCharacter(characterId, user.uid);
       navigate("/characters");
-    } catch (err: any) {
-      setError(err.message || "Failed to delete character");
+    } catch (err) {
+      setError(errorMessage(err, "Failed to delete character"));
       console.error("Error deleting character:", err);
       setDeleting(false);
     }
@@ -171,8 +172,8 @@ const ViewEditCharacter = () => {
 
     try {
       await fillCharacterPDF(formData);
-    } catch (err: any) {
-      setError(err.message || "Failed to export PDF");
+    } catch (err) {
+      setError(errorMessage(err, "Failed to export PDF"));
       console.error("Error exporting PDF:", err);
     } finally {
       setExportingPDF(false);
