@@ -14,10 +14,7 @@ vi.mock("firebase/auth", () => ({
 }));
 
 describe("LoginContainer", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    vi.spyOn(window, "alert").mockImplementation(() => {});
-  });
+  beforeEach(() => vi.clearAllMocks());
 
   it("signs in with the entered credentials", async () => {
     const user = userEvent.setup();
@@ -25,7 +22,7 @@ describe("LoginContainer", () => {
 
     await user.type(screen.getByLabelText("Email"), "dm@example.com");
     await user.type(screen.getByLabelText("Password"), "hunter22");
-    await user.click(screen.getByRole("button", { name: "Submit" }));
+    await user.click(screen.getByRole("button", { name: "Sign in" }));
 
     expect(signInWithEmailAndPassword).toHaveBeenCalledWith(
       {},
@@ -34,17 +31,71 @@ describe("LoginContainer", () => {
     );
   });
 
+  it("shows a friendly message when sign-in fails", async () => {
+    vi.mocked(signInWithEmailAndPassword).mockRejectedValueOnce({
+      code: "auth/invalid-credential",
+    });
+    const user = userEvent.setup();
+    render(<LoginContainer />);
+
+    await user.type(screen.getByLabelText("Email"), "dm@example.com");
+    await user.type(screen.getByLabelText("Password"), "wrong-password");
+    await user.click(screen.getByRole("button", { name: "Sign in" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Incorrect email or password."
+    );
+    expect(screen.getByRole("button", { name: "Sign in" })).toBeEnabled();
+  });
+
   it("refuses to sign up when passwords differ", async () => {
     const user = userEvent.setup();
     render(<LoginContainer />);
     await user.click(screen.getByRole("button", { name: "New user" }));
 
     await user.type(screen.getByLabelText("Email"), "new@example.com");
-    await user.type(screen.getByLabelText("Password"), "one");
-    await user.type(screen.getByLabelText("Confirm password"), "two");
-    await user.click(screen.getByRole("button", { name: "Submit" }));
+    await user.type(screen.getByLabelText("Password"), "password-one");
+    await user.type(screen.getByLabelText("Confirm password"), "password-two");
+    await user.click(screen.getByRole("button", { name: "Create account" }));
 
     expect(createUserWithEmailAndPassword).not.toHaveBeenCalled();
-    expect(window.alert).toHaveBeenCalledWith("your passwords did not match");
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Your passwords don't match."
+    );
+    // The email isn't lost
+    expect(screen.getByLabelText("Email")).toHaveValue("new@example.com");
+  });
+
+  it("creates an account", async () => {
+    const user = userEvent.setup();
+    render(<LoginContainer />);
+    await user.click(screen.getByRole("button", { name: "New user" }));
+
+    await user.type(screen.getByLabelText("Email"), "new@example.com");
+    await user.type(screen.getByLabelText("Password"), "password-one");
+    await user.type(screen.getByLabelText("Confirm password"), "password-one");
+    await user.click(screen.getByRole("button", { name: "Create account" }));
+
+    expect(createUserWithEmailAndPassword).toHaveBeenCalledWith(
+      {},
+      "new@example.com",
+      "password-one"
+    );
+  });
+
+  it("clears the error when switching forms", async () => {
+    const user = userEvent.setup();
+    render(<LoginContainer />);
+    await user.click(screen.getByRole("button", { name: "New user" }));
+    await user.type(screen.getByLabelText("Email"), "new@example.com");
+    await user.type(screen.getByLabelText("Password"), "password-one");
+    await user.type(screen.getByLabelText("Confirm password"), "different");
+    await user.click(screen.getByRole("button", { name: "Create account" }));
+
+    await user.click(
+      screen.getByRole("button", { name: "Already have account" })
+    );
+
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });

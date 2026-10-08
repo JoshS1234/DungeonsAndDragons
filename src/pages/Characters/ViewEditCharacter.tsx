@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { auth } from "../../../firebaseSetup";
-import Header from "../../components/Header/Header";
+import { useCurrentUser } from "../../auth/currentUser";
 import CharacterFormFields from "../../components/CharacterForm/CharacterFormFields";
 import CampaignLinker from "../../components/CharacterForm/CampaignLinker";
 import { findJoinableCampaign } from "../../services/campaigns";
@@ -22,11 +21,11 @@ import "./CreateCharacter.scss";
 import { errorMessage, isPermissionDenied } from "../../utils/errors";
 
 const ViewEditCharacter = () => {
+  const user = useCurrentUser();
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams<{ id: string }>();
   const characterId = id!;
-  const user = auth.currentUser!;
   const campaignIdFromState = (location.state as { fromCampaign?: string })
     ?.fromCampaign;
   const [loading, setLoading] = useState(true);
@@ -184,150 +183,144 @@ const ViewEditCharacter = () => {
 
   if (loading) {
     return (
-      <div className="app">
-        <Header />
-        <div className="character-creation-page">
-          <div className="character-creation-page__container">
-            <h2>Loading Character...</h2>
-          </div>
+      <div className="character-creation-page">
+        <div className="character-creation-page__container">
+          <h2>Loading Character...</h2>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="app">
-      <Header />
-      <div className="character-creation-page">
-        <div className="character-creation-page__container">
-          <div className="page-title-row">
-            <h2>
-              {canEdit ? "Edit Character" : "View Character"}:{" "}
-              {formData.characterName || "Unnamed"}
-            </h2>
-            {campaignIdFromState && (
-              <button
-                type="button"
-                onClick={() => navigate(`/campaigns/${campaignIdFromState}`)}
-                className="back-button"
-              >
-                ← Back to Campaign
-              </button>
-            )}
-          </div>
-          {!canEdit && (
-            <p className="view-only-note">
-              View-only mode: This character is linked to a campaign you're part
-              of
-            </p>
+    <div className="character-creation-page">
+      <div className="character-creation-page__container">
+        <div className="page-title-row">
+          <h2>
+            {canEdit ? "Edit Character" : "View Character"}:{" "}
+            {formData.characterName || "Unnamed"}
+          </h2>
+          {campaignIdFromState && (
+            <button
+              type="button"
+              onClick={() => navigate(`/campaigns/${campaignIdFromState}`)}
+              className="back-button"
+            >
+              ← Back to Campaign
+            </button>
           )}
-          {error && <div className="character-form__error">{error}</div>}
-          <form onSubmit={handleSubmit} className="character-form">
-            <CharacterFormFields
-              character={formData}
-              onFieldChange={setField}
-              disabled={!canEdit}
+        </div>
+        {!canEdit && (
+          <p className="view-only-note">
+            View-only mode: This character is linked to a campaign you're part
+            of
+          </p>
+        )}
+        {error && <div className="character-form__error">{error}</div>}
+        <form onSubmit={handleSubmit} className="character-form">
+          <CharacterFormFields
+            character={formData}
+            onFieldChange={setField}
+            disabled={!canEdit}
+          />
+
+          {canEdit && (
+            <CampaignLinker
+              linkedCampaigns={linkedCampaigns}
+              onLink={handleLinkCampaign}
+              onUnlink={handleUnlinkCampaign}
             />
+          )}
 
-            {canEdit && (
-              <CampaignLinker
-                linkedCampaigns={linkedCampaigns}
-                onLink={handleLinkCampaign}
-                onUnlink={handleUnlinkCampaign}
-              />
-            )}
+          <div className="character-form__actions">
+            <button
+              type="button"
+              className="character-form__export-pdf"
+              onClick={handleExportPDF}
+              disabled={busy}
+            >
+              {exportingPDF ? "Exporting..." : "Export PDF"}
+            </button>
+          </div>
 
+          {canEdit && (
             <div className="character-form__actions">
               <button
-                type="button"
-                className="character-form__export-pdf"
-                onClick={handleExportPDF}
+                type="submit"
+                className="character-form__submit"
                 disabled={busy}
               >
-                {exportingPDF ? "Exporting..." : "Export PDF"}
+                {saving ? "Saving..." : "Save Changes"}
+              </button>
+              <button
+                type="button"
+                className="character-form__cancel"
+                onClick={() => navigate("/characters")}
+                disabled={busy}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="character-form__delete"
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={busy}
+              >
+                Delete Character
               </button>
             </div>
+          )}
 
-            {canEdit && (
-              <div className="character-form__actions">
-                <button
-                  type="submit"
-                  className="character-form__submit"
-                  disabled={busy}
-                >
-                  {saving ? "Saving..." : "Save Changes"}
-                </button>
-                <button
-                  type="button"
-                  className="character-form__cancel"
-                  onClick={() => navigate("/characters")}
-                  disabled={busy}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="character-form__delete"
-                  onClick={() => setShowDeleteConfirm(true)}
-                  disabled={busy}
-                >
-                  Delete Character
-                </button>
-              </div>
-            )}
-
-            {showDeleteConfirm && canEdit && (
-              <div className="delete-confirm-modal">
-                <div
-                  className="delete-confirm-modal__overlay"
-                  onClick={closeDeleteConfirm}
+          {showDeleteConfirm && canEdit && (
+            <div className="delete-confirm-modal">
+              <div
+                className="delete-confirm-modal__overlay"
+                onClick={closeDeleteConfirm}
+              />
+              <div className="delete-confirm-modal__content">
+                <h3>Delete Character</h3>
+                <p>
+                  This action cannot be undone. This will permanently delete
+                  your character and remove them from all linked campaigns.
+                </p>
+                <p>
+                  To confirm, please enter the character name:{" "}
+                  <strong>{formData.characterName}</strong>
+                </p>
+                <input
+                  type="text"
+                  className="delete-confirm-modal__input"
+                  value={deleteConfirmName}
+                  onChange={(e) => setDeleteConfirmName(e.target.value)}
+                  placeholder="Enter character name to confirm"
+                  autoFocus
                 />
-                <div className="delete-confirm-modal__content">
-                  <h3>Delete Character</h3>
-                  <p>
-                    This action cannot be undone. This will permanently delete
-                    your character and remove them from all linked campaigns.
-                  </p>
-                  <p>
-                    To confirm, please enter the character name:{" "}
-                    <strong>{formData.characterName}</strong>
-                  </p>
-                  <input
-                    type="text"
-                    className="delete-confirm-modal__input"
-                    value={deleteConfirmName}
-                    onChange={(e) => setDeleteConfirmName(e.target.value)}
-                    placeholder="Enter character name to confirm"
-                    autoFocus
-                  />
-                  {error && (
-                    <div className="delete-confirm-modal__error">{error}</div>
-                  )}
-                  <div className="delete-confirm-modal__actions">
-                    <button
-                      type="button"
-                      className="delete-confirm-modal__cancel"
-                      onClick={closeDeleteConfirm}
-                      disabled={deleting}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      className="delete-confirm-modal__confirm"
-                      onClick={handleDelete}
-                      disabled={
-                        deleting || deleteConfirmName !== formData.characterName
-                      }
-                    >
-                      {deleting ? "Deleting..." : "Delete Character"}
-                    </button>
-                  </div>
+                {error && (
+                  <div className="delete-confirm-modal__error">{error}</div>
+                )}
+                <div className="delete-confirm-modal__actions">
+                  <button
+                    type="button"
+                    className="delete-confirm-modal__cancel"
+                    onClick={closeDeleteConfirm}
+                    disabled={deleting}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="delete-confirm-modal__confirm"
+                    onClick={handleDelete}
+                    disabled={
+                      deleting || deleteConfirmName !== formData.characterName
+                    }
+                  >
+                    {deleting ? "Deleting..." : "Delete Character"}
+                  </button>
                 </div>
               </div>
-            )}
-          </form>
-        </div>
+            </div>
+          )}
+        </form>
       </div>
     </div>
   );

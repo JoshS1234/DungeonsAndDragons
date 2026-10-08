@@ -4,11 +4,13 @@ import "./LoginStyles.scss";
 type LoginNewUserProps = {
   handleSignUp: (e: FormEvent) => void;
   handleSwitchToCurrUser: () => void;
+  busy: boolean;
 };
 
 const LoginNewUser = ({
   handleSignUp,
   handleSwitchToCurrUser,
+  busy,
 }: LoginNewUserProps) => {
   return (
     <form className="login-page__form" onSubmit={handleSignUp}>
@@ -16,10 +18,12 @@ const LoginNewUser = ({
         Email
       </label>
       <input
-        type="text"
+        type="email"
         className="login-page__form-textbox"
         name="email"
         id="email"
+        autoComplete="email"
+        required
       />
       <label className="login-page__form-label" htmlFor="password">
         Password
@@ -29,6 +33,9 @@ const LoginNewUser = ({
         className="login-page__form-textbox"
         name="password"
         id="password"
+        autoComplete="new-password"
+        minLength={6}
+        required
       />
       <label className="login-page__form-label" htmlFor="password2">
         Confirm password
@@ -38,9 +45,11 @@ const LoginNewUser = ({
         className="login-page__form-textbox"
         name="password2"
         id="password2"
+        autoComplete="new-password"
+        required
       />
-      <button type="submit" className="login-page__form-button">
-        Submit
+      <button type="submit" className="login-page__form-button" disabled={busy}>
+        {busy ? "Creating account..." : "Create account"}
       </button>
       <button
         type="button"

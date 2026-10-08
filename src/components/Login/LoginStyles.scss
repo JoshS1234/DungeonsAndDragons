@@ -211,3 +211,14 @@
     }
   }
 }
+
+.login-page__error {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  max-width: 90%;
+  border: 1px solid rgba(255, 68, 68, 0.6);
+  border-radius: 8px;
+  background: rgba(128, 0, 0, 0.75);
+  color: #ffdddd;
+  text-align: center;
+}
