@@ -1,5 +1,7 @@
 // Shared D&D 5e reference data and rules helpers.
 
+import { rollDie } from "./dice";
+
 export const ABILITIES = [
   { name: "Strength", key: "strength", abbrev: "STR" },
   { name: "Dexterity", key: "dexterity", abbrev: "DEX" },
@@ -209,9 +211,6 @@ export const savingThrowModifier = (
   (character.savingThrowProficiencies.includes(ability.abbrev)
     ? character.proficiencyBonus
     : 0);
-
-const rollDie = (sides: number, random: () => number): number =>
-  Math.floor(random() * sides) + 1;
 
 export const roll4d6DropLowest = (
   random: () => number = Math.random

@@ -20,6 +20,7 @@ const ViewEditCharacter = lazy(
 );
 const Rules = lazy(() => import("./pages/Rules/Rules"));
 const Instructions = lazy(() => import("./pages/Instructions/Instructions"));
+const Dice = lazy(() => import("./pages/Dice/Dice"));
 const NotFound = lazy(() => import("./pages/NotFound/NotFound"));
 
 const App = () => (
@@ -33,6 +34,7 @@ const App = () => (
       <Route path="/characters" element={<Characters />} />
       <Route path="/characters/create" element={<CreateCharacter />} />
       <Route path="/characters/:id" element={<ViewEditCharacter />} />
+      <Route path="/dice" element={<Dice />} />
       <Route path="/rules" element={<Rules />} />
       <Route path="/instructions" element={<Instructions />} />
       <Route path="*" element={<NotFound />} />

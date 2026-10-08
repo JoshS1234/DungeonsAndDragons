@@ -101,7 +101,7 @@ const Campaigns = () => {
 
   return (
     <div className="page-content">
-      <h2>🎲 Campaigns</h2>
+      <h2>🗺️ Campaigns</h2>
       <p>Manage your campaigns and adventures</p>
       <div className="page-content__section">
         <Link to="/campaigns/create" className="create-campaign-button">

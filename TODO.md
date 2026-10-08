@@ -32,7 +32,9 @@ parts of the sheet:
 
 - [ ] **SCSS duplication.** `CreateCharacter.scss` (800 lines) and
       `CreateCampaign.scss` (400 lines) restyle the same form elements. Pull
-      shared form styles and colour variables into one partial.
+      shared form styles and colour variables into one partial (best done as
+      part of the style overhaul). Shared page styles already moved to
+      `App.scss` (PR 7).
 
 ## Testing
 
@@ -68,8 +70,8 @@ In priority order (agreed October 2026).
    - [ ] Compact, phone-friendly character sheet for sessions: quick buttons
          for damage, healing, temporary HP, death saves and spell slots,
          instead of editing the whole form mid-session.
-   - [ ] Dice roller: any expression (`2d6+3`), advantage/disadvantage, and
-         one-tap rolls for skills, saves and attacks from the sheet.
+   - [ ] One-tap **attack** rolls (needs weapons, item 3). Dice roller with
+         ability/save/skill/initiative rolls is done (PR 7).
 2. **DM party view + initiative**
    - [ ] Each campaign shows its characters' HP, AC, passive perception and
          conditions on one screen, updated live with `onSnapshot`.
@@ -93,6 +95,15 @@ Smaller ideas, unprioritised:
       accounts.
 
 ## Done in this pass
+
+### Dice roller (PR 7)
+
+- Dice engine for expressions like `2d6+3` or `1d20+1d4-1`, with
+  advantage/disadvantage on d20s and natural 1/20 call-outs.
+- Dice page (linked from the header and home page) with quick d4–d100
+  buttons and a roll history shared across the session.
+- One-tap ability, save, skill and initiative rolls on character pages.
+- Shared page styles moved to `App.scss`: lazily-loaded pages (like Dice and 404) were unstyled unless another page's CSS had already loaded.
 
 ### Page tests (PR 6)
 

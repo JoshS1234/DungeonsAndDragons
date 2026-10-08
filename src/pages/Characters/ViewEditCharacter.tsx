@@ -3,6 +3,7 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useCurrentUser } from "../../auth/currentUser";
 import CharacterFormFields from "../../components/CharacterForm/CharacterFormFields";
 import ConfirmDeleteDialog from "../../components/ConfirmDeleteDialog/ConfirmDeleteDialog";
+import QuickRolls from "../../components/Dice/QuickRolls";
 import CampaignLinker from "../../components/CharacterForm/CampaignLinker";
 import { findJoinableCampaign } from "../../services/campaigns";
 import {
@@ -237,6 +238,12 @@ const ViewEditCharacter = () => {
           </p>
         )}
         {error && <div className="character-form__error">{error}</div>}
+        <details className="character-form__section quick-rolls-panel">
+          <summary>
+            <h3>🎲 Quick rolls</h3>
+          </summary>
+          <QuickRolls character={formData} />
+        </details>
         <form onSubmit={handleSubmit} className="character-form">
           <CharacterFormFields
             character={formData}
