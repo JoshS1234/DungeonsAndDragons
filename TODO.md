@@ -5,17 +5,17 @@ a call from you before they can be done.
 
 ## Security / data problems
 
-- [ ] **Deploy the new rules and wipe old data.** Rules are written and tested
-      (`firestore.rules`, `npm run test:integration`) but not deployed. Data
-      in the old format won't show up in the new structure.
 - [ ] Rules check ownership and membership, but not field contents (e.g. an
       owner could write a 10 MB character name). Add type/size checks if
       sign-up is ever opened to strangers.
 - [ ] After a DM removes a player, that DM can still read the character until
       its owner next saves it (that save tidies up `campaignIds`).
-- [ ] **Run `npm audit fix` / bump dependencies.** 6 known vulnerabilities
-      (react-router high; protobufjs/websocket-driver critical, both via
-      firebase). Not done in this pass, so the diff stays reviewable.
+
+- [ ] **Remaining dependency advisories** (12, all moderate/high) are inside
+      `firebase-tools`, which only runs on developer machines and CI. They
+      clear when firebase-tools updates its dependencies.
+- [ ] **Major upgrades not yet done:** Vite 8, TypeScript 7,
+      `@vitejs/plugin-react` 6. Each needs its own check for breaking changes.
 
 ## Bugs / jank
 
@@ -53,12 +53,6 @@ parts of the sheet:
       shared form styles and colour variables into one partial.
 - [ ] **Bundle size** (1.07 MB). Lazy-load `pdf-lib` (only needed on export)
       and the route components.
-- [ ] Add ESLint (`App.tsx` has an `eslint-disable` comment, but no ESLint is
-      configured) and commit a Prettier config. The code is Prettier-formatted
-      with `trailingComma: "es5"`.
-- [ ] Docs: there's no README, but there are five overlapping deployment docs
-      (`QUICK_FIX`, `TROUBLESHOOTING`, `DEPLOYMENT_CHECKLIST`,
-      `GITHUB_PAGES_SETUP`, `GITHUB_SECRETS`). Merge them into one README.
 
 ## Testing
 
@@ -127,8 +121,19 @@ Smaller ideas, unprioritised:
 
 ## Done in this pass
 
+### Tooling (PR 2)
+
+- Upgraded firebase to 13, Vitest to 5 and everything else within its major
+  version; patched `@grpc/grpc-js` via an npm override. Production
+  dependencies have no known vulnerabilities.
+- CI uses Node 22 LTS (`.nvmrc`, `engines`).
+- ESLint (flat config, React hooks rules) and a Prettier config; both run in
+  CI. Typed error handling replaces `catch (err: any)`.
+- One README replaces the five overlapping deployment docs.
+
 ### Second pass
 
+- Firestore security rules deployed and old-format data wiped.
 - Firestore security rules (members-only reads, owner-only writes, DM-only
   notes), deployed with the Firebase CLI and tested against the emulator,
   including the attacks the old setup allowed.

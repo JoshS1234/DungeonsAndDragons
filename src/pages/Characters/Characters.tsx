@@ -6,6 +6,7 @@ import { listMyCharacters } from "../../services/characters";
 import type { StoredCharacter } from "../../services/characters";
 import { fillCharacterPDF } from "../../utils/fillCharacterPDF";
 import "./Characters.scss";
+import { errorMessage } from "../../utils/errors";
 
 const Characters = () => {
   const [characters, setCharacters] = useState<StoredCharacter[]>([]);
@@ -18,7 +19,9 @@ const Characters = () => {
       .then(setCharacters)
       .catch((err) => {
         console.error("Error fetching characters:", err);
-        setError(err.message || "Failed to load characters. Please try again.");
+        setError(
+          errorMessage(err, "Failed to load characters. Please try again.")
+        );
       })
       .finally(() => setLoading(false));
   }, []);
@@ -29,8 +32,8 @@ const Characters = () => {
 
     try {
       await fillCharacterPDF(character);
-    } catch (err: any) {
-      setError(err.message || "Failed to export PDF");
+    } catch (err) {
+      setError(errorMessage(err, "Failed to export PDF"));
       console.error("Error exporting PDF:", err);
     } finally {
       setExportingPDF(null);

@@ -13,6 +13,7 @@ import type { CampaignMember } from "../../services/campaigns";
 import { leaveCampaign } from "../../services/characters";
 import { formatDateInput } from "../../utils/formatDateInput";
 import "./CreateCampaign.scss";
+import { errorMessage, isPermissionDenied } from "../../utils/errors";
 
 const ViewEditCampaign = () => {
   const navigate = useNavigate();
@@ -43,11 +44,11 @@ const ViewEditCampaign = () => {
         setCanEdit(isDm);
         setFormData({ ...details, notes });
         setLinkedPlayers(players);
-      } catch (err: any) {
+      } catch (err) {
         setError(
-          err.code === "permission-denied"
+          isPermissionDenied(err)
             ? "You don't have permission to view this campaign"
-            : err.message || "Failed to load campaign"
+            : errorMessage(err, "Failed to load campaign")
         );
         console.error("Error fetching campaign:", err);
       } finally {
@@ -92,8 +93,8 @@ const ViewEditCampaign = () => {
       setLinkedPlayers((prev) =>
         prev.filter((p) => p.userId !== player.userId)
       );
-    } catch (err: any) {
-      setError(err.message || "Failed to remove player from campaign");
+    } catch (err) {
+      setError(errorMessage(err, "Failed to remove player from campaign"));
       console.error("Error removing player:", err);
     } finally {
       setRemovingPlayer(null);
@@ -109,8 +110,8 @@ const ViewEditCampaign = () => {
       const { notes, ...details } = formData;
       await updateCampaign(campaignId, user.uid, details, notes);
       navigate("/campaigns");
-    } catch (err: any) {
-      setError(err.message || "Failed to update campaign");
+    } catch (err) {
+      setError(errorMessage(err, "Failed to update campaign"));
       console.error("Error updating campaign:", err);
     } finally {
       setSaving(false);

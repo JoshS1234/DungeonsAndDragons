@@ -15,6 +15,7 @@ import {
 } from "../../utils/dnd";
 import type { Ability, AbilityKey, CharacterData } from "../../utils/dnd";
 import "./CreateCharacter.scss";
+import { errorMessage } from "../../utils/errors";
 
 type ScoreAssignments = Partial<Record<AbilityKey, number>>;
 
@@ -55,8 +56,8 @@ const CreateCharacter = () => {
         { id: campaignId, name: summary.campaignName || "Unnamed Campaign" },
       ]);
       return true;
-    } catch (err: any) {
-      setError(err.message || "Failed to link campaign");
+    } catch (err) {
+      setError(errorMessage(err, "Failed to link campaign"));
       console.error("Error linking campaign:", err);
       return false;
     }
@@ -77,8 +78,8 @@ const CreateCharacter = () => {
 
     try {
       await fillCharacterPDF(formData);
-    } catch (err: any) {
-      setError(err.message || "Failed to export PDF");
+    } catch (err) {
+      setError(errorMessage(err, "Failed to export PDF"));
       console.error("Error exporting PDF:", err);
     } finally {
       setExportingPDF(false);
@@ -94,8 +95,8 @@ const CreateCharacter = () => {
       const user = auth.currentUser!;
       await createCharacter(user.uid, formData, fallbackPlayerName(user));
       navigate("/characters");
-    } catch (err: any) {
-      setError(err.message || "Failed to create character");
+    } catch (err) {
+      setError(errorMessage(err, "Failed to create character"));
       console.error("Error creating character:", err);
     } finally {
       setLoading(false);

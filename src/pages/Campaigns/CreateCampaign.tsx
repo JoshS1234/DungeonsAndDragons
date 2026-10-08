@@ -6,6 +6,7 @@ import NumberInput from "../../components/NumberInput/NumberInput";
 import { DEFAULT_CAMPAIGN, createCampaign } from "../../services/campaigns";
 import { formatDateInput } from "../../utils/formatDateInput";
 import "./CreateCampaign.scss";
+import { errorMessage } from "../../utils/errors";
 
 const CreateCampaign = () => {
   const navigate = useNavigate();
@@ -35,8 +36,8 @@ const CreateCampaign = () => {
       const id = await createCampaign(auth.currentUser!.uid, details, notes);
       // Navigate to the view/edit page where the campaign ID will be displayed
       navigate(`/campaigns/${id}`);
-    } catch (err: any) {
-      setError(err.message || "Failed to create campaign");
+    } catch (err) {
+      setError(errorMessage(err, "Failed to create campaign"));
       console.error("Error creating campaign:", err);
     } finally {
       setLoading(false);
