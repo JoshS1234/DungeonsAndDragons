@@ -43,9 +43,18 @@ src/
   components/   Shared UI (header, character form, inputs…)
   services/     All Firestore access (characters, campaigns)
   utils/        D&D rules maths, PDF export, helpers
+scripts/                One-off data scripts (SRD snapshot, PDF field mapping)
+src/data/srd/           SRD spells and class tables (CC-BY-4.0)
 firestore.rules         Security rules (who can read/write what)
 firestore.indexes.json  Firestore indexes
 ```
+
+### SRD data
+
+Spells and class spellcasting tables come from the D&D 5e System Reference
+Document 5.1 (CC-BY-4.0), snapshotted from dnd5eapi.co by
+`node scripts/fetch-srd.mjs`. The PDF's spell-page field mapping is generated
+by `node scripts/pdf-spell-fields.mjs`.
 
 ### Data model
 

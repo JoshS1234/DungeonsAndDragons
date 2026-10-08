@@ -1,0 +1,4142 @@
+{
+ "Barbarian": {
+  "ability": null,
+  "levels": [
+   {
+    "level": 1,
+    "profBonus": 2,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 2,
+    "profBonus": 2,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 3,
+    "profBonus": 2,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 4,
+    "profBonus": 2,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 5,
+    "profBonus": 3,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 6,
+    "profBonus": 3,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 7,
+    "profBonus": 3,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 8,
+    "profBonus": 3,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 9,
+    "profBonus": 4,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 10,
+    "profBonus": 4,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 11,
+    "profBonus": 4,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 12,
+    "profBonus": 4,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 13,
+    "profBonus": 5,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 14,
+    "profBonus": 5,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 15,
+    "profBonus": 5,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 16,
+    "profBonus": 5,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 17,
+    "profBonus": 6,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 18,
+    "profBonus": 6,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 19,
+    "profBonus": 6,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 20,
+    "profBonus": 6,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   }
+  ]
+ },
+ "Bard": {
+  "ability": "CHA",
+  "levels": [
+   {
+    "level": 1,
+    "profBonus": 2,
+    "cantripsKnown": 2,
+    "spellsKnown": 4,
+    "slots": [
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 2,
+    "profBonus": 2,
+    "cantripsKnown": 2,
+    "spellsKnown": 5,
+    "slots": [
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 3,
+    "profBonus": 2,
+    "cantripsKnown": 2,
+    "spellsKnown": 6,
+    "slots": [
+     4,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 4,
+    "profBonus": 2,
+    "cantripsKnown": 3,
+    "spellsKnown": 7,
+    "slots": [
+     4,
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 5,
+    "profBonus": 3,
+    "cantripsKnown": 3,
+    "spellsKnown": 8,
+    "slots": [
+     4,
+     3,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 6,
+    "profBonus": 3,
+    "cantripsKnown": 3,
+    "spellsKnown": 9,
+    "slots": [
+     4,
+     3,
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 7,
+    "profBonus": 3,
+    "cantripsKnown": 3,
+    "spellsKnown": 10,
+    "slots": [
+     4,
+     3,
+     3,
+     1,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 8,
+    "profBonus": 3,
+    "cantripsKnown": 3,
+    "spellsKnown": 11,
+    "slots": [
+     4,
+     3,
+     3,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 9,
+    "profBonus": 4,
+    "cantripsKnown": 3,
+    "spellsKnown": 12,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     1,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 10,
+    "profBonus": 4,
+    "cantripsKnown": 4,
+    "spellsKnown": 14,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 11,
+    "profBonus": 4,
+    "cantripsKnown": 4,
+    "spellsKnown": 15,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 12,
+    "profBonus": 4,
+    "cantripsKnown": 4,
+    "spellsKnown": 15,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 13,
+    "profBonus": 5,
+    "cantripsKnown": 4,
+    "spellsKnown": 16,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 14,
+    "profBonus": 5,
+    "cantripsKnown": 4,
+    "spellsKnown": 18,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 15,
+    "profBonus": 5,
+    "cantripsKnown": 4,
+    "spellsKnown": 19,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     1,
+     0
+    ]
+   },
+   {
+    "level": 16,
+    "profBonus": 5,
+    "cantripsKnown": 4,
+    "spellsKnown": 19,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     1,
+     0
+    ]
+   },
+   {
+    "level": 17,
+    "profBonus": 6,
+    "cantripsKnown": 4,
+    "spellsKnown": 20,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     1,
+     1
+    ]
+   },
+   {
+    "level": 18,
+    "profBonus": 6,
+    "cantripsKnown": 4,
+    "spellsKnown": 22,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     3,
+     1,
+     1,
+     1,
+     1
+    ]
+   },
+   {
+    "level": 19,
+    "profBonus": 6,
+    "cantripsKnown": 4,
+    "spellsKnown": 22,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     1
+    ]
+   },
+   {
+    "level": 20,
+    "profBonus": 6,
+    "cantripsKnown": 4,
+    "spellsKnown": 22,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     3,
+     2,
+     2,
+     1,
+     1
+    ]
+   }
+  ]
+ },
+ "Cleric": {
+  "ability": "WIS",
+  "levels": [
+   {
+    "level": 1,
+    "profBonus": 2,
+    "cantripsKnown": 3,
+    "spellsKnown": null,
+    "slots": [
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 2,
+    "profBonus": 2,
+    "cantripsKnown": 3,
+    "spellsKnown": null,
+    "slots": [
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 3,
+    "profBonus": 2,
+    "cantripsKnown": 3,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 4,
+    "profBonus": 2,
+    "cantripsKnown": 4,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 5,
+    "profBonus": 3,
+    "cantripsKnown": 4,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 6,
+    "profBonus": 3,
+    "cantripsKnown": 4,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 7,
+    "profBonus": 3,
+    "cantripsKnown": 4,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     1,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 8,
+    "profBonus": 3,
+    "cantripsKnown": 4,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 9,
+    "profBonus": 4,
+    "cantripsKnown": 4,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     1,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 10,
+    "profBonus": 4,
+    "cantripsKnown": 5,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 11,
+    "profBonus": 4,
+    "cantripsKnown": 5,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 12,
+    "profBonus": 4,
+    "cantripsKnown": 5,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 13,
+    "profBonus": 5,
+    "cantripsKnown": 5,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 14,
+    "profBonus": 5,
+    "cantripsKnown": 5,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 15,
+    "profBonus": 5,
+    "cantripsKnown": 5,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     1,
+     0
+    ]
+   },
+   {
+    "level": 16,
+    "profBonus": 5,
+    "cantripsKnown": 5,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     1,
+     0
+    ]
+   },
+   {
+    "level": 17,
+    "profBonus": 6,
+    "cantripsKnown": 5,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     1,
+     1
+    ]
+   },
+   {
+    "level": 18,
+    "profBonus": 6,
+    "cantripsKnown": 5,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     3,
+     1,
+     1,
+     1,
+     1
+    ]
+   },
+   {
+    "level": 19,
+    "profBonus": 6,
+    "cantripsKnown": 5,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     1
+    ]
+   },
+   {
+    "level": 20,
+    "profBonus": 6,
+    "cantripsKnown": 5,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     3,
+     2,
+     2,
+     1,
+     1
+    ]
+   }
+  ]
+ },
+ "Druid": {
+  "ability": "WIS",
+  "levels": [
+   {
+    "level": 1,
+    "profBonus": 2,
+    "cantripsKnown": 2,
+    "spellsKnown": null,
+    "slots": [
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 2,
+    "profBonus": 2,
+    "cantripsKnown": 2,
+    "spellsKnown": null,
+    "slots": [
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 3,
+    "profBonus": 2,
+    "cantripsKnown": 2,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 4,
+    "profBonus": 2,
+    "cantripsKnown": 3,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 5,
+    "profBonus": 3,
+    "cantripsKnown": 3,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 6,
+    "profBonus": 3,
+    "cantripsKnown": 3,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 7,
+    "profBonus": 3,
+    "cantripsKnown": 3,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     1,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 8,
+    "profBonus": 3,
+    "cantripsKnown": 3,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 9,
+    "profBonus": 4,
+    "cantripsKnown": 3,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     1,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 10,
+    "profBonus": 4,
+    "cantripsKnown": 4,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 11,
+    "profBonus": 4,
+    "cantripsKnown": 4,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 12,
+    "profBonus": 4,
+    "cantripsKnown": 4,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 13,
+    "profBonus": 5,
+    "cantripsKnown": 4,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 14,
+    "profBonus": 5,
+    "cantripsKnown": 4,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 15,
+    "profBonus": 5,
+    "cantripsKnown": 4,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     1,
+     0
+    ]
+   },
+   {
+    "level": 16,
+    "profBonus": 5,
+    "cantripsKnown": 4,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     1,
+     0
+    ]
+   },
+   {
+    "level": 17,
+    "profBonus": 6,
+    "cantripsKnown": 4,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     1,
+     1
+    ]
+   },
+   {
+    "level": 18,
+    "profBonus": 6,
+    "cantripsKnown": 4,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     3,
+     1,
+     1,
+     1,
+     1
+    ]
+   },
+   {
+    "level": 19,
+    "profBonus": 6,
+    "cantripsKnown": 4,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     1
+    ]
+   },
+   {
+    "level": 20,
+    "profBonus": 6,
+    "cantripsKnown": 4,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     3,
+     2,
+     2,
+     1,
+     1
+    ]
+   }
+  ]
+ },
+ "Fighter": {
+  "ability": null,
+  "levels": [
+   {
+    "level": 1,
+    "profBonus": 2,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 2,
+    "profBonus": 2,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 3,
+    "profBonus": 2,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 4,
+    "profBonus": 2,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 5,
+    "profBonus": 3,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 6,
+    "profBonus": 3,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 7,
+    "profBonus": 3,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 8,
+    "profBonus": 3,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 9,
+    "profBonus": 4,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 10,
+    "profBonus": 4,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 11,
+    "profBonus": 4,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 12,
+    "profBonus": 4,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 13,
+    "profBonus": 5,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 14,
+    "profBonus": 5,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 15,
+    "profBonus": 5,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 16,
+    "profBonus": 5,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 17,
+    "profBonus": 6,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 18,
+    "profBonus": 6,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 19,
+    "profBonus": 6,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 20,
+    "profBonus": 6,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   }
+  ]
+ },
+ "Monk": {
+  "ability": null,
+  "levels": [
+   {
+    "level": 1,
+    "profBonus": 2,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 2,
+    "profBonus": 2,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 3,
+    "profBonus": 2,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 4,
+    "profBonus": 2,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 5,
+    "profBonus": 3,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 6,
+    "profBonus": 3,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 7,
+    "profBonus": 3,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 8,
+    "profBonus": 3,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 9,
+    "profBonus": 4,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 10,
+    "profBonus": 4,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 11,
+    "profBonus": 4,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 12,
+    "profBonus": 4,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 13,
+    "profBonus": 5,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 14,
+    "profBonus": 5,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 15,
+    "profBonus": 5,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 16,
+    "profBonus": 5,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 17,
+    "profBonus": 6,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 18,
+    "profBonus": 6,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 19,
+    "profBonus": 6,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 20,
+    "profBonus": 6,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   }
+  ]
+ },
+ "Paladin": {
+  "ability": "CHA",
+  "levels": [
+   {
+    "level": 1,
+    "profBonus": 2,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 2,
+    "profBonus": 2,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 3,
+    "profBonus": 2,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 4,
+    "profBonus": 2,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 5,
+    "profBonus": 3,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 6,
+    "profBonus": 3,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 7,
+    "profBonus": 3,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 8,
+    "profBonus": 3,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 9,
+    "profBonus": 4,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 10,
+    "profBonus": 4,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 11,
+    "profBonus": 4,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 12,
+    "profBonus": 4,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 13,
+    "profBonus": 5,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     1,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 14,
+    "profBonus": 5,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     1,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 15,
+    "profBonus": 5,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 16,
+    "profBonus": 5,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 17,
+    "profBonus": 6,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     1,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 18,
+    "profBonus": 6,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     1,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 19,
+    "profBonus": 6,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 20,
+    "profBonus": 6,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     0,
+     0,
+     0,
+     0
+    ]
+   }
+  ]
+ },
+ "Ranger": {
+  "ability": "WIS",
+  "levels": [
+   {
+    "level": 1,
+    "profBonus": 2,
+    "cantripsKnown": 0,
+    "spellsKnown": 0,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 2,
+    "profBonus": 2,
+    "cantripsKnown": 0,
+    "spellsKnown": 2,
+    "slots": [
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 3,
+    "profBonus": 2,
+    "cantripsKnown": 0,
+    "spellsKnown": 3,
+    "slots": [
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 4,
+    "profBonus": 2,
+    "cantripsKnown": 0,
+    "spellsKnown": 3,
+    "slots": [
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 5,
+    "profBonus": 3,
+    "cantripsKnown": 0,
+    "spellsKnown": 4,
+    "slots": [
+     4,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 6,
+    "profBonus": 3,
+    "cantripsKnown": 0,
+    "spellsKnown": 4,
+    "slots": [
+     4,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 7,
+    "profBonus": 3,
+    "cantripsKnown": 0,
+    "spellsKnown": 5,
+    "slots": [
+     4,
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 8,
+    "profBonus": 3,
+    "cantripsKnown": 0,
+    "spellsKnown": 5,
+    "slots": [
+     4,
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 9,
+    "profBonus": 4,
+    "cantripsKnown": 0,
+    "spellsKnown": 6,
+    "slots": [
+     4,
+     3,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 10,
+    "profBonus": 4,
+    "cantripsKnown": 0,
+    "spellsKnown": 6,
+    "slots": [
+     4,
+     3,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 11,
+    "profBonus": 4,
+    "cantripsKnown": 0,
+    "spellsKnown": 7,
+    "slots": [
+     4,
+     3,
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 12,
+    "profBonus": 4,
+    "cantripsKnown": 0,
+    "spellsKnown": 7,
+    "slots": [
+     4,
+     3,
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 13,
+    "profBonus": 5,
+    "cantripsKnown": 0,
+    "spellsKnown": 8,
+    "slots": [
+     4,
+     3,
+     3,
+     1,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 14,
+    "profBonus": 5,
+    "cantripsKnown": 0,
+    "spellsKnown": 8,
+    "slots": [
+     4,
+     3,
+     3,
+     1,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 15,
+    "profBonus": 5,
+    "cantripsKnown": 0,
+    "spellsKnown": 9,
+    "slots": [
+     4,
+     3,
+     3,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 16,
+    "profBonus": 5,
+    "cantripsKnown": 0,
+    "spellsKnown": 9,
+    "slots": [
+     4,
+     3,
+     3,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 17,
+    "profBonus": 6,
+    "cantripsKnown": 0,
+    "spellsKnown": 10,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     1,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 18,
+    "profBonus": 6,
+    "cantripsKnown": 0,
+    "spellsKnown": 10,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     1,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 19,
+    "profBonus": 6,
+    "cantripsKnown": 0,
+    "spellsKnown": 11,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 20,
+    "profBonus": 6,
+    "cantripsKnown": 0,
+    "spellsKnown": 11,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     0,
+     0,
+     0,
+     0
+    ]
+   }
+  ]
+ },
+ "Rogue": {
+  "ability": null,
+  "levels": [
+   {
+    "level": 1,
+    "profBonus": 2,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 2,
+    "profBonus": 2,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 3,
+    "profBonus": 2,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 4,
+    "profBonus": 2,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 5,
+    "profBonus": 3,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 6,
+    "profBonus": 3,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 7,
+    "profBonus": 3,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 8,
+    "profBonus": 3,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 9,
+    "profBonus": 4,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 10,
+    "profBonus": 4,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 11,
+    "profBonus": 4,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 12,
+    "profBonus": 4,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 13,
+    "profBonus": 5,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 14,
+    "profBonus": 5,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 15,
+    "profBonus": 5,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 16,
+    "profBonus": 5,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 17,
+    "profBonus": 6,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 18,
+    "profBonus": 6,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 19,
+    "profBonus": 6,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 20,
+    "profBonus": 6,
+    "cantripsKnown": 0,
+    "spellsKnown": null,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   }
+  ]
+ },
+ "Sorcerer": {
+  "ability": "CHA",
+  "levels": [
+   {
+    "level": 1,
+    "profBonus": 2,
+    "cantripsKnown": 4,
+    "spellsKnown": 2,
+    "slots": [
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 2,
+    "profBonus": 2,
+    "cantripsKnown": 4,
+    "spellsKnown": 3,
+    "slots": [
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 3,
+    "profBonus": 2,
+    "cantripsKnown": 4,
+    "spellsKnown": 4,
+    "slots": [
+     4,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 4,
+    "profBonus": 2,
+    "cantripsKnown": 5,
+    "spellsKnown": 5,
+    "slots": [
+     4,
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 5,
+    "profBonus": 3,
+    "cantripsKnown": 5,
+    "spellsKnown": 6,
+    "slots": [
+     4,
+     3,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 6,
+    "profBonus": 3,
+    "cantripsKnown": 5,
+    "spellsKnown": 7,
+    "slots": [
+     4,
+     3,
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 7,
+    "profBonus": 3,
+    "cantripsKnown": 5,
+    "spellsKnown": 8,
+    "slots": [
+     4,
+     3,
+     3,
+     1,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 8,
+    "profBonus": 3,
+    "cantripsKnown": 5,
+    "spellsKnown": 9,
+    "slots": [
+     4,
+     3,
+     3,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 9,
+    "profBonus": 4,
+    "cantripsKnown": 5,
+    "spellsKnown": 10,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     1,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 10,
+    "profBonus": 4,
+    "cantripsKnown": 6,
+    "spellsKnown": 11,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 11,
+    "profBonus": 4,
+    "cantripsKnown": 6,
+    "spellsKnown": 12,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 12,
+    "profBonus": 4,
+    "cantripsKnown": 6,
+    "spellsKnown": 12,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 13,
+    "profBonus": 5,
+    "cantripsKnown": 6,
+    "spellsKnown": 13,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 14,
+    "profBonus": 5,
+    "cantripsKnown": 6,
+    "spellsKnown": 13,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 15,
+    "profBonus": 5,
+    "cantripsKnown": 6,
+    "spellsKnown": 14,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     1,
+     0
+    ]
+   },
+   {
+    "level": 16,
+    "profBonus": 5,
+    "cantripsKnown": 6,
+    "spellsKnown": 14,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     1,
+     0
+    ]
+   },
+   {
+    "level": 17,
+    "profBonus": 6,
+    "cantripsKnown": 6,
+    "spellsKnown": 15,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     1,
+     1
+    ]
+   },
+   {
+    "level": 18,
+    "profBonus": 6,
+    "cantripsKnown": 6,
+    "spellsKnown": 15,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     3,
+     1,
+     1,
+     1,
+     1
+    ]
+   },
+   {
+    "level": 19,
+    "profBonus": 6,
+    "cantripsKnown": 6,
+    "spellsKnown": 15,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     1
+    ]
+   },
+   {
+    "level": 20,
+    "profBonus": 6,
+    "cantripsKnown": 6,
+    "spellsKnown": 15,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     3,
+     2,
+     2,
+     1,
+     1
+    ]
+   }
+  ]
+ },
+ "Warlock": {
+  "ability": "CHA",
+  "levels": [
+   {
+    "level": 1,
+    "profBonus": 2,
+    "cantripsKnown": 2,
+    "spellsKnown": 2,
+    "slots": [
+     1,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 2,
+    "profBonus": 2,
+    "cantripsKnown": 2,
+    "spellsKnown": 3,
+    "slots": [
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 3,
+    "profBonus": 2,
+    "cantripsKnown": 2,
+    "spellsKnown": 4,
+    "slots": [
+     0,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 4,
+    "profBonus": 2,
+    "cantripsKnown": 3,
+    "spellsKnown": 5,
+    "slots": [
+     0,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 5,
+    "profBonus": 3,
+    "cantripsKnown": 3,
+    "spellsKnown": 6,
+    "slots": [
+     0,
+     0,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 6,
+    "profBonus": 3,
+    "cantripsKnown": 3,
+    "spellsKnown": 7,
+    "slots": [
+     0,
+     0,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 7,
+    "profBonus": 3,
+    "cantripsKnown": 3,
+    "spellsKnown": 8,
+    "slots": [
+     0,
+     0,
+     0,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 8,
+    "profBonus": 3,
+    "cantripsKnown": 3,
+    "spellsKnown": 9,
+    "slots": [
+     0,
+     0,
+     0,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 9,
+    "profBonus": 4,
+    "cantripsKnown": 3,
+    "spellsKnown": 10,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     2,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 10,
+    "profBonus": 4,
+    "cantripsKnown": 4,
+    "spellsKnown": 10,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     2,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 11,
+    "profBonus": 4,
+    "cantripsKnown": 4,
+    "spellsKnown": 11,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     3,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 12,
+    "profBonus": 4,
+    "cantripsKnown": 4,
+    "spellsKnown": 11,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     3,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 13,
+    "profBonus": 5,
+    "cantripsKnown": 4,
+    "spellsKnown": 12,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     3,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 14,
+    "profBonus": 5,
+    "cantripsKnown": 4,
+    "spellsKnown": 12,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     3,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 15,
+    "profBonus": 5,
+    "cantripsKnown": 4,
+    "spellsKnown": 13,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     3,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 16,
+    "profBonus": 5,
+    "cantripsKnown": 4,
+    "spellsKnown": 13,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     3,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 17,
+    "profBonus": 6,
+    "cantripsKnown": 4,
+    "spellsKnown": 14,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     4,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 18,
+    "profBonus": 6,
+    "cantripsKnown": 4,
+    "spellsKnown": 14,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     4,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 19,
+    "profBonus": 6,
+    "cantripsKnown": 4,
+    "spellsKnown": 15,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     4,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 20,
+    "profBonus": 6,
+    "cantripsKnown": 4,
+    "spellsKnown": 15,
+    "slots": [
+     0,
+     0,
+     0,
+     0,
+     4,
+     0,
+     0,
+     0,
+     0
+    ]
+   }
+  ]
+ },
+ "Wizard": {
+  "ability": "INT",
+  "levels": [
+   {
+    "level": 1,
+    "profBonus": 2,
+    "cantripsKnown": 3,
+    "spellsKnown": null,
+    "slots": [
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 2,
+    "profBonus": 2,
+    "cantripsKnown": 3,
+    "spellsKnown": null,
+    "slots": [
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 3,
+    "profBonus": 2,
+    "cantripsKnown": 3,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 4,
+    "profBonus": 2,
+    "cantripsKnown": 4,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 5,
+    "profBonus": 3,
+    "cantripsKnown": 4,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 6,
+    "profBonus": 3,
+    "cantripsKnown": 4,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 7,
+    "profBonus": 3,
+    "cantripsKnown": 4,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     1,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 8,
+    "profBonus": 3,
+    "cantripsKnown": 4,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 9,
+    "profBonus": 4,
+    "cantripsKnown": 4,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     1,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 10,
+    "profBonus": 4,
+    "cantripsKnown": 5,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 11,
+    "profBonus": 4,
+    "cantripsKnown": 5,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 12,
+    "profBonus": 4,
+    "cantripsKnown": 5,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 13,
+    "profBonus": 5,
+    "cantripsKnown": 5,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 14,
+    "profBonus": 5,
+    "cantripsKnown": 5,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     0,
+     0
+    ]
+   },
+   {
+    "level": 15,
+    "profBonus": 5,
+    "cantripsKnown": 5,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     1,
+     0
+    ]
+   },
+   {
+    "level": 16,
+    "profBonus": 5,
+    "cantripsKnown": 5,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     1,
+     0
+    ]
+   },
+   {
+    "level": 17,
+    "profBonus": 6,
+    "cantripsKnown": 5,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     1,
+     1
+    ]
+   },
+   {
+    "level": 18,
+    "profBonus": 6,
+    "cantripsKnown": 5,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     3,
+     1,
+     1,
+     1,
+     1
+    ]
+   },
+   {
+    "level": 19,
+    "profBonus": 6,
+    "cantripsKnown": 5,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     1
+    ]
+   },
+   {
+    "level": 20,
+    "profBonus": 6,
+    "cantripsKnown": 5,
+    "spellsKnown": null,
+    "slots": [
+     4,
+     3,
+     3,
+     3,
+     3,
+     2,
+     2,
+     1,
+     1
+    ]
+   }
+  ]
+ }
+}

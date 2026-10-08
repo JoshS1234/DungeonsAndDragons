@@ -1,5 +1,6 @@
 import type { ChangeEvent, ReactNode } from "react";
 import NumberInput from "../NumberInput/NumberInput";
+import SpellsSection from "../Spells/SpellsSection";
 import {
   ABILITIES,
   ALIGNMENTS,
@@ -8,6 +9,7 @@ import {
   SKILLS,
   calculateModifier,
   formatModifier,
+  proficiencyBonusForLevel,
 } from "../../utils/dnd";
 import type { Ability, CharacterData } from "../../utils/dnd";
 
@@ -55,7 +57,7 @@ const ADDITIONAL_FIELDS: Array<{ key: TextKey; label: string; rows: number }> =
       rows: 6,
     },
     { key: "equipment", label: "Equipment", rows: 6 },
-    { key: "spells", label: "Spells", rows: 6 },
+    { key: "spells", label: "Spell notes", rows: 4 },
   ];
 
 type CharacterFormFieldsProps = {
@@ -160,6 +162,17 @@ const CharacterFormFields = ({
         min={stat.min}
         disabled={disabled}
       />
+      {stat.key === "proficiencyBonus" && (
+        <small className="character-form__hint">
+          Level {character.level}:{" "}
+          {formatModifier(proficiencyBonusForLevel(character.level))}
+        </small>
+      )}
+      {stat.key === "initiative" && (
+        <small className="character-form__hint">
+          DEX modifier: {formatModifier(calculateModifier(character.dexterity))}
+        </small>
+      )}
     </div>
   );
 
@@ -287,6 +300,12 @@ const CharacterFormFields = ({
           {PERSONALITY_FIELDS.map(({ key, label }) => textArea(key, label, 4))}
         </div>
       </section>
+
+      <SpellsSection
+        character={character}
+        onChange={(spells) => onFieldChange("knownSpells", spells)}
+        disabled={disabled}
+      />
 
       <section className="character-form__section">
         <h3>Additional Information</h3>

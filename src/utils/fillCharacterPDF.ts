@@ -8,6 +8,8 @@ import {
   skillModifier,
 } from "./dnd";
 import type { AbilityKey, CharacterData } from "./dnd";
+import { spellcastingFor } from "./spellcasting";
+import spellPageFields from "./pdfSpellFields.json";
 
 export type { CharacterData } from "./dnd";
 
@@ -143,7 +145,42 @@ export const buildPdfFieldValues = (
   const perception = SKILLS.find((s) => s.name === "Perception")!;
   text.Passive = String(10 + skillModifier(c, perception));
 
+  addSpellPage(c, text, checkboxes);
+
   return { text, checkboxes };
+};
+
+/**
+ * Page 3: spellcasting stats, slots, and spells by level. Field names come
+ * from scripts/pdf-spell-fields.mjs. Spells beyond the lines available for
+ * a level are left off.
+ */
+const addSpellPage = (
+  c: CharacterData,
+  text: Record<string, string>,
+  checkboxes: Record<string, boolean>
+) => {
+  const casting = spellcastingFor(c);
+  if (casting) {
+    text["Spellcasting Class 2"] = c.class;
+    text["SpellcastingAbility 2"] = casting.ability;
+    text["SpellSaveDC  2"] = String(casting.saveDC);
+    text["SpellAtkBonus 2"] = formatModifier(casting.attackBonus);
+  }
+
+  for (const { level, slotsTotal, lines } of spellPageFields) {
+    const slots = casting?.slots[level - 1] ?? 0;
+    if (slotsTotal && slots > 0) text[slotsTotal] = String(slots);
+
+    const spells = c.knownSpells
+      .filter((spell) => spell.level === level)
+      .sort((a, b) => a.name.localeCompare(b.name));
+    spells.slice(0, lines.length).forEach((spell, i) => {
+      text[lines[i].name] = spell.name;
+      const box = lines[i].prepared;
+      if (box) checkboxes[box] = spell.prepared;
+    });
+  }
 };
 
 export const fillPdfTemplate = async (

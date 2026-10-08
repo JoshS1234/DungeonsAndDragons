@@ -13,6 +13,7 @@ import type { LinkedCampaign } from "../../services/characters";
 import { fillCharacterPDF } from "../../utils/fillCharacterPDF";
 import {
   ABILITIES,
+  derivedChanges,
   DEFAULT_CHARACTER,
   rollAbilityScores,
 } from "../../utils/dnd";
@@ -39,7 +40,13 @@ const CreateCharacter = () => {
   const setField = <K extends keyof CharacterData>(
     key: K,
     value: CharacterData[K]
-  ) => setFormData((prev) => ({ ...prev, [key]: value }));
+  ) =>
+    setFormData((prev) => ({
+      ...prev,
+      [key]: value,
+      // e.g. proficiency bonus follows level unless it's been overridden
+      ...derivedChanges(prev, key, value),
+    }));
 
   const handleLinkCampaign = async (campaignId: string) => {
     if (formData.campaignIds.length >= MAX_CAMPAIGNS_PER_CHARACTER) {

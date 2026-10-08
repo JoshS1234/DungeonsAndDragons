@@ -25,8 +25,6 @@ parts of the sheet:
       those fields)
 - [ ] Weapons/attacks table, currency (CP/SP/EP/GP/PP), inspiration,
       proficiencies & languages, death saves
-- [ ] Page 3 spell sheet. Spells currently go into "Attacks & Spellcasting" on
-      page 1, because the app stores spells as one free-text box.
 
 ## Refactoring
 
@@ -78,9 +76,7 @@ In priority order (agreed October 2026).
    - [ ] Initiative tracker, pre-filled with the party's initiative bonuses,
          with monsters added by hand.
 3. **SRD lookups + inventory**
-   - [ ] Spell, equipment and monster details from the free 5e SRD API
-         (dnd5eapi.co), e.g. picking spells from a list instead of free text,
-         which would also let the PDF fill page 3.
+   - [ ] Equipment and monster details from the SRD (spells done in PR 8).
    - [ ] Inventory and currency (CP/SP/EP/GP/PP), weapons/attacks, languages
          (also fills the remaining PDF fields).
 4. **Session log**
@@ -88,13 +84,23 @@ In priority order (agreed October 2026).
 
 Smaller ideas, unprioritised:
 
-- [ ] Work out proficiency bonus from level, and initiative from DEX, instead
-      of typing them in (perhaps with a manual override).
 - [ ] Character portraits (Firebase Storage).
 - [ ] Export/import a character as JSON, as a backup or to move it between
       accounts.
 
 ## Done in this pass
+
+### Spells (PR 8)
+
+- Spell picker from the SRD (319 spells), filtered to the character's class
+  and castable levels, with full spell details; custom spells for other
+  books or homebrew.
+- Spellcasting summary: ability, save DC, attack bonus, slots, and
+  cantrips/known/prepared counts with gentle over-limit warnings.
+- Proficiency bonus follows level and initiative follows DEX, unless
+  overridden.
+- PDF export fills the spell page (page 3): stats, slots, spells by level
+  and prepared boxes.
 
 ### Dice roller (PR 7)
 

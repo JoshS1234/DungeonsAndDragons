@@ -1,6 +1,7 @@
 // Shared D&D 5e reference data and rules helpers.
 
 import { rollDie } from "./dice";
+import type { KnownSpell } from "./spellcasting";
 
 export const ABILITIES = [
   { name: "Strength", key: "strength", abbrev: "STR" },
@@ -117,7 +118,9 @@ export interface CharacterData {
   alliesAndOrganizations: string;
   additionalFeaturesAndTraits: string;
   equipment: string;
+  /** Free-text spell notes (shown as "Spell notes"). */
   spells: string;
+  knownSpells: KnownSpell[];
   campaignIds: string[];
 }
 
@@ -159,6 +162,7 @@ export const DEFAULT_CHARACTER: CharacterData = {
   additionalFeaturesAndTraits: "",
   equipment: "",
   spells: "",
+  knownSpells: [],
   campaignIds: [],
 };
 
@@ -178,6 +182,35 @@ export const normaliseCharacter = (
     }
   }
   return result;
+};
+
+/** 5e proficiency bonus: +2 at levels 1-4, rising by 1 every 4 levels. */
+export const proficiencyBonusForLevel = (level: number): number =>
+  2 + Math.floor((Math.min(Math.max(level, 1), 20) - 1) / 4);
+
+/**
+ * Fields that should follow another field when it changes, unless the user
+ * has overridden them: proficiency bonus follows level, initiative follows
+ * DEX.
+ */
+export const derivedChanges = <K extends keyof CharacterData>(
+  character: CharacterData,
+  key: K,
+  value: CharacterData[K]
+): Partial<CharacterData> => {
+  if (
+    key === "level" &&
+    character.proficiencyBonus === proficiencyBonusForLevel(character.level)
+  ) {
+    return { proficiencyBonus: proficiencyBonusForLevel(value as number) };
+  }
+  if (
+    key === "dexterity" &&
+    character.initiative === calculateModifier(character.dexterity)
+  ) {
+    return { initiative: calculateModifier(value as number) };
+  }
+  return {};
 };
 
 export const calculateModifier = (score: number): number =>

@@ -4,7 +4,9 @@ import {
   DEFAULT_CHARACTER,
   SKILLS,
   calculateModifier,
+  derivedChanges,
   formatModifier,
+  proficiencyBonusForLevel,
   normaliseCharacter,
   roll4d6DropLowest,
   rollAbilityScores,
@@ -117,5 +119,44 @@ describe("savingThrowModifier", () => {
       savingThrowProficiencies: ["WIS"],
     };
     expect(savingThrowModifier(character, wisdom)).toBe(1);
+  });
+});
+
+describe("proficiencyBonusForLevel", () => {
+  it.each([
+    [1, 2],
+    [4, 2],
+    [5, 3],
+    [9, 4],
+    [13, 5],
+    [17, 6],
+    [20, 6],
+  ])("level %i gives +%i", (level, bonus) => {
+    expect(proficiencyBonusForLevel(level)).toBe(bonus);
+  });
+});
+
+describe("derivedChanges", () => {
+  it("moves proficiency bonus with level", () => {
+    expect(derivedChanges(DEFAULT_CHARACTER, "level", 5)).toEqual({
+      proficiencyBonus: 3,
+    });
+  });
+
+  it("leaves an overridden proficiency bonus alone", () => {
+    const character = { ...DEFAULT_CHARACTER, proficiencyBonus: 4 };
+    expect(derivedChanges(character, "level", 5)).toEqual({});
+  });
+
+  it("moves initiative with DEX unless overridden", () => {
+    expect(derivedChanges(DEFAULT_CHARACTER, "dexterity", 16)).toEqual({
+      initiative: 3,
+    });
+    const alert = { ...DEFAULT_CHARACTER, initiative: 5 };
+    expect(derivedChanges(alert, "dexterity", 16)).toEqual({});
+  });
+
+  it("ignores unrelated fields", () => {
+    expect(derivedChanges(DEFAULT_CHARACTER, "characterName", "X")).toEqual({});
   });
 });
