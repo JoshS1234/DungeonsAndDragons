@@ -69,6 +69,10 @@ service cloud.firestore {
         && data.get('campaignIds', []).size() <= 5
         && data.get('knownSpells', []) is list
         && data.get('knownSpells', []).size() <= 200
+        && data.get('inventory', []) is list
+        && data.get('inventory', []).size() <= 300
+        && data.get('attacks', []) is list
+        && data.get('attacks', []).size() <= 50
         && shortText(data, 'characterName')
         && shortText(data, 'playerName')
         && shortText(data, 'class')

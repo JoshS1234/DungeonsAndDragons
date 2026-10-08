@@ -2,6 +2,7 @@
 
 import { rollDie } from "./dice";
 import type { KnownSpell } from "./spellcasting";
+import type { Attack, Currency, InventoryItem } from "./inventory";
 
 export const ABILITIES = [
   { name: "Strength", key: "strength", abbrev: "STR" },
@@ -125,7 +126,12 @@ export interface CharacterData {
   characterAppearance: string;
   alliesAndOrganizations: string;
   additionalFeaturesAndTraits: string;
+  /** Free-text equipment notes (shown as "Other equipment"). */
   equipment: string;
+  inventory: InventoryItem[];
+  attacks: Attack[];
+  currency: Currency;
+  proficienciesAndLanguages: string;
   /** Free-text spell notes (shown as "Spell notes"). */
   spells: string;
   knownSpells: KnownSpell[];
@@ -175,6 +181,10 @@ export const DEFAULT_CHARACTER: CharacterData = {
   alliesAndOrganizations: "",
   additionalFeaturesAndTraits: "",
   equipment: "",
+  inventory: [],
+  attacks: [],
+  currency: { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 },
+  proficienciesAndLanguages: "",
   spells: "",
   knownSpells: [],
   campaignIds: [],

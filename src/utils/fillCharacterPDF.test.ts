@@ -30,6 +30,42 @@ const character: CharacterData = {
   proficiencyBonus: 2,
   currentHitPoints: 0,
   personalityTraits: "Curious",
+  attacks: [
+    {
+      name: "Rapier",
+      ability: "DEX",
+      proficient: true,
+      damageDice: "1d8",
+      damageType: "Piercing",
+      magicBonus: 0,
+    },
+    {
+      name: "Shortbow",
+      ability: "DEX",
+      proficient: true,
+      damageDice: "1d6",
+      damageType: "Piercing",
+      magicBonus: 1,
+    },
+    {
+      name: "Dagger",
+      ability: "DEX",
+      proficient: true,
+      damageDice: "1d4",
+      damageType: "Piercing",
+      magicBonus: 0,
+    },
+    {
+      name: "Unarmed",
+      ability: "STR",
+      proficient: true,
+      damageDice: "1",
+      damageType: "Bludgeoning",
+      magicBonus: 0,
+    },
+  ],
+  currency: { cp: 5, sp: 0, ep: 0, gp: 12, pp: 0 },
+  proficienciesAndLanguages: "Common, Elvish",
   savingThrowProficiencies: ["DEX"],
   skillProficiencies: ["Stealth", "Perception"],
 };
@@ -73,6 +109,21 @@ describe("buildPdfFieldValues", () => {
     expect(values.checkboxes["Check Box 15"]).toBe(true);
     expect(values.checkboxes["Check Box 16"]).toBe(false);
     expect(values.text.Inspiration).toBe("Yes");
+  });
+
+  it("fills the weapons table and puts extra attacks below it", () => {
+    expect(text["Wpn Name 1"]).toBe("Rapier");
+    expect(text["Wpn1 AtkBonus"]).toBe("+5");
+    expect(text["Wpn1 Damage"]).toBe("1d8+3 Piercing");
+    expect(text["Wpn2 AtkBonus "]).toBe("+6");
+    expect(text["Wpn2 Damage "]).toBe("1d6+4 Piercing");
+    expect(text.AttacksSpellcasting).toContain("Unarmed: +2, 1 Bludgeoning");
+  });
+
+  it("fills coins and languages", () => {
+    expect(text.GP).toBe("12");
+    expect(text.CP).toBe("5");
+    expect(text.ProficienciesLang).toBe("Common, Elvish");
   });
 
   it("keeps 0 current hit points", () => {

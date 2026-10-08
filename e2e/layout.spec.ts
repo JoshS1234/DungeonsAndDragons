@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { resetEmulators, signUp } from "./helpers";
+import { createCharacter, resetEmulators, signUp } from "./helpers";
 
 test.beforeEach(resetEmulators);
 
@@ -20,3 +20,21 @@ for (const path of ["/", "/#/characters", "/#/campaigns", "/#/rules"]) {
     expect(overflow).toBe(0);
   });
 }
+
+test("character form sections fit their container", async ({ page }) => {
+  await signUp(page, "player@example.com");
+  await createCharacter(page, "Thalia");
+  await page.getByRole("heading", { name: "Thalia" }).click();
+  await expect(page.getByLabel("Gold (GP)")).toBeVisible();
+
+  // Medium widths are where fixed-column grids tend to overflow
+  for (const width of [800, 1000, page.viewportSize()!.width]) {
+    await page.setViewportSize({ width, height: 900 });
+    const overflowing = await page.evaluate(() =>
+      Array.from(document.querySelectorAll(".character-form__section"))
+        .filter((section) => section.scrollWidth > section.clientWidth + 1)
+        .map((section) => section.querySelector("h3")?.textContent)
+    );
+    expect(overflowing, `at ${width}px`).toEqual([]);
+  }
+});

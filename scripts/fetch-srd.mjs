@@ -1,4 +1,4 @@
-// Snapshots the D&D 5e SRD (2014) spells and class tables from the free
+// Snapshots the D&D 5e SRD (2014) spells, equipment and class tables from the free
 // dnd5eapi.co API into src/data/srd/. Run with: node scripts/fetch-srd.mjs
 //
 // The SRD is published by Wizards of the Coast under CC-BY-4.0; see
@@ -63,6 +63,41 @@ const simplifySpell = (spell) => ({
   classes: spell.classes.map((c) => c.name),
 });
 
+const simplifyEquipment = (item) => ({
+  index: item.index,
+  name: item.name,
+  category: item.equipment_category.name,
+  ...(item.cost && { cost: `${item.cost.quantity} ${item.cost.unit}` }),
+  ...(item.weight !== undefined && { weight: item.weight }),
+  ...(item.desc?.length && { description: item.desc.join("\n\n") }),
+  ...(item.damage && {
+    weapon: {
+      category: item.weapon_category,
+      range: item.weapon_range,
+      damage: item.damage.damage_dice,
+      damageType: item.damage.damage_type?.name,
+      properties: (item.properties ?? []).map((p) => p.name),
+      ...(item.two_handed_damage && {
+        twoHandedDamage: item.two_handed_damage.damage_dice,
+      }),
+      ...(item.range && {
+        normalRange: item.range.normal,
+        longRange: item.range.long,
+      }),
+    },
+  }),
+  ...(item.armor_class && {
+    armor: {
+      category: item.armor_category,
+      baseAC: item.armor_class.base,
+      dexBonus: item.armor_class.dex_bonus,
+      maxDexBonus: item.armor_class.max_bonus ?? null,
+      strMinimum: item.str_minimum ?? 0,
+      stealthDisadvantage: item.stealth_disadvantage ?? false,
+    },
+  }),
+});
+
 const fetchClass = async ({ index, name }) => {
   const [spellcasting, levels] = await Promise.all([
     get(`/api/2014/classes/${index}/spellcasting`),
@@ -107,6 +142,17 @@ const main = async () => {
   spells.sort((a, b) => a.level - b.level || a.name.localeCompare(b.name));
   await writeFile(new URL("spells.json", OUT), JSON.stringify(spells) + "\n");
   console.log(`spells: ${spells.length}`);
+
+  const equipmentList = (await get("/api/2014/equipment")).results;
+  const equipment = await mapLimit(equipmentList, 8, async ({ index }) =>
+    simplifyEquipment(await get(`/api/2014/equipment/${index}`))
+  );
+  equipment.sort((a, b) => a.name.localeCompare(b.name));
+  await writeFile(
+    new URL("equipment.json", OUT),
+    JSON.stringify(equipment) + "\n"
+  );
+  console.log(`equipment: ${equipment.length}`);
 };
 
 await main();

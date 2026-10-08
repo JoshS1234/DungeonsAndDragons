@@ -1,6 +1,8 @@
 import type { ChangeEvent, ReactNode } from "react";
 import NumberInput from "../NumberInput/NumberInput";
 import SpellsSection from "../Spells/SpellsSection";
+import AttacksSection from "../Inventory/AttacksSection";
+import InventorySection from "../Inventory/InventorySection";
 import {
   ABILITIES,
   ALIGNMENTS,
@@ -56,7 +58,11 @@ const ADDITIONAL_FIELDS: Array<{ key: TextKey; label: string; rows: number }> =
       label: "Additional Features & Traits",
       rows: 6,
     },
-    { key: "equipment", label: "Equipment", rows: 6 },
+    {
+      key: "proficienciesAndLanguages",
+      label: "Other proficiencies & languages",
+      rows: 4,
+    },
     { key: "spells", label: "Spell notes", rows: 4 },
   ];
 
@@ -300,6 +306,25 @@ const CharacterFormFields = ({
           {PERSONALITY_FIELDS.map(({ key, label }) => textArea(key, label, 4))}
         </div>
       </section>
+
+      <AttacksSection
+        character={character}
+        onChange={(attacks) => onFieldChange("attacks", attacks)}
+        disabled={disabled}
+      />
+
+      <InventorySection
+        character={character}
+        onChange={(fields) => {
+          for (const [key, value] of Object.entries(fields)) {
+            onFieldChange(
+              key as keyof CharacterData,
+              value as CharacterData[keyof CharacterData]
+            );
+          }
+        }}
+        disabled={disabled}
+      />
 
       <SpellsSection
         character={character}
