@@ -35,6 +35,8 @@ const ViewEditCharacter = () => {
   const [deleting, setDeleting] = useState(false);
   const [exportingPDF, setExportingPDF] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Set when the page can't be shown at all (not found / no access)
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [canEdit, setCanEdit] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [formData, setFormData] = useState<CharacterData>(DEFAULT_CHARACTER);
@@ -44,7 +46,7 @@ const ViewEditCharacter = () => {
     const fetchCharacter = async () => {
       try {
         setLoading(true);
-        setError(null);
+        setLoadError(null);
 
         const stored = await getCharacter(characterId);
         if (!stored) {
@@ -60,7 +62,7 @@ const ViewEditCharacter = () => {
           );
         }
       } catch (err) {
-        setError(
+        setLoadError(
           isPermissionDenied(err)
             ? "You don't have permission to view this character"
             : errorMessage(err, "Failed to load character")
@@ -185,6 +187,26 @@ const ViewEditCharacter = () => {
       <div className="character-creation-page">
         <div className="character-creation-page__container">
           <h2>Loading Character...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="character-creation-page">
+        <div className="character-creation-page__container">
+          <h2>Character unavailable</h2>
+          <div className="character-form__error" role="alert">
+            {loadError}
+          </div>
+          <button
+            type="button"
+            className="back-button"
+            onClick={() => navigate("/characters")}
+          >
+            ← Back to Characters
+          </button>
         </div>
       </div>
     );

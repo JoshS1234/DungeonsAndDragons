@@ -45,7 +45,7 @@ test("a DM and a player share a campaign", async ({ browser }) => {
 
   // The DM removes the player, who then loses access
   await dm.getByRole("button", { name: "← Back to Campaign" }).click();
-  await dm.getByRole("button", { name: "✕" }).click();
+  await dm.getByRole("button", { name: "Remove Thalia from campaign" }).click();
   await expect(dm.getByText("No players linked yet.")).toBeVisible();
 
   await player.reload();

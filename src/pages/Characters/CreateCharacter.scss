@@ -350,16 +350,6 @@
     margin-top: 1rem;
   }
 
-  .character-form__error {
-    background-color: rgba(128, 0, 0, 0.3);
-    border: 2px solid #ff4444;
-    color: #ffaaaa;
-    padding: 1rem;
-    border-radius: 8px;
-    margin-bottom: 1.5rem;
-    font-weight: 600;
-  }
-
   .character-form__submit,
   .character-form__cancel,
   .character-form__delete,
@@ -653,4 +643,15 @@
       }
     }
   }
+}
+
+// Rendered outside the form, so not nested under it
+.character-form__error {
+  background-color: rgba(128, 0, 0, 0.3);
+  border: 2px solid #ff4444;
+  color: #ffaaaa;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
 }
