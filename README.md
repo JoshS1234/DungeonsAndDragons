@@ -9,7 +9,8 @@ hosted on GitHub Pages.
 
 ## Getting started
 
-Requires Node 22.12+ (see `.nvmrc`) and, for the emulator tests, Java 21+.
+Requires Node 22.12+ (see `.nvmrc`) and, for the emulator and end-to-end
+tests, Java 21+. The first E2E run needs `npx playwright install chromium`.
 
 ```bash
 cp .env.example .env   # then fill in the Firebase web config
@@ -23,15 +24,16 @@ are kept out of the repo so other forks can point at their own project.
 
 ## Scripts
 
-| Command                    | What it does                                                      |
-| -------------------------- | ----------------------------------------------------------------- |
-| `npm run dev`              | Start the dev server                                              |
-| `npm run build`            | Type-check and build to `dist/`                                   |
-| `npm test`                 | Unit and component tests (Vitest)                                 |
-| `npm run test:integration` | Security rules + service tests against the Firestore emulator     |
-| `npm run lint`             | ESLint                                                            |
-| `npm run format`           | Format everything with Prettier (`format:check` to just check)    |
-| `npm run deploy:rules`     | Deploy `firestore.rules` and indexes (needs `npx firebase login`) |
+| Command                    | What it does                                                         |
+| -------------------------- | -------------------------------------------------------------------- |
+| `npm run dev`              | Start the dev server                                                 |
+| `npm run build`            | Type-check and build to `dist/`                                      |
+| `npm test`                 | Unit and component tests (Vitest)                                    |
+| `npm run test:integration` | Security rules + service tests against the Firestore emulator        |
+| `npm run test:e2e`         | End-to-end tests (Playwright) against the Auth + Firestore emulators |
+| `npm run lint`             | ESLint                                                               |
+| `npm run format`           | Format everything with Prettier (`format:check` to just check)       |
+| `npm run deploy:rules`     | Deploy `firestore.rules` and indexes (needs `npx firebase login`)    |
 
 ## Project layout
 
@@ -58,7 +60,8 @@ The comments in `firestore.rules` describe exactly who can do what.
 
 ## Deployment
 
-Pushing to `main` runs `.github/workflows/deploy.yml`, which runs the tests,
+Every pull request runs lint, unit, rules and end-to-end tests
+(`.github/workflows/deploy.yml`). Pushing to `main` runs the same tests, then
 builds the site and deploys it to GitHub Pages. A failing test stops the
 deploy.
 
