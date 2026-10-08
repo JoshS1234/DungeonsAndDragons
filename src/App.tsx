@@ -20,6 +20,7 @@ const ViewEditCharacter = lazy(
 );
 const Rules = lazy(() => import("./pages/Rules/Rules"));
 const Instructions = lazy(() => import("./pages/Instructions/Instructions"));
+const Party = lazy(() => import("./pages/Party/Party"));
 const PlayMode = lazy(() => import("./pages/Play/PlayMode"));
 const Dice = lazy(() => import("./pages/Dice/Dice"));
 const NotFound = lazy(() => import("./pages/NotFound/NotFound"));
@@ -32,6 +33,7 @@ const App = () => (
       <Route path="/campaigns" element={<Campaigns />} />
       <Route path="/campaigns/create" element={<CreateCampaign />} />
       <Route path="/campaigns/:id" element={<ViewEditCampaign />} />
+      <Route path="/campaigns/:id/party" element={<Party />} />
       <Route path="/characters" element={<Characters />} />
       <Route path="/characters/create" element={<CreateCharacter />} />
       <Route path="/characters/:id" element={<ViewEditCharacter />} />
