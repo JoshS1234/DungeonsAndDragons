@@ -3,6 +3,7 @@ import { render } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import type { User } from "firebase/auth";
 import { CurrentUserContext } from "../auth/currentUser";
+import DiceProvider from "../components/Dice/DiceProvider";
 
 export const testUser = {
   uid: "user-1",
@@ -24,11 +25,13 @@ export const renderSignedIn = (
 ) =>
   render(
     <CurrentUserContext.Provider value={user}>
-      <MemoryRouter initialEntries={[url]}>
-        <Routes>
-          <Route path={path} element={page} />
-          <Route path="*" element={<p>Navigated to another page</p>} />
-        </Routes>
-      </MemoryRouter>
+      <DiceProvider>
+        <MemoryRouter initialEntries={[url]}>
+          <Routes>
+            <Route path={path} element={page} />
+            <Route path="*" element={<p>Navigated to another page</p>} />
+          </Routes>
+        </MemoryRouter>
+      </DiceProvider>
     </CurrentUserContext.Provider>
   );

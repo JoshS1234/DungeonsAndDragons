@@ -11,7 +11,7 @@ const Home = () => {
       </Link>
       <div className="landing-content__features">
         <Link to="/campaigns" className="feature-card">
-          <h3>🎲 Campaigns</h3>
+          <h3>🗺️ Campaigns</h3>
           <p>Manage your campaigns and adventures</p>
         </Link>
         <Link to="/characters" className="feature-card">

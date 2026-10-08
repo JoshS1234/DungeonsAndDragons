@@ -24,6 +24,9 @@ const Header = () => {
             Home
           </Link>
         )}
+        <Link to="/dice" className="header-bar__account-link">
+          Dice
+        </Link>
         <Link to="/account" className="header-bar__account-link">
           My Account
         </Link>
