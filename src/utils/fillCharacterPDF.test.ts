@@ -2,12 +2,13 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { PDFDocument } from "pdf-lib";
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { DEFAULT_CHARACTER } from "./dnd";
 import type { CharacterData } from "./dnd";
 import {
   PDF_TEMPLATE_FILE,
   buildPdfFieldValues,
+  fillCharacterPDF,
   fillPdfTemplate,
 } from "./fillCharacterPDF";
 
@@ -101,5 +102,29 @@ describe("fillPdfTemplate", () => {
     expect(form.getTextField("PersonalityTraits ").getText()).toBe("Curious");
     expect(form.getCheckBox("Check Box 39").isChecked()).toBe(true);
     expect(form.getCheckBox("Check Box 23").isChecked()).toBe(false);
+  });
+});
+
+describe("fillCharacterPDF", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("explains when the template can't be downloaded", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockRejectedValue(new TypeError("Failed to fetch"))
+    );
+
+    await expect(fillCharacterPDF(character)).rejects.toThrow(
+      "Couldn't load the character sheet template"
+    );
+  });
+
+  it("includes the status code when the server returns an error", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response(null, { status: 404 }))
+    );
+
+    await expect(fillCharacterPDF(character)).rejects.toThrow("(404)");
   });
 });

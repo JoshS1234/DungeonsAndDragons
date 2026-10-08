@@ -1,4 +1,3 @@
-import { PDFDocument, StandardFonts } from "pdf-lib";
 import {
   ABILITIES,
   SKILLS,
@@ -151,6 +150,8 @@ export const fillPdfTemplate = async (
   templateBytes: ArrayBuffer | Uint8Array,
   character: Partial<CharacterData>
 ): Promise<Uint8Array> => {
+  // Loaded on demand: pdf-lib is large and only needed when exporting
+  const { PDFDocument, StandardFonts } = await import("pdf-lib");
   const pdfDoc = await PDFDocument.load(templateBytes);
   const form = pdfDoc.getForm();
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -186,13 +187,16 @@ const downloadBytes = (bytes: Uint8Array, fileName: string) => {
 };
 
 export const fillCharacterPDF = async (character: Partial<CharacterData>) => {
-  const response = await fetch(
-    `${import.meta.env.BASE_URL}${PDF_TEMPLATE_FILE}`
-  );
+  const templateError =
+    "Couldn't load the character sheet template. Check your connection and try again.";
+  let response: Response;
+  try {
+    response = await fetch(`${import.meta.env.BASE_URL}${PDF_TEMPLATE_FILE}`);
+  } catch {
+    throw new Error(templateError);
+  }
   if (!response.ok) {
-    throw new Error(
-      `Failed to load PDF template (${response.status} ${response.statusText})`
-    );
+    throw new Error(`${templateError} (${response.status})`);
   }
 
   const pdfBytes = await fillPdfTemplate(

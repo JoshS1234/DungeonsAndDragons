@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { auth } from "../../../firebaseSetup";
-import Header from "../../components/Header/Header";
+import { useCurrentUser } from "../../auth/currentUser";
 import CharacterFormFields from "../../components/CharacterForm/CharacterFormFields";
 import CampaignLinker from "../../components/CharacterForm/CampaignLinker";
 import { findJoinableCampaign } from "../../services/campaigns";
@@ -20,6 +19,7 @@ import { errorMessage } from "../../utils/errors";
 type ScoreAssignments = Partial<Record<AbilityKey, number>>;
 
 const CreateCharacter = () => {
+  const user = useCurrentUser();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [exportingPDF, setExportingPDF] = useState(false);
@@ -45,10 +45,7 @@ const CreateCharacter = () => {
 
     try {
       setError(null);
-      const summary = await findJoinableCampaign(
-        campaignId,
-        auth.currentUser!.uid
-      );
+      const summary = await findJoinableCampaign(campaignId, user.uid);
 
       setField("campaignIds", [...formData.campaignIds, campaignId]);
       setLinkedCampaigns((prev) => [
@@ -92,7 +89,6 @@ const CreateCharacter = () => {
     setError(null);
 
     try {
-      const user = auth.currentUser!;
       await createCharacter(user.uid, formData, fallbackPlayerName(user));
       navigate("/characters");
     } catch (err) {
@@ -208,56 +204,53 @@ const CreateCharacter = () => {
     );
 
   return (
-    <div className="app">
-      <Header />
-      <div className="character-creation-page">
-        <div className="character-creation-page__container">
-          <h2>Create New Character</h2>
-          {error && <div className="character-form__error">{error}</div>}
-          <form onSubmit={handleSubmit} className="character-form">
-            <CharacterFormFields
-              character={formData}
-              onFieldChange={setField}
-              abilityScoresHeader={diceRoller}
-              renderAbilityControls={renderAssignButtons}
-            />
+    <div className="character-creation-page">
+      <div className="character-creation-page__container">
+        <h2>Create New Character</h2>
+        {error && <div className="character-form__error">{error}</div>}
+        <form onSubmit={handleSubmit} className="character-form">
+          <CharacterFormFields
+            character={formData}
+            onFieldChange={setField}
+            abilityScoresHeader={diceRoller}
+            renderAbilityControls={renderAssignButtons}
+          />
 
-            <CampaignLinker
-              linkedCampaigns={linkedCampaigns}
-              onLink={handleLinkCampaign}
-              onUnlink={handleUnlinkCampaign}
-            />
+          <CampaignLinker
+            linkedCampaigns={linkedCampaigns}
+            onLink={handleLinkCampaign}
+            onUnlink={handleUnlinkCampaign}
+          />
 
-            <div className="character-form__actions">
-              <button
-                type="button"
-                className="character-form__export-pdf"
-                onClick={handleExportPDF}
-                disabled={exportingPDF || loading}
-              >
-                {exportingPDF ? "Exporting..." : "Export PDF"}
-              </button>
-            </div>
+          <div className="character-form__actions">
+            <button
+              type="button"
+              className="character-form__export-pdf"
+              onClick={handleExportPDF}
+              disabled={exportingPDF || loading}
+            >
+              {exportingPDF ? "Exporting..." : "Export PDF"}
+            </button>
+          </div>
 
-            <div className="character-form__actions">
-              <button
-                type="submit"
-                className="character-form__submit"
-                disabled={loading || exportingPDF}
-              >
-                {loading ? "Creating..." : "Create Character"}
-              </button>
-              <button
-                type="button"
-                className="character-form__cancel"
-                onClick={() => navigate("/characters")}
-                disabled={loading || exportingPDF}
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
+          <div className="character-form__actions">
+            <button
+              type="submit"
+              className="character-form__submit"
+              disabled={loading || exportingPDF}
+            >
+              {loading ? "Creating..." : "Create Character"}
+            </button>
+            <button
+              type="button"
+              className="character-form__cancel"
+              onClick={() => navigate("/characters")}
+              disabled={loading || exportingPDF}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

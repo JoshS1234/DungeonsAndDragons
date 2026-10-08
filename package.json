@@ -12,7 +12,7 @@
     "typecheck": "tsc",
     "test:integration": "firebase emulators:exec --only firestore --project demo-dnd \"vitest run --config vitest.integration.config.ts\"",
     "deploy:rules": "firebase deploy --only firestore:rules,firestore:indexes",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 0",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },

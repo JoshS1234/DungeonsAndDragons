@@ -1,20 +1,18 @@
 import { useState } from "react";
-import { auth } from "../../../firebaseSetup";
+import { useCurrentUser } from "../../auth/currentUser";
 import {
   updateProfile,
   updatePassword,
   EmailAuthProvider,
   reauthenticateWithCredential,
 } from "firebase/auth";
-import Header from "../../components/Header/Header";
 import "./Account.scss";
 import { errorMessage } from "../../utils/errors";
 
 const Account = () => {
-  const [displayName, setDisplayName] = useState(
-    auth.currentUser?.displayName || ""
-  );
-  const email = auth.currentUser?.email || "";
+  const user = useCurrentUser();
+  const [displayName, setDisplayName] = useState(user.displayName || "");
+  const email = user.email || "";
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -26,13 +24,12 @@ const Account = () => {
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth.currentUser) return;
 
     setLoading(true);
     setMessage(null);
 
     try {
-      await updateProfile(auth.currentUser, {
+      await updateProfile(user, {
         displayName: displayName,
       });
       setMessage({ type: "success", text: "Profile updated successfully!" });
@@ -48,7 +45,7 @@ const Account = () => {
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth.currentUser || !auth.currentUser.email) return;
+    if (!user.email) return;
 
     if (newPassword !== confirmPassword) {
       setMessage({ type: "error", text: "New passwords do not match" });
@@ -68,11 +65,11 @@ const Account = () => {
 
     try {
       const credential = EmailAuthProvider.credential(
-        auth.currentUser.email,
+        user.email,
         currentPassword
       );
-      await reauthenticateWithCredential(auth.currentUser, credential);
-      await updatePassword(auth.currentUser, newPassword);
+      await reauthenticateWithCredential(user, credential);
+      await updatePassword(user, newPassword);
       setMessage({ type: "success", text: "Password updated successfully!" });
       setCurrentPassword("");
       setNewPassword("");
@@ -88,102 +85,96 @@ const Account = () => {
   };
 
   return (
-    <div className="app">
-      <Header />
-      <div className="account-page">
-        <div className="account-page__container">
-          <h2>My Account</h2>
+    <div className="account-page">
+      <div className="account-page__container">
+        <h2>My Account</h2>
 
-          {message && (
-            <div
-              className={`account-page__message account-page__message--${message.type}`}
-            >
-              {message.text}
+        {message && (
+          <div
+            className={`account-page__message account-page__message--${message.type}`}
+          >
+            {message.text}
+          </div>
+        )}
+
+        <div className="account-page__section">
+          <h3>Profile Information</h3>
+          <form onSubmit={handleUpdateProfile} className="account-page__form">
+            <div className="account-page__form-group">
+              <label htmlFor="displayName">Display Name</label>
+              <input
+                type="text"
+                id="displayName"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="Enter your display name"
+              />
             </div>
-          )}
-
-          <div className="account-page__section">
-            <h3>Profile Information</h3>
-            <form onSubmit={handleUpdateProfile} className="account-page__form">
-              <div className="account-page__form-group">
-                <label htmlFor="displayName">Display Name</label>
-                <input
-                  type="text"
-                  id="displayName"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="Enter your display name"
-                />
-              </div>
-              <div className="account-page__form-group">
-                <label htmlFor="email">Email</label>
-                <input
-                  type="email"
-                  id="email"
-                  value={email}
-                  disabled
-                  className="account-page__input--disabled"
-                />
-                <small>Email cannot be changed</small>
-              </div>
-              <button
-                type="submit"
-                className="account-page__button"
-                disabled={loading}
-              >
-                {loading ? "Updating..." : "Update Profile"}
-              </button>
-            </form>
-          </div>
-
-          <div className="account-page__section">
-            <h3>Change Password</h3>
-            <form
-              onSubmit={handleUpdatePassword}
-              className="account-page__form"
+            <div className="account-page__form-group">
+              <label htmlFor="email">Email</label>
+              <input
+                type="email"
+                id="email"
+                value={email}
+                disabled
+                className="account-page__input--disabled"
+              />
+              <small>Email cannot be changed</small>
+            </div>
+            <button
+              type="submit"
+              className="account-page__button"
+              disabled={loading}
             >
-              <div className="account-page__form-group">
-                <label htmlFor="currentPassword">Current Password</label>
-                <input
-                  type="password"
-                  id="currentPassword"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder="Enter current password"
-                  required
-                />
-              </div>
-              <div className="account-page__form-group">
-                <label htmlFor="newPassword">New Password</label>
-                <input
-                  type="password"
-                  id="newPassword"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Enter new password"
-                  required
-                />
-              </div>
-              <div className="account-page__form-group">
-                <label htmlFor="confirmPassword">Confirm New Password</label>
-                <input
-                  type="password"
-                  id="confirmPassword"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm new password"
-                  required
-                />
-              </div>
-              <button
-                type="submit"
-                className="account-page__button"
-                disabled={loading}
-              >
-                {loading ? "Updating..." : "Update Password"}
-              </button>
-            </form>
-          </div>
+              {loading ? "Updating..." : "Update Profile"}
+            </button>
+          </form>
+        </div>
+
+        <div className="account-page__section">
+          <h3>Change Password</h3>
+          <form onSubmit={handleUpdatePassword} className="account-page__form">
+            <div className="account-page__form-group">
+              <label htmlFor="currentPassword">Current Password</label>
+              <input
+                type="password"
+                id="currentPassword"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Enter current password"
+                required
+              />
+            </div>
+            <div className="account-page__form-group">
+              <label htmlFor="newPassword">New Password</label>
+              <input
+                type="password"
+                id="newPassword"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password"
+                required
+              />
+            </div>
+            <div className="account-page__form-group">
+              <label htmlFor="confirmPassword">Confirm New Password</label>
+              <input
+                type="password"
+                id="confirmPassword"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm new password"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              className="account-page__button"
+              disabled={loading}
+            >
+              {loading ? "Updating..." : "Update Password"}
+            </button>
+          </form>
         </div>
       </div>
     </div>

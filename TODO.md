@@ -17,14 +17,6 @@ a call from you before they can be done.
 - [ ] **Major upgrades not yet done:** Vite 8, TypeScript 7,
       `@vitejs/plugin-react` 6. Each needs its own check for breaking changes.
 
-## Bugs / jank
-
-- [ ] Login errors use `alert()` and show raw Firebase error text. Show them
-      inline with friendly messages, like the Account page does.
-- [ ] Login email inputs are `type="text"`. Use `type="email"` with
-      `autocomplete` attributes.
-- [ ] No 404 route: unknown URLs render a blank page.
-
 ## PDF export gaps
 
 The export now fills correctly (see Done). The app has no data yet for these
@@ -40,19 +32,12 @@ parts of the sheet:
 
 ## Refactoring
 
-- [ ] **Auth context.** Pages now read `auth.currentUser!` directly (safe,
-      since `App` only renders when signed in). A `useCurrentUser()` hook would
-      be tidier and easier to mock in tests.
 - [ ] **Campaign form.** `CreateCampaign` and `ViewEditCampaign` duplicate their
       form fields, as the character pages did. Extract a `CampaignFormFields`
       component the same way.
-- [ ] **Layout route.** Every page renders `<Header />` itself. Use a layout
-      route with `<Outlet />`.
 - [ ] **SCSS duplication.** `CreateCharacter.scss` (800 lines) and
       `CreateCampaign.scss` (400 lines) restyle the same form elements. Pull
       shared form styles and colour variables into one partial.
-- [ ] **Bundle size** (1.07 MB). Lazy-load `pdf-lib` (only needed on export)
-      and the route components.
 
 ## Testing
 
@@ -120,6 +105,18 @@ Smaller ideas, unprioritised:
       accounts.
 
 ## Done in this pass
+
+### App shell (PR 3)
+
+- Pages get the signed-in user from a `useCurrentUser()` hook (React
+  context) instead of `auth.currentUser!`; a loading message shows while
+  Firebase restores the session.
+- One layout route renders the header for every page; added a 404 page.
+- Pages and `pdf-lib` load on demand: first download 1,070 kB → 843 kB
+  (374 → 259 kB gzipped). The rest is mostly Firebase.
+- Login errors appear inline in plain English instead of `alert()` popups;
+  email fields use `type="email"` with autocomplete hints.
+- Clearer error when the PDF template can't be downloaded.
 
 ### Tooling (PR 2)
 
