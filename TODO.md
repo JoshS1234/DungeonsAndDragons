@@ -76,10 +76,14 @@ In priority order (agreed October 2026).
 Smaller ideas, unprioritised:
 
 - [ ] Character portraits (Firebase Storage).
-- [ ] Export/import a character as JSON, as a backup or to move it between
-      accounts.
 
 ## Done in this pass
+
+### Character backups (PR 13)
+
+- Download a character as JSON from its page; import it from the
+  characters list (to restore it or move it to another account). Imported
+  files are validated and clamped so they can't create a broken character.
 
 ### Session log (PR 12)
 

@@ -187,3 +187,28 @@
     }
   }
 }
+
+.characters__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+}
+
+// The file input is visually replaced by its label, which looks like a button
+.characters__import {
+  position: relative;
+  cursor: pointer;
+
+  input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+
+  &:focus-within {
+    outline: 3px solid #ffd700;
+    outline-offset: 2px;
+  }
+}

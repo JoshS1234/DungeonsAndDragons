@@ -18,6 +18,8 @@ import {
 } from "../../services/characters";
 import type { LinkedCampaign } from "../../services/characters";
 import { fillCharacterPDF } from "../../utils/fillCharacterPDF";
+import { toCharacterFile } from "../../utils/characterFile";
+import { downloadFile, fileNameFor } from "../../utils/download";
 import { DEFAULT_CHARACTER, derivedChanges } from "../../utils/dnd";
 import type { CharacterData } from "../../utils/dnd";
 import "./CreateCharacter.scss";
@@ -277,6 +279,21 @@ const ViewEditCharacter = () => {
             >
               {exportingPDF ? "Exporting..." : "Export PDF"}
             </button>
+            {canEdit && (
+              <button
+                type="button"
+                className="character-form__export-pdf"
+                onClick={() =>
+                  downloadFile(
+                    toCharacterFile(formData),
+                    `${fileNameFor(formData.characterName, "Character")}.json`,
+                    "application/json"
+                  )
+                }
+              >
+                Download backup (JSON)
+              </button>
+            )}
           </div>
 
           {canEdit && (
