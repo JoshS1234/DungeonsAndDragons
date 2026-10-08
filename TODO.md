@@ -36,13 +36,10 @@ parts of the sheet:
 
 ## Testing
 
-Unit/component tests (`npm test`) and Firestore emulator tests of the rules
-and services (`npm run test:integration`, needs Java) both run in CI before
-deploys. Still missing:
+Unit/component tests (`npm test`), Firestore emulator tests of the rules and
+services (`npm run test:integration`) and Playwright end-to-end tests
+(`npm run test:e2e`) all run in CI on every pull request and before deploys. Still missing:
 
-- [ ] **E2E tests with Playwright (decision).** Should run against the emulator
-      rather than the real project. Suggested flows: sign up → create character
-      → export PDF; DM creates campaign → player links character → DM views it.
 - [ ] Component tests for `ViewEditCharacter`, the campaign pages and the
       characters list (mock `src/services/*`, as `CreateCharacter.test.tsx`
       does).
@@ -99,6 +96,14 @@ Smaller ideas, unprioritised:
       accounts.
 
 ## Done in this pass
+
+### End-to-end tests (PR 5)
+
+- Playwright tests against the Auth + Firestore emulators: sign-up/in/out,
+  login errors, refresh, 404, character create/edit/delete, PDF download,
+  a DM and player sharing a campaign (including permissions), and no
+  horizontal scrolling on desktop or mobile.
+- CI runs every test suite on pull requests; deploys only after they pass.
 
 ### Campaign management (PR 4)
 
