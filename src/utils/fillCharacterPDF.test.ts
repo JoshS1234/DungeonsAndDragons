@@ -5,6 +5,7 @@ import { PDFDocument } from "pdf-lib";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { DEFAULT_CHARACTER } from "./dnd";
 import type { CharacterData } from "./dnd";
+import spellPageFields from "./pdfSpellFields.json";
 import {
   PDF_TEMPLATE_FILE,
   buildPdfFieldValues,
@@ -102,6 +103,52 @@ describe("fillPdfTemplate", () => {
     expect(form.getTextField("PersonalityTraits ").getText()).toBe("Curious");
     expect(form.getCheckBox("Check Box 39").isChecked()).toBe(true);
     expect(form.getCheckBox("Check Box 23").isChecked()).toBe(false);
+  });
+});
+
+describe("spell page", () => {
+  const wizard: CharacterData = {
+    ...DEFAULT_CHARACTER,
+    class: "Wizard",
+    level: 5,
+    intelligence: 16,
+    proficiencyBonus: 3,
+    knownSpells: [
+      { name: "Fire Bolt", level: 0, prepared: true, srdIndex: "fire-bolt" },
+      { name: "Shield", level: 1, prepared: true, srdIndex: "shield" },
+      { name: "Fireball", level: 3, prepared: false, srdIndex: "fireball" },
+    ],
+  };
+  const { text, checkboxes } = buildPdfFieldValues(wizard);
+  const line = (level: number, i: number) => spellPageFields[level].lines[i];
+
+  it("fills spellcasting stats and slots", () => {
+    expect(text["Spellcasting Class 2"]).toBe("Wizard");
+    expect(text["SpellcastingAbility 2"]).toBe("INT");
+    expect(text["SpellSaveDC  2"]).toBe("14");
+    expect(text["SpellAtkBonus 2"]).toBe("+6");
+    expect(text[spellPageFields[1].slotsTotal!]).toBe("4");
+    expect(text[spellPageFields[3].slotsTotal!]).toBe("2");
+    expect(text).not.toHaveProperty(spellPageFields[4].slotsTotal!);
+  });
+
+  it("lists spells under their level with prepared boxes", () => {
+    expect(text[line(0, 0).name]).toBe("Fire Bolt");
+    expect(text[line(1, 0).name]).toBe("Shield");
+    expect(checkboxes[line(1, 0).prepared!]).toBe(true);
+    expect(text[line(3, 0).name]).toBe("Fireball");
+    expect(checkboxes[line(3, 0).prepared!]).toBe(false);
+  });
+
+  it("maps every spell-page field to one that exists in the template", async () => {
+    const form = (await PDFDocument.load(templateBytes)).getForm();
+    for (const { slotsTotal, lines } of spellPageFields) {
+      if (slotsTotal) form.getTextField(slotsTotal);
+      for (const { name, prepared } of lines) {
+        form.getTextField(name);
+        if (prepared) form.getCheckBox(prepared);
+      }
+    }
   });
 });
 

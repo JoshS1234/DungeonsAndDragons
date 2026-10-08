@@ -67,6 +67,8 @@ service cloud.firestore {
       return data.userId == uid()
         && data.get('campaignIds', []) is list
         && data.get('campaignIds', []).size() <= 5
+        && data.get('knownSpells', []) is list
+        && data.get('knownSpells', []).size() <= 200
         && shortText(data, 'characterName')
         && shortText(data, 'playerName')
         && shortText(data, 'class')

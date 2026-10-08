@@ -48,11 +48,14 @@ export const signOut = async (page: Page) => {
 export const createCharacter = async (
   page: Page,
   name: string,
-  { campaignId }: { campaignId?: string } = {}
+  {
+    campaignId,
+    characterClass = "Rogue",
+  }: { campaignId?: string; characterClass?: string } = {}
 ) => {
   await page.goto("/#/characters/create");
   await page.getByLabel("Character Name").fill(name);
-  await page.getByLabel("Class", { exact: true }).selectOption("Rogue");
+  await page.getByLabel("Class", { exact: true }).selectOption(characterClass);
   await page.getByLabel("Race", { exact: true }).selectOption("Half-Elf");
   if (campaignId) {
     await page.getByLabel("Link to Campaign").fill(campaignId);

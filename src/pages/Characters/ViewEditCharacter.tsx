@@ -18,7 +18,7 @@ import {
 } from "../../services/characters";
 import type { LinkedCampaign } from "../../services/characters";
 import { fillCharacterPDF } from "../../utils/fillCharacterPDF";
-import { DEFAULT_CHARACTER } from "../../utils/dnd";
+import { DEFAULT_CHARACTER, derivedChanges } from "../../utils/dnd";
 import type { CharacterData } from "../../utils/dnd";
 import "./CreateCharacter.scss";
 import { errorMessage, isPermissionDenied } from "../../utils/errors";
@@ -80,7 +80,13 @@ const ViewEditCharacter = () => {
   const setField = <K extends keyof CharacterData>(
     key: K,
     value: CharacterData[K]
-  ) => setFormData((prev) => ({ ...prev, [key]: value }));
+  ) =>
+    setFormData((prev) => ({
+      ...prev,
+      [key]: value,
+      // e.g. proficiency bonus follows level unless it's been overridden
+      ...derivedChanges(prev, key, value),
+    }));
 
   const handleLinkCampaign = async (campaignId: string) => {
     if (formData.campaignIds.length >= MAX_CAMPAIGNS_PER_CHARACTER) {
