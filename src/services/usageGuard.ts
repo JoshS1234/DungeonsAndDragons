@@ -17,11 +17,21 @@ export class UsageLimitError extends Error {
 
 let calls: number[] = [];
 let tripped = false;
+let totalCalls = 0;
+
+// The end-to-end tests read this to check pages go quiet once loaded
+if (import.meta.env.VITE_USE_EMULATORS === "true") {
+  Object.defineProperty(globalThis, "__firebaseCallCount", {
+    get: () => totalCalls,
+    configurable: true,
+  });
+}
 const listeners = new Set<() => void>();
 
 /** Call before every Firebase network operation. Throws once tripped. */
 export const recordCall = (now = Date.now()) => {
   if (tripped) throw new UsageLimitError();
+  totalCalls++;
   calls.push(now);
   while (calls.length > 0 && calls[0] <= now - WINDOW_MS) calls.shift();
   if (calls.length > LIMIT) {
