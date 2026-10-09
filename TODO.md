@@ -80,6 +80,11 @@ Smaller ideas, unprioritised:
 
 ## Done in this pass
 
+### Loop check in CI (PR 17)
+
+- E2E test that opens every page and fails if it keeps calling Firebase
+  once loaded (verified to catch a deliberately broken effect).
+
 ### Usage guard (PR 16)
 
 - Circuit breaker: if the app makes more than 300 Firebase calls in a
