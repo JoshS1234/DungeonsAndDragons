@@ -64,8 +64,56 @@ jobs:
           path: playwright-report/
           retention-days: 7
 
-  build:
+  # Deploy security rules before the site, so new code never runs against
+  # old rules. If this fails, the site isn't deployed.
+  deploy-rules:
     needs: test
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Write service account key
+        env:
+          SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$SERVICE_ACCOUNT" ]; then
+            echo "::error::Add the FIREBASE_SERVICE_ACCOUNT secret (see README → Deploying rules from CI)"
+            exit 1
+          fi
+          printf '%s' "$SERVICE_ACCOUNT" > "$RUNNER_TEMP/service-account.json"
+
+      - name: Deploy Firestore rules and indexes
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/service-account.json
+        # --non-interactive: indexes that only exist in the console are kept
+        # (with a warning) rather than deleted
+        run: npx firebase deploy --only firestore:rules,firestore:indexes --non-interactive
+
+      - name: Deploy Storage rules
+        if: vars.STORAGE_ENABLED == 'true'
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/service-account.json
+        run: npx firebase deploy --only storage --non-interactive
+
+      - name: Remove service account key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/service-account.json"
+
+  build:
+    needs: deploy-rules
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
