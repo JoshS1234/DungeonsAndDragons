@@ -164,3 +164,22 @@
     }
   }
 }
+
+.usage-limit-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: #8b0000;
+  color: #fff;
+  text-align: center;
+
+  button {
+    background: #ffd700;
+    color: #2c1810;
+    font-weight: 700;
+  }
+}

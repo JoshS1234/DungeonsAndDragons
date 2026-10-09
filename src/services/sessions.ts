@@ -1,10 +1,5 @@
-import {
-  collection,
-  doc,
-  getDocs,
-  serverTimestamp,
-  writeBatch,
-} from "firebase/firestore";
+import { collection, doc, serverTimestamp } from "firebase/firestore";
+import { getDocs, writeBatch } from "./firebaseCalls";
 import { db } from "../../firebaseSetup";
 
 export interface Session {

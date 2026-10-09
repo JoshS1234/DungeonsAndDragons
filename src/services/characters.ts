@@ -4,16 +4,18 @@ import {
   collection,
   collectionGroup,
   doc,
-  getDoc,
-  getDocs,
-  onSnapshot,
   orderBy,
   query,
   serverTimestamp,
-  updateDoc,
   where,
-  writeBatch,
 } from "firebase/firestore";
+import {
+  getDoc,
+  getDocs,
+  onSnapshot,
+  updateDoc,
+  writeBatch,
+} from "./firebaseCalls";
 import { db } from "../../firebaseSetup";
 import { normaliseCharacter } from "../utils/dnd";
 import type { CharacterData } from "../utils/dnd";
