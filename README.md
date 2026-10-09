@@ -125,6 +125,10 @@ create a new one.
   loop bug) pauses the page and asks the user to reload.
 - **Loop check (CI):** an E2E test fails if any page keeps calling Firebase
   once loaded.
+- **Closed sign-ups:** once everyone has an account, untick **Enable create
+  (sign-up)** in the Firebase console under **Authentication → Settings →
+  User actions**. New people then see "New sign-ups are closed"; switch it
+  back on to let someone join.
 - **Billing cut-off (Google Cloud):** a function that disables billing when
   the monthly budget is exceeded. One-off setup in
   [`billing-cutoff/README.md`](billing-cutoff/README.md).

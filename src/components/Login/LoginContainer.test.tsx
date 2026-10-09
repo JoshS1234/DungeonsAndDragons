@@ -83,6 +83,24 @@ describe("LoginContainer", () => {
     );
   });
 
+  it("tells people when sign-ups are closed", async () => {
+    vi.mocked(createUserWithEmailAndPassword).mockRejectedValueOnce({
+      code: "auth/admin-restricted-operation",
+    });
+    const user = userEvent.setup();
+    render(<LoginContainer />);
+    await user.click(screen.getByRole("button", { name: "New user" }));
+
+    await user.type(screen.getByLabelText("Email"), "stranger@example.com");
+    await user.type(screen.getByLabelText("Password"), "password-one");
+    await user.type(screen.getByLabelText("Confirm password"), "password-one");
+    await user.click(screen.getByRole("button", { name: "Create account" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "New sign-ups are closed."
+    );
+  });
+
   it("clears the error when switching forms", async () => {
     const user = userEvent.setup();
     render(<LoginContainer />);
