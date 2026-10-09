@@ -5,6 +5,7 @@ a call from you before they can be done.
 
 ## Security / data problems
 
+- [ ] **Billing cut-off setup (you):** follow `billing-cutoff/README.md`.
 - [ ] **Portrait setup (you):** upgrade to Blaze, enable Storage, deploy
       rules, and apply `cors.json` (see README → Portraits).
 
@@ -79,6 +80,11 @@ In priority order (agreed October 2026).
 Smaller ideas, unprioritised:
 
 ## Done in this pass
+
+### Billing cut-off (PR 18)
+
+- Cloud Run function that disables billing when the budget is exceeded,
+  with step-by-step Cloud Shell setup.
 
 ### Loop check in CI (PR 17)
 

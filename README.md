@@ -43,6 +43,7 @@ src/
   components/   Shared UI (header, character form, inputs…)
   services/     All Firestore access (characters, campaigns)
   utils/        D&D rules maths, PDF export, helpers
+billing-cutoff/          Function that switches billing off over budget
 scripts/                One-off data scripts (SRD snapshot, PDF field mapping)
 src/data/srd/           SRD spells and class tables (CC-BY-4.0)
 firestore.rules         Security rules (who can read/write what)
@@ -117,6 +118,16 @@ To deploy by hand instead: `npx firebase login`, then `npm run deploy:rules`.
 The key can deploy security rules and indexes but can't read or change your
 data. If it leaks, delete it under the service account's **Keys** tab and
 create a new one.
+
+### Spending protection
+
+- **Usage guard (in the app):** more than 300 Firebase calls a minute (a
+  loop bug) pauses the page and asks the user to reload.
+- **Loop check (CI):** an E2E test fails if any page keeps calling Firebase
+  once loaded.
+- **Billing cut-off (Google Cloud):** a function that disables billing when
+  the monthly budget is exceeded. One-off setup in
+  [`billing-cutoff/README.md`](billing-cutoff/README.md).
 
 ### Portraits (Firebase Storage)
 
