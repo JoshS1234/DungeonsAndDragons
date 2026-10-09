@@ -90,8 +90,33 @@ One-off setup (already done for this repo):
 The app uses `HashRouter` (URLs look like `/#/characters`) because GitHub
 Pages can't rewrite routes to `index.html`.
 
-Firestore and Storage rules are deployed separately, with
-`npm run deploy:rules`.
+### Deploying rules from CI
+
+On pushes to `main`, CI deploys `firestore.rules` and the indexes (and
+`storage.rules` once Storage is enabled) before deploying the site. If the
+rules deploy fails, the site deploy is skipped. One-off setup:
+
+1. **Create a service account.** In the
+   [Google Cloud console](https://console.cloud.google.com/iam-admin/serviceaccounts)
+   for the Firebase project: **Create service account**, name it e.g.
+   `github-rules-deploy`, and grant these roles:
+   - Firebase Rules Admin
+   - Cloud Datastore Index Admin
+   - Firebase Viewer
+   - Service Usage Consumer
+2. **Create a key.** Open the service account → **Keys → Add key → Create
+   new key → JSON**. A `.json` file downloads.
+3. **Add it to GitHub.** Repository **Settings → Secrets and variables →
+   Actions → New repository secret**, named `FIREBASE_SERVICE_ACCOUNT`, with
+   the whole contents of the file. Then delete the downloaded file.
+4. **Once Storage is enabled** (see Portraits below): on the same page,
+   **Variables → New repository variable** `STORAGE_ENABLED` = `true`.
+
+To deploy by hand instead: `npx firebase login`, then `npm run deploy:rules`.
+
+The key can deploy security rules and indexes but can't read or change your
+data. If it leaks, delete it under the service account's **Keys** tab and
+create a new one.
 
 ### Portraits (Firebase Storage)
 
@@ -99,8 +124,10 @@ Portraits need Firebase Storage, which requires the Blaze (pay-as-you-go)
 plan. One-off setup:
 
 1. Firebase console → upgrade to Blaze, then **Storage → Get started**.
-2. `npm run deploy:rules` (includes `storage.rules`; accept the prompt to let
-   Storage rules read Firestore, which they use to check ownership).
+2. Deploy `storage.rules` once by hand with `npm run deploy:rules`, and
+   accept the prompt to let Storage rules read Firestore (they use it to
+   check ownership). Then set the `STORAGE_ENABLED` variable so CI deploys
+   them from then on.
 3. Allow the site to download portraits for PDF export (displaying them
    works without this):
    `gcloud storage buckets update gs://<bucket> --cors-file=cors.json`

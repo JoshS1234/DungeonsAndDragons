@@ -8,9 +8,9 @@ a call from you before they can be done.
 - [ ] **Portrait setup (you):** upgrade to Blaze, enable Storage, deploy
       rules, and apply `cors.json` (see README → Portraits).
 
-- [ ] **Deploy rules automatically (decision).** Rules changes currently need
-      `npm run deploy:rules` by hand after merging. CI could deploy them, but
-      it needs a Firebase service-account key stored as a GitHub secret.
+- [ ] **CI rules deploy setup (you):** create the service account and add the
+      `FIREBASE_SERVICE_ACCOUNT` secret (see README → Deploying rules from
+      CI).
 
 - [ ] **Remaining dependency advisories** (12, all moderate/high) are inside
       `firebase-tools`, which only runs on developer machines and CI. They
@@ -79,6 +79,11 @@ In priority order (agreed October 2026).
 Smaller ideas, unprioritised:
 
 ## Done in this pass
+
+### Rules deployed by CI (PR 15)
+
+- Pushes to `main` deploy Firestore rules and indexes (and Storage rules
+  when `STORAGE_ENABLED` is set) after the tests and before the site.
 
 ### Portraits (PR 14)
 
