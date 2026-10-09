@@ -1,16 +1,13 @@
 import {
   collection,
   collectionGroup,
-  deleteDoc,
   doc,
-  getDoc,
-  getDocs,
   query,
   serverTimestamp,
   where,
-  writeBatch,
 } from "firebase/firestore";
 import type { DocumentData } from "firebase/firestore";
+import { deleteDoc, getDoc, getDocs, writeBatch } from "./firebaseCalls";
 import { db } from "../../firebaseSetup";
 
 export interface CampaignDetails {

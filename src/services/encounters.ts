@@ -1,4 +1,5 @@
-import { deleteDoc, doc, onSnapshot, setDoc } from "firebase/firestore";
+import { doc } from "firebase/firestore";
+import { deleteDoc, onSnapshot, setDoc } from "./firebaseCalls";
 import { db } from "../../firebaseSetup";
 import { NEW_ENCOUNTER } from "../utils/encounter";
 import type { Encounter } from "../utils/encounter";

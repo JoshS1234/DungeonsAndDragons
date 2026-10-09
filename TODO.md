@@ -80,6 +80,12 @@ Smaller ideas, unprioritised:
 
 ## Done in this pass
 
+### Usage guard (PR 16)
+
+- Circuit breaker: if the app makes more than 300 Firebase calls in a
+  minute (a loop bug), further calls are blocked and a banner asks the user
+  to reload, so a bug can't run up a bill.
+
 ### Rules deployed by CI (PR 15)
 
 - Pushes to `main` deploy Firestore rules and indexes (and Storage rules

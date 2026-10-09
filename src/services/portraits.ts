@@ -1,9 +1,5 @@
-import {
-  deleteObject,
-  getDownloadURL,
-  ref,
-  uploadBytes,
-} from "firebase/storage";
+import { ref } from "firebase/storage";
+import { deleteObject, getDownloadURL, uploadBytes } from "./firebaseCalls";
 import { storage } from "../../firebaseSetup";
 import { updateCharacterFields } from "./characters";
 

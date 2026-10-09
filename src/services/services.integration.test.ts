@@ -54,6 +54,7 @@ import {
   watchCharacter,
 } from "./characters";
 import { removePortrait, uploadPortrait } from "./portraits";
+import { resetUsageGuard } from "./usageGuard";
 import { endEncounter, saveEncounter, watchEncounter } from "./encounters";
 import { deleteSession, listSessions, saveSession } from "./sessions";
 import { NEW_ENCOUNTER } from "../utils/encounter";
@@ -134,6 +135,8 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
+  // This suite makes hundreds of calls a minute on purpose
+  resetUsageGuard();
   await Promise.all([testEnv.clearFirestore(), testEnv.clearStorage()]);
 });
 
