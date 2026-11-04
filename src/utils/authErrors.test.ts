@@ -11,6 +11,12 @@ describe("authErrorMessage", () => {
     );
   });
 
+  it("explains when sign-ups are closed", () => {
+    expect(authErrorMessage({ code: "auth/admin-restricted-operation" })).toBe(
+      "New sign-ups are closed. Ask whoever runs the site to let you in."
+    );
+  });
+
   it("falls back to a generic message", () => {
     expect(authErrorMessage({ code: "auth/something-new" })).toBe(
       "Something went wrong. Please try again."

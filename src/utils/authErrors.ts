@@ -8,6 +8,9 @@ const MESSAGES: Record<string, string> = {
   "auth/weak-password": "Passwords must be at least 6 characters.",
   "auth/too-many-requests":
     "Too many attempts. Please wait a moment and try again.",
+  // Sign-up switched off in Firebase (Authentication → Settings)
+  "auth/admin-restricted-operation":
+    "New sign-ups are closed. Ask whoever runs the site to let you in.",
   "auth/network-request-failed":
     "Couldn't reach the server. Check your connection and try again.",
 };

@@ -5,6 +5,9 @@ a call from you before they can be done.
 
 ## Security / data problems
 
+- [ ] **Close sign-ups (you), once everyone has an account:** Firebase
+      console → Authentication → Settings → User actions → untick "Enable
+      create (sign-up)".
 - [ ] **Billing cut-off setup (you):** follow `billing-cutoff/README.md`.
 - [ ] **Portrait setup (you):** upgrade to Blaze, enable Storage, deploy
       rules, and apply `cors.json` (see README → Portraits).
@@ -80,6 +83,11 @@ In priority order (agreed October 2026).
 Smaller ideas, unprioritised:
 
 ## Done in this pass
+
+### Closed sign-ups message (PR 19)
+
+- With sign-up switched off in Firebase, the sign-up form explains that
+  sign-ups are closed instead of showing a generic error.
 
 ### Billing cut-off (PR 18)
 
