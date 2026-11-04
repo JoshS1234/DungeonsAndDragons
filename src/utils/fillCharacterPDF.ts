@@ -1,4 +1,3 @@
-import { PDFDocument, StandardFonts } from "pdf-lib";
 import {
   ABILITIES,
   SKILLS,
@@ -9,6 +8,10 @@ import {
   skillModifier,
 } from "./dnd";
 import type { AbilityKey, CharacterData } from "./dnd";
+import { spellcastingFor } from "./spellcasting";
+import { attackBonus, damageExpression, inventoryText } from "./inventory";
+import spellPageFields from "./pdfSpellFields.json";
+import { downloadFile, fileNameFor } from "./download";
 
 export type { CharacterData } from "./dnd";
 
@@ -66,6 +69,13 @@ const SKILL_FIELDS: Record<string, { value: string; checkbox: string }> = {
   Survival: { value: "Survival", checkbox: "Check Box 40" },
 };
 
+// Weapon rows on page 1 (some names really do have trailing spaces)
+const WEAPON_ROWS = [
+  { name: "Wpn Name 1", bonus: "Wpn1 AtkBonus", damage: "Wpn1 Damage" },
+  { name: "Wpn Name 2", bonus: "Wpn2 AtkBonus ", damage: "Wpn2 Damage " },
+  { name: "Wpn Name 3", bonus: "Wpn3 AtkBonus  ", damage: "Wpn3 Damage " },
+];
+
 // Large free-text boxes default to auto-sized text, which renders short
 // entries enormously. Give them a fixed size instead.
 const LONG_TEXT_FIELDS = new Set([
@@ -77,6 +87,7 @@ const LONG_TEXT_FIELDS = new Set([
   "Features and Traits",
   "Equipment",
   "AttacksSpellcasting",
+  "ProficienciesLang",
 ]);
 const LONG_TEXT_FONT_SIZE = 9;
 
@@ -117,8 +128,13 @@ export const buildPdfFieldValues = (
     Flaws: c.flaws,
     Allies: c.alliesAndOrganizations,
     "Features and Traits": c.additionalFeaturesAndTraits,
-    Equipment: c.equipment,
-    AttacksSpellcasting: c.spells,
+    Equipment: inventoryText(c),
+    ProficienciesLang: c.proficienciesAndLanguages,
+    CP: String(c.currency.cp),
+    SP: String(c.currency.sp),
+    EP: String(c.currency.ep),
+    GP: String(c.currency.gp),
+    PP: String(c.currency.pp),
   };
   const checkboxes: Record<string, boolean> = {};
 
@@ -144,13 +160,77 @@ export const buildPdfFieldValues = (
   const perception = SKILLS.find((s) => s.name === "Perception")!;
   text.Passive = String(10 + skillModifier(c, perception));
 
+  // Death save circles: three successes then three failures
+  ["Check Box 12", "Check Box 13", "Check Box 14"].forEach((box, i) => {
+    checkboxes[box] = i < c.deathSaveSuccesses;
+  });
+  ["Check Box 15", "Check Box 16", "Check Box 17"].forEach((box, i) => {
+    checkboxes[box] = i < c.deathSaveFailures;
+  });
+  if (c.inspiration) text.Inspiration = "Yes";
+
+  // The weapons table has three rows; any further attacks go in the box below
+  c.attacks.slice(0, WEAPON_ROWS.length).forEach((attack, i) => {
+    const row = WEAPON_ROWS[i];
+    text[row.name] = attack.name;
+    text[row.bonus] = formatModifier(attackBonus(c, attack));
+    text[row.damage] =
+      `${damageExpression(c, attack)} ${attack.damageType}`.trim();
+  });
+  const extraAttacks = c.attacks
+    .slice(WEAPON_ROWS.length)
+    .map((attack) =>
+      `${attack.name}: ${formatModifier(attackBonus(c, attack))}, ${damageExpression(c, attack)} ${attack.damageType}`.trim()
+    );
+  text.AttacksSpellcasting = [...extraAttacks, c.spells]
+    .filter(Boolean)
+    .join("\n");
+
+  addSpellPage(c, text, checkboxes);
+
   return { text, checkboxes };
+};
+
+/**
+ * Page 3: spellcasting stats, slots, and spells by level. Field names come
+ * from scripts/pdf-spell-fields.mjs. Spells beyond the lines available for
+ * a level are left off.
+ */
+const addSpellPage = (
+  c: CharacterData,
+  text: Record<string, string>,
+  checkboxes: Record<string, boolean>
+) => {
+  const casting = spellcastingFor(c);
+  if (casting) {
+    text["Spellcasting Class 2"] = c.class;
+    text["SpellcastingAbility 2"] = casting.ability;
+    text["SpellSaveDC  2"] = String(casting.saveDC);
+    text["SpellAtkBonus 2"] = formatModifier(casting.attackBonus);
+  }
+
+  for (const { level, slotsTotal, lines } of spellPageFields) {
+    const slots = casting?.slots[level - 1] ?? 0;
+    if (slotsTotal && slots > 0) text[slotsTotal] = String(slots);
+
+    const spells = c.knownSpells
+      .filter((spell) => spell.level === level)
+      .sort((a, b) => a.name.localeCompare(b.name));
+    spells.slice(0, lines.length).forEach((spell, i) => {
+      text[lines[i].name] = spell.name;
+      const box = lines[i].prepared;
+      if (box) checkboxes[box] = spell.prepared;
+    });
+  }
 };
 
 export const fillPdfTemplate = async (
   templateBytes: ArrayBuffer | Uint8Array,
-  character: Partial<CharacterData>
+  character: Partial<CharacterData>,
+  { portrait }: { portrait?: ArrayBuffer | Uint8Array } = {}
 ): Promise<Uint8Array> => {
+  // Loaded on demand: pdf-lib is large and only needed when exporting
+  const { PDFDocument, StandardFonts } = await import("pdf-lib");
   const pdfDoc = await PDFDocument.load(templateBytes);
   const form = pdfDoc.getForm();
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -168,39 +248,53 @@ export const fillPdfTemplate = async (
     if (checked) form.getCheckBox(name).check();
   }
 
+  if (portrait) {
+    // Portraits are always saved as JPEG (see utils/image.ts)
+    const image = await pdfDoc.embedJpg(portrait);
+    form.getButton("CHARACTER IMAGE").setImage(image);
+  }
+
   // pdf-lib's default appearance regeneration redraws every checkbox with a
   // square border, so it's disabled here and text fields are updated above.
   return pdfDoc.save({ updateFieldAppearances: false });
 };
 
-const downloadBytes = (bytes: Uint8Array, fileName: string) => {
-  const blob = new Blob([bytes as BlobPart], { type: "application/pdf" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+/** The portrait's bytes, or undefined if there isn't one or it won't load. */
+const fetchPortrait = async (url?: string) => {
+  if (!url) return undefined;
+  try {
+    const response = await fetch(url);
+    return response.ok ? await response.arrayBuffer() : undefined;
+  } catch {
+    // The rest of the sheet is still worth exporting
+    return undefined;
+  }
 };
 
-export const fillCharacterPDF = async (character: Partial<CharacterData>) => {
-  const response = await fetch(
-    `${import.meta.env.BASE_URL}${PDF_TEMPLATE_FILE}`
-  );
+/** Download the template and portrait, and fill in the sheet. */
+export const generateCharacterPdf = async (
+  character: Partial<CharacterData>
+): Promise<Uint8Array> => {
+  const templateError =
+    "Couldn't load the character sheet template. Check your connection and try again.";
+  let response: Response;
+  try {
+    response = await fetch(`${import.meta.env.BASE_URL}${PDF_TEMPLATE_FILE}`);
+  } catch {
+    throw new Error(templateError);
+  }
   if (!response.ok) {
-    throw new Error(
-      `Failed to load PDF template (${response.status} ${response.statusText})`
-    );
+    throw new Error(`${templateError} (${response.status})`);
   }
 
-  const pdfBytes = await fillPdfTemplate(
-    await response.arrayBuffer(),
-    character
-  );
-  downloadBytes(
-    pdfBytes,
-    `${character.characterName || "Character"}_Sheet.pdf`
-  );
+  return fillPdfTemplate(await response.arrayBuffer(), character, {
+    portrait: await fetchPortrait(character.portraitUrl),
+  });
 };
+
+export const fillCharacterPDF = async (character: Partial<CharacterData>) =>
+  downloadFile(
+    (await generateCharacterPdf(character)) as BlobPart,
+    `${fileNameFor(character.characterName ?? "", "Character")}_Sheet.pdf`,
+    "application/pdf"
+  );

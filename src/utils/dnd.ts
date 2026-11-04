@@ -1,5 +1,9 @@
 // Shared D&D 5e reference data and rules helpers.
 
+import { rollDie } from "./dice";
+import type { KnownSpell } from "./spellcasting";
+import type { Attack, Currency, InventoryItem } from "./inventory";
+
 export const ABILITIES = [
   { name: "Strength", key: "strength", abbrev: "STR" },
   { name: "Dexterity", key: "dexterity", abbrev: "DEX" },
@@ -76,6 +80,8 @@ export const ALIGNMENTS = [
 export interface CharacterData {
   // Basic Information
   characterName: string;
+  /** Download URL of the uploaded portrait, or "". */
+  portraitUrl: string;
   class: string;
   level: number;
   background: string;
@@ -101,6 +107,14 @@ export interface CharacterData {
   temporaryHitPoints: number;
   hitDice: string;
 
+  // Session state (play mode)
+  deathSaveSuccesses: number;
+  deathSaveFailures: number;
+  /** Slots used per spell level, index 0 = 1st level. */
+  spellSlotsUsed: number[];
+  conditions: string[];
+  inspiration: boolean;
+
   // Proficiency
   proficiencyBonus: number;
   savingThrowProficiencies: string[];
@@ -114,13 +128,21 @@ export interface CharacterData {
   characterAppearance: string;
   alliesAndOrganizations: string;
   additionalFeaturesAndTraits: string;
+  /** Free-text equipment notes (shown as "Other equipment"). */
   equipment: string;
+  inventory: InventoryItem[];
+  attacks: Attack[];
+  currency: Currency;
+  proficienciesAndLanguages: string;
+  /** Free-text spell notes (shown as "Spell notes"). */
   spells: string;
+  knownSpells: KnownSpell[];
   campaignIds: string[];
 }
 
 export const DEFAULT_CHARACTER: CharacterData = {
   characterName: "",
+  portraitUrl: "",
   class: "",
   level: 1,
   background: "",
@@ -144,6 +166,12 @@ export const DEFAULT_CHARACTER: CharacterData = {
   temporaryHitPoints: 0,
   hitDice: "1d8",
 
+  deathSaveSuccesses: 0,
+  deathSaveFailures: 0,
+  spellSlotsUsed: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+  conditions: [],
+  inspiration: false,
+
   proficiencyBonus: 2,
   savingThrowProficiencies: [],
   skillProficiencies: [],
@@ -156,7 +184,12 @@ export const DEFAULT_CHARACTER: CharacterData = {
   alliesAndOrganizations: "",
   additionalFeaturesAndTraits: "",
   equipment: "",
+  inventory: [],
+  attacks: [],
+  currency: { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 },
+  proficienciesAndLanguages: "",
   spells: "",
+  knownSpells: [],
   campaignIds: [],
 };
 
@@ -176,6 +209,35 @@ export const normaliseCharacter = (
     }
   }
   return result;
+};
+
+/** 5e proficiency bonus: +2 at levels 1-4, rising by 1 every 4 levels. */
+export const proficiencyBonusForLevel = (level: number): number =>
+  2 + Math.floor((Math.min(Math.max(level, 1), 20) - 1) / 4);
+
+/**
+ * Fields that should follow another field when it changes, unless the user
+ * has overridden them: proficiency bonus follows level, initiative follows
+ * DEX.
+ */
+export const derivedChanges = <K extends keyof CharacterData>(
+  character: CharacterData,
+  key: K,
+  value: CharacterData[K]
+): Partial<CharacterData> => {
+  if (
+    key === "level" &&
+    character.proficiencyBonus === proficiencyBonusForLevel(character.level)
+  ) {
+    return { proficiencyBonus: proficiencyBonusForLevel(value as number) };
+  }
+  if (
+    key === "dexterity" &&
+    character.initiative === calculateModifier(character.dexterity)
+  ) {
+    return { initiative: calculateModifier(value as number) };
+  }
+  return {};
 };
 
 export const calculateModifier = (score: number): number =>
@@ -209,9 +271,6 @@ export const savingThrowModifier = (
   (character.savingThrowProficiencies.includes(ability.abbrev)
     ? character.proficiencyBonus
     : 0);
-
-const rollDie = (sides: number, random: () => number): number =>
-  Math.floor(random() * sides) + 1;
 
 export const roll4d6DropLowest = (
   random: () => number = Math.random

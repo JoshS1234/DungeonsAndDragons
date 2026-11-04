@@ -1,15 +1,13 @@
 import {
   collection,
   collectionGroup,
-  deleteDoc,
   doc,
-  getDoc,
-  getDocs,
   query,
   serverTimestamp,
   where,
-  writeBatch,
 } from "firebase/firestore";
+import type { DocumentData } from "firebase/firestore";
+import { deleteDoc, getDoc, getDocs, writeBatch } from "./firebaseCalls";
 import { db } from "../../firebaseSetup";
 
 export interface CampaignDetails {
@@ -23,6 +21,8 @@ export interface CampaignDetails {
   world: string;
   theme: string;
 }
+
+export const CAMPAIGN_STATUSES = ["Active", "On Hold", "Completed", "Planning"];
 
 export const DEFAULT_CAMPAIGN: CampaignDetails = {
   campaignName: "",
@@ -69,7 +69,7 @@ const toSummary = (details: CampaignDetails): CampaignSummary => ({
   dungeonMaster: details.dungeonMaster,
 });
 
-const toCampaign = (id: string, data: Record<string, any>): Campaign => {
+const toCampaign = (id: string, data: DocumentData): Campaign => {
   const campaign = { ...DEFAULT_CAMPAIGN, id, userId: data.userId };
   for (const key of Object.keys(
     DEFAULT_CAMPAIGN
@@ -213,4 +213,22 @@ export const findJoinableCampaign = async (
     );
   }
   return summary;
+};
+
+/** DM deletes their campaign, with its memberships, sessions and encounter. */
+export const deleteCampaign = async (campaignId: string) => {
+  const [members, sessions, sessionNotes] = await Promise.all(
+    ["members", "sessions", "sessionNotes"].map((name) =>
+      getDocs(collection(db, "campaigns", campaignId, name))
+    )
+  );
+  const batch = writeBatch(db);
+  for (const snapshot of [members, sessions, sessionNotes]) {
+    snapshot.docs.forEach((d) => batch.delete(d.ref));
+  }
+  batch.delete(summaryRef(campaignId));
+  batch.delete(privateRef(campaignId));
+  batch.delete(doc(db, "campaigns", campaignId, "encounter", "current"));
+  batch.delete(campaignRef(campaignId));
+  await batch.commit();
 };

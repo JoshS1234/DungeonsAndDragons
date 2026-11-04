@@ -2,13 +2,15 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { PDFDocument } from "pdf-lib";
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { DEFAULT_CHARACTER } from "./dnd";
 import type { CharacterData } from "./dnd";
+import spellPageFields from "./pdfSpellFields.json";
 import {
   PDF_TEMPLATE_FILE,
   buildPdfFieldValues,
   fillPdfTemplate,
+  generateCharacterPdf,
 } from "./fillCharacterPDF";
 
 const templateBytes = readFileSync(
@@ -28,6 +30,42 @@ const character: CharacterData = {
   proficiencyBonus: 2,
   currentHitPoints: 0,
   personalityTraits: "Curious",
+  attacks: [
+    {
+      name: "Rapier",
+      ability: "DEX",
+      proficient: true,
+      damageDice: "1d8",
+      damageType: "Piercing",
+      magicBonus: 0,
+    },
+    {
+      name: "Shortbow",
+      ability: "DEX",
+      proficient: true,
+      damageDice: "1d6",
+      damageType: "Piercing",
+      magicBonus: 1,
+    },
+    {
+      name: "Dagger",
+      ability: "DEX",
+      proficient: true,
+      damageDice: "1d4",
+      damageType: "Piercing",
+      magicBonus: 0,
+    },
+    {
+      name: "Unarmed",
+      ability: "STR",
+      proficient: true,
+      damageDice: "1",
+      damageType: "Bludgeoning",
+      magicBonus: 0,
+    },
+  ],
+  currency: { cp: 5, sp: 0, ep: 0, gp: 12, pp: 0 },
+  proficienciesAndLanguages: "Common, Elvish",
   savingThrowProficiencies: ["DEX"],
   skillProficiencies: ["Stealth", "Perception"],
 };
@@ -57,6 +95,35 @@ describe("buildPdfFieldValues", () => {
     expect(text["Perception "]).toBe("+3");
     expect(text.Passive).toBe("13");
     expect(checkboxes["Check Box 39"]).toBe(true);
+  });
+
+  it("fills death saves and inspiration", () => {
+    const values = buildPdfFieldValues({
+      ...character,
+      deathSaveSuccesses: 2,
+      deathSaveFailures: 1,
+      inspiration: true,
+    });
+    expect(values.checkboxes["Check Box 13"]).toBe(true);
+    expect(values.checkboxes["Check Box 14"]).toBe(false);
+    expect(values.checkboxes["Check Box 15"]).toBe(true);
+    expect(values.checkboxes["Check Box 16"]).toBe(false);
+    expect(values.text.Inspiration).toBe("Yes");
+  });
+
+  it("fills the weapons table and puts extra attacks below it", () => {
+    expect(text["Wpn Name 1"]).toBe("Rapier");
+    expect(text["Wpn1 AtkBonus"]).toBe("+5");
+    expect(text["Wpn1 Damage"]).toBe("1d8+3 Piercing");
+    expect(text["Wpn2 AtkBonus "]).toBe("+6");
+    expect(text["Wpn2 Damage "]).toBe("1d6+4 Piercing");
+    expect(text.AttacksSpellcasting).toContain("Unarmed: +2, 1 Bludgeoning");
+  });
+
+  it("fills coins and languages", () => {
+    expect(text.GP).toBe("12");
+    expect(text.CP).toBe("5");
+    expect(text.ProficienciesLang).toBe("Common, Elvish");
   });
 
   it("keeps 0 current hit points", () => {
@@ -101,5 +168,115 @@ describe("fillPdfTemplate", () => {
     expect(form.getTextField("PersonalityTraits ").getText()).toBe("Curious");
     expect(form.getCheckBox("Check Box 39").isChecked()).toBe(true);
     expect(form.getCheckBox("Check Box 23").isChecked()).toBe(false);
+  });
+});
+
+describe("spell page", () => {
+  const wizard: CharacterData = {
+    ...DEFAULT_CHARACTER,
+    class: "Wizard",
+    level: 5,
+    intelligence: 16,
+    proficiencyBonus: 3,
+    knownSpells: [
+      { name: "Fire Bolt", level: 0, prepared: true, srdIndex: "fire-bolt" },
+      { name: "Shield", level: 1, prepared: true, srdIndex: "shield" },
+      { name: "Fireball", level: 3, prepared: false, srdIndex: "fireball" },
+    ],
+  };
+  const { text, checkboxes } = buildPdfFieldValues(wizard);
+  const line = (level: number, i: number) => spellPageFields[level].lines[i];
+
+  it("fills spellcasting stats and slots", () => {
+    expect(text["Spellcasting Class 2"]).toBe("Wizard");
+    expect(text["SpellcastingAbility 2"]).toBe("INT");
+    expect(text["SpellSaveDC  2"]).toBe("14");
+    expect(text["SpellAtkBonus 2"]).toBe("+6");
+    expect(text[spellPageFields[1].slotsTotal!]).toBe("4");
+    expect(text[spellPageFields[3].slotsTotal!]).toBe("2");
+    expect(text).not.toHaveProperty(spellPageFields[4].slotsTotal!);
+  });
+
+  it("lists spells under their level with prepared boxes", () => {
+    expect(text[line(0, 0).name]).toBe("Fire Bolt");
+    expect(text[line(1, 0).name]).toBe("Shield");
+    expect(checkboxes[line(1, 0).prepared!]).toBe(true);
+    expect(text[line(3, 0).name]).toBe("Fireball");
+    expect(checkboxes[line(3, 0).prepared!]).toBe(false);
+  });
+
+  it("maps every spell-page field to one that exists in the template", async () => {
+    const form = (await PDFDocument.load(templateBytes)).getForm();
+    for (const { slotsTotal, lines } of spellPageFields) {
+      if (slotsTotal) form.getTextField(slotsTotal);
+      for (const { name, prepared } of lines) {
+        form.getTextField(name);
+        if (prepared) form.getCheckBox(prepared);
+      }
+    }
+  });
+});
+
+describe("portrait", () => {
+  it("puts the portrait in the character image box", async () => {
+    // A copy: small Buffers from readFileSync share Node's memory pool, and
+    // pdf-lib reads the whole underlying buffer
+    const portrait = new Uint8Array(
+      readFileSync(resolve(__dirname, "../test/portrait.jpg"))
+    );
+    const filled = await PDFDocument.load(
+      await fillPdfTemplate(templateBytes, character, { portrait })
+    );
+    const button = filled.getForm().getButton("CHARACTER IMAGE");
+    // setImage gives the button a normal appearance stream
+    expect(
+      button.acroField.getWidgets()[0].getNormalAppearance()
+    ).toBeDefined();
+  });
+
+  it("still exports when the portrait can't be downloaded", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url: string) =>
+        url.includes("portrait")
+          ? Promise.reject(new TypeError("Failed to fetch"))
+          : Promise.resolve(new Response(templateBytes))
+      )
+    );
+
+    const bytes = await generateCharacterPdf({
+      ...character,
+      portraitUrl: "https://example.com/portrait",
+    });
+
+    const form = (await PDFDocument.load(bytes)).getForm();
+    expect(form.getTextField("CharacterName").getText()).toBe(
+      "Thalia Brightwood"
+    );
+    vi.unstubAllGlobals();
+  });
+});
+
+describe("fillCharacterPDF", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("explains when the template can't be downloaded", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockRejectedValue(new TypeError("Failed to fetch"))
+    );
+
+    await expect(generateCharacterPdf(character)).rejects.toThrow(
+      "Couldn't load the character sheet template"
+    );
+  });
+
+  it("includes the status code when the server returns an error", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response(null, { status: 404 }))
+    );
+
+    await expect(generateCharacterPdf(character)).rejects.toThrow("(404)");
   });
 });

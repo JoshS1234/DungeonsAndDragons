@@ -8,6 +8,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
 } from "firebase/auth";
+import { authErrorMessage } from "../../utils/authErrors";
 
 const readForm = (form: HTMLFormElement): Record<string, string> =>
   Object.fromEntries(
@@ -16,33 +17,44 @@ const readForm = (form: HTMLFormElement): Record<string, string> =>
 
 const LoginContainer = () => {
   const [isNewUser, setIsNewUser] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  // On success, AppContainer swaps this page out for the app
+  const attempt = async (action: () => Promise<unknown>) => {
+    setBusy(true);
+    setError(null);
+    try {
+      await action();
+    } catch (err) {
+      setError(authErrorMessage(err));
+      setBusy(false);
+    }
+  };
 
   const handleSignUp = (e: FormEvent) => {
     e.preventDefault();
-    const target = e.currentTarget as HTMLFormElement;
-    const { email, password: password1, password2 } = readForm(target);
+    const { email, password, password2 } = readForm(
+      e.currentTarget as HTMLFormElement
+    );
 
-    if (password1 == password2) {
-      createUserWithEmailAndPassword(auth, email, password1).catch((err) => {
-        alert(err);
-      });
-    } else {
-      target.reset();
-      alert("your passwords did not match");
+    if (password !== password2) {
+      setError("Your passwords don't match.");
+      return;
     }
+    attempt(() => createUserWithEmailAndPassword(auth, email, password));
   };
 
   const handleSignIn = (e: FormEvent) => {
     e.preventDefault();
     const { email, password } = readForm(e.currentTarget as HTMLFormElement);
-
-    signInWithEmailAndPassword(auth, email, password).catch((err) => {
-      alert(err);
-    });
+    attempt(() => signInWithEmailAndPassword(auth, email, password));
   };
 
-  const handleSwitchToNewUser = () => setIsNewUser(true);
-  const handleSwitchToCurrUser = () => setIsNewUser(false);
+  const switchTo = (newUser: boolean) => () => {
+    setIsNewUser(newUser);
+    setError(null);
+  };
 
   return (
     <div className="login-page">
@@ -50,13 +62,20 @@ const LoginContainer = () => {
       {isNewUser ? (
         <LoginNewUser
           handleSignUp={handleSignUp}
-          handleSwitchToCurrUser={handleSwitchToCurrUser}
+          handleSwitchToCurrUser={switchTo(false)}
+          busy={busy}
         />
       ) : (
         <LoginCurrUser
           handleSignIn={handleSignIn}
-          handleSwitchToNewUser={handleSwitchToNewUser}
+          handleSwitchToNewUser={switchTo(true)}
+          busy={busy}
         />
+      )}
+      {error && (
+        <p className="login-page__error" role="alert">
+          {error}
+        </p>
       )}
     </div>
   );

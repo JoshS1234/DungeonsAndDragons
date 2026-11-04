@@ -1,15 +1,11 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createCharacter } from "../../services/characters";
 import CreateCharacter from "./CreateCharacter";
+import { renderSignedIn } from "../../test/renderSignedIn";
 
-vi.mock("../../../firebaseSetup", () => ({
-  auth: { currentUser: { uid: "user-1", displayName: "Josh", email: null } },
-  db: {},
-}));
-vi.mock("firebase/auth", () => ({ signOut: vi.fn() }));
+vi.mock("../../../firebaseSetup", () => ({ db: {} }));
 vi.mock("../../services/characters", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../../services/characters")>()),
   createCharacter: vi.fn(() => Promise.resolve("new-character")),
@@ -22,12 +18,7 @@ vi.mock("../../utils/dnd", async (importOriginal) => ({
   rollAbilityScores: () => [17, 15, 14, 12, 10, 8],
 }));
 
-const renderPage = () =>
-  render(
-    <MemoryRouter>
-      <CreateCharacter />
-    </MemoryRouter>
-  );
+const renderPage = () => renderSignedIn(<CreateCharacter />);
 
 describe("CreateCharacter", () => {
   beforeEach(() => vi.clearAllMocks());

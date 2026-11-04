@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { auth } from "../../../firebaseSetup";
-import Header from "../../components/Header/Header";
+import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
+import { useCurrentUser } from "../../auth/currentUser";
 import CharacterFormFields from "../../components/CharacterForm/CharacterFormFields";
+import ConfirmDeleteDialog from "../../components/ConfirmDeleteDialog/ConfirmDeleteDialog";
+import PortraitUpload from "../../components/Portrait/PortraitUpload";
+import QuickRolls from "../../components/Dice/QuickRolls";
 import CampaignLinker from "../../components/CharacterForm/CampaignLinker";
 import { findJoinableCampaign } from "../../services/campaigns";
 import {
@@ -13,19 +15,23 @@ import {
   joinCampaign,
   leaveCampaign,
   updateCharacter,
+  MAX_CAMPAIGNS_PER_CHARACTER,
 } from "../../services/characters";
 import type { LinkedCampaign } from "../../services/characters";
 import { fillCharacterPDF } from "../../utils/fillCharacterPDF";
-import { DEFAULT_CHARACTER } from "../../utils/dnd";
+import { toCharacterFile } from "../../utils/characterFile";
+import { downloadFile, fileNameFor } from "../../utils/download";
+import { DEFAULT_CHARACTER, derivedChanges } from "../../utils/dnd";
 import type { CharacterData } from "../../utils/dnd";
 import "./CreateCharacter.scss";
+import { errorMessage, isPermissionDenied } from "../../utils/errors";
 
 const ViewEditCharacter = () => {
+  const user = useCurrentUser();
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams<{ id: string }>();
   const characterId = id!;
-  const user = auth.currentUser!;
   const campaignIdFromState = (location.state as { fromCampaign?: string })
     ?.fromCampaign;
   const [loading, setLoading] = useState(true);
@@ -33,9 +39,10 @@ const ViewEditCharacter = () => {
   const [deleting, setDeleting] = useState(false);
   const [exportingPDF, setExportingPDF] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Set when the page can't be shown at all (not found / no access)
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [canEdit, setCanEdit] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleteConfirmName, setDeleteConfirmName] = useState("");
   const [formData, setFormData] = useState<CharacterData>(DEFAULT_CHARACTER);
   const [linkedCampaigns, setLinkedCampaigns] = useState<LinkedCampaign[]>([]);
 
@@ -43,7 +50,7 @@ const ViewEditCharacter = () => {
     const fetchCharacter = async () => {
       try {
         setLoading(true);
-        setError(null);
+        setLoadError(null);
 
         const stored = await getCharacter(characterId);
         if (!stored) {
@@ -58,11 +65,11 @@ const ViewEditCharacter = () => {
             await getCharacterCampaigns(characterId, user.uid)
           );
         }
-      } catch (err: any) {
-        setError(
-          err.code === "permission-denied"
+      } catch (err) {
+        setLoadError(
+          isPermissionDenied(err)
             ? "You don't have permission to view this character"
-            : err.message || "Failed to load character"
+            : errorMessage(err, "Failed to load character")
         );
         console.error("Error fetching character:", err);
       } finally {
@@ -76,9 +83,21 @@ const ViewEditCharacter = () => {
   const setField = <K extends keyof CharacterData>(
     key: K,
     value: CharacterData[K]
-  ) => setFormData((prev) => ({ ...prev, [key]: value }));
+  ) =>
+    setFormData((prev) => ({
+      ...prev,
+      [key]: value,
+      // e.g. proficiency bonus follows level unless it's been overridden
+      ...derivedChanges(prev, key, value),
+    }));
 
   const handleLinkCampaign = async (campaignId: string) => {
+    if (formData.campaignIds.length >= MAX_CAMPAIGNS_PER_CHARACTER) {
+      setError(
+        `A character can be in at most ${MAX_CAMPAIGNS_PER_CHARACTER} campaigns.`
+      );
+      return false;
+    }
     try {
       setError(null);
       const summary = await findJoinableCampaign(campaignId, user.uid);
@@ -96,8 +115,8 @@ const ViewEditCharacter = () => {
         { id: campaignId, name: summary.campaignName || "Unnamed Campaign" },
       ]);
       return true;
-    } catch (err: any) {
-      setError(err.message || "Failed to link campaign");
+    } catch (err) {
+      setError(errorMessage(err, "Failed to link campaign"));
       console.error("Error linking campaign:", err);
       return false;
     }
@@ -111,8 +130,8 @@ const ViewEditCharacter = () => {
         formData.campaignIds.filter((cid) => cid !== campaignId)
       );
       setLinkedCampaigns((prev) => prev.filter((c) => c.id !== campaignId));
-    } catch (err: any) {
-      setError(err.message || "Failed to unlink campaign");
+    } catch (err) {
+      setError(errorMessage(err, "Failed to unlink campaign"));
       console.error("Error unlinking campaign:", err);
     }
   };
@@ -130,8 +149,8 @@ const ViewEditCharacter = () => {
         fallbackPlayerName(user)
       );
       navigate("/characters");
-    } catch (err: any) {
-      setError(err.message || "Failed to update character");
+    } catch (err) {
+      setError(errorMessage(err, "Failed to update character"));
       console.error("Error updating character:", err);
     } finally {
       setSaving(false);
@@ -139,21 +158,14 @@ const ViewEditCharacter = () => {
   };
 
   const handleDelete = async () => {
-    if (deleteConfirmName !== formData.characterName) {
-      setError(
-        "Character name does not match. Please enter the exact character name to confirm deletion."
-      );
-      return;
-    }
-
     setDeleting(true);
     setError(null);
 
     try {
       await deleteCharacter(characterId, user.uid);
       navigate("/characters");
-    } catch (err: any) {
-      setError(err.message || "Failed to delete character");
+    } catch (err) {
+      setError(errorMessage(err, "Failed to delete character"));
       console.error("Error deleting character:", err);
       setDeleting(false);
     }
@@ -161,7 +173,6 @@ const ViewEditCharacter = () => {
 
   const closeDeleteConfirm = () => {
     setShowDeleteConfirm(false);
-    setDeleteConfirmName("");
     setError(null);
   };
 
@@ -171,8 +182,8 @@ const ViewEditCharacter = () => {
 
     try {
       await fillCharacterPDF(formData);
-    } catch (err: any) {
-      setError(err.message || "Failed to export PDF");
+    } catch (err) {
+      setError(errorMessage(err, "Failed to export PDF"));
       console.error("Error exporting PDF:", err);
     } finally {
       setExportingPDF(false);
@@ -183,150 +194,156 @@ const ViewEditCharacter = () => {
 
   if (loading) {
     return (
-      <div className="app">
-        <Header />
-        <div className="character-creation-page">
-          <div className="character-creation-page__container">
-            <h2>Loading Character...</h2>
+      <div className="character-creation-page">
+        <div className="character-creation-page__container">
+          <h2>Loading Character...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="character-creation-page">
+        <div className="character-creation-page__container">
+          <h2>Character unavailable</h2>
+          <div className="character-form__error" role="alert">
+            {loadError}
           </div>
+          <button
+            type="button"
+            className="back-button"
+            onClick={() => navigate("/characters")}
+          >
+            ← Back to Characters
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="app">
-      <Header />
-      <div className="character-creation-page">
-        <div className="character-creation-page__container">
-          <div className="page-title-row">
-            <h2>
-              {canEdit ? "Edit Character" : "View Character"}:{" "}
-              {formData.characterName || "Unnamed"}
-            </h2>
-            {campaignIdFromState && (
-              <button
-                type="button"
-                onClick={() => navigate(`/campaigns/${campaignIdFromState}`)}
-                className="back-button"
-              >
-                ← Back to Campaign
-              </button>
-            )}
-          </div>
-          {!canEdit && (
-            <p className="view-only-note">
-              View-only mode: This character is linked to a campaign you're part
-              of
-            </p>
+    <div className="character-creation-page">
+      <div className="character-creation-page__container">
+        <div className="page-title-row">
+          <h2>
+            {canEdit ? "Edit Character" : "View Character"}:{" "}
+            {formData.characterName || "Unnamed"}
+          </h2>
+          <Link to={`/characters/${characterId}/play`} className="back-button">
+            ▶ Play mode
+          </Link>
+          {campaignIdFromState && (
+            <button
+              type="button"
+              onClick={() => navigate(`/campaigns/${campaignIdFromState}`)}
+              className="back-button"
+            >
+              ← Back to Campaign
+            </button>
           )}
-          {error && <div className="character-form__error">{error}</div>}
-          <form onSubmit={handleSubmit} className="character-form">
-            <CharacterFormFields
-              character={formData}
-              onFieldChange={setField}
-              disabled={!canEdit}
+        </div>
+        {!canEdit && (
+          <p className="view-only-note">
+            View-only mode: This character is linked to a campaign you're part
+            of
+          </p>
+        )}
+        {error && <div className="character-form__error">{error}</div>}
+        <details className="character-form__section quick-rolls-panel">
+          <summary>
+            <h3>🎲 Quick rolls</h3>
+          </summary>
+          <QuickRolls character={formData} />
+        </details>
+        <PortraitUpload
+          characterId={characterId}
+          name={formData.characterName}
+          url={formData.portraitUrl}
+          onChange={(url) => setField("portraitUrl", url)}
+          canEdit={canEdit}
+        />
+        <form onSubmit={handleSubmit} className="character-form">
+          <CharacterFormFields
+            character={formData}
+            onFieldChange={setField}
+            disabled={!canEdit}
+          />
+
+          {canEdit && (
+            <CampaignLinker
+              linkedCampaigns={linkedCampaigns}
+              onLink={handleLinkCampaign}
+              onUnlink={handleUnlinkCampaign}
             />
+          )}
 
+          <div className="character-form__actions">
+            <button
+              type="button"
+              className="character-form__export-pdf"
+              onClick={handleExportPDF}
+              disabled={busy}
+            >
+              {exportingPDF ? "Exporting..." : "Export PDF"}
+            </button>
             {canEdit && (
-              <CampaignLinker
-                linkedCampaigns={linkedCampaigns}
-                onLink={handleLinkCampaign}
-                onUnlink={handleUnlinkCampaign}
-              />
-            )}
-
-            <div className="character-form__actions">
               <button
                 type="button"
                 className="character-form__export-pdf"
-                onClick={handleExportPDF}
+                onClick={() =>
+                  downloadFile(
+                    toCharacterFile(formData),
+                    `${fileNameFor(formData.characterName, "Character")}.json`,
+                    "application/json"
+                  )
+                }
+              >
+                Download backup (JSON)
+              </button>
+            )}
+          </div>
+
+          {canEdit && (
+            <div className="character-form__actions">
+              <button
+                type="submit"
+                className="character-form__submit"
                 disabled={busy}
               >
-                {exportingPDF ? "Exporting..." : "Export PDF"}
+                {saving ? "Saving..." : "Save Changes"}
+              </button>
+              <button
+                type="button"
+                className="character-form__cancel"
+                onClick={() => navigate("/characters")}
+                disabled={busy}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="character-form__delete"
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={busy}
+              >
+                Delete Character
               </button>
             </div>
+          )}
 
-            {canEdit && (
-              <div className="character-form__actions">
-                <button
-                  type="submit"
-                  className="character-form__submit"
-                  disabled={busy}
-                >
-                  {saving ? "Saving..." : "Save Changes"}
-                </button>
-                <button
-                  type="button"
-                  className="character-form__cancel"
-                  onClick={() => navigate("/characters")}
-                  disabled={busy}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="character-form__delete"
-                  onClick={() => setShowDeleteConfirm(true)}
-                  disabled={busy}
-                >
-                  Delete Character
-                </button>
-              </div>
-            )}
-
-            {showDeleteConfirm && canEdit && (
-              <div className="delete-confirm-modal">
-                <div
-                  className="delete-confirm-modal__overlay"
-                  onClick={closeDeleteConfirm}
-                />
-                <div className="delete-confirm-modal__content">
-                  <h3>Delete Character</h3>
-                  <p>
-                    This action cannot be undone. This will permanently delete
-                    your character and remove them from all linked campaigns.
-                  </p>
-                  <p>
-                    To confirm, please enter the character name:{" "}
-                    <strong>{formData.characterName}</strong>
-                  </p>
-                  <input
-                    type="text"
-                    className="delete-confirm-modal__input"
-                    value={deleteConfirmName}
-                    onChange={(e) => setDeleteConfirmName(e.target.value)}
-                    placeholder="Enter character name to confirm"
-                    autoFocus
-                  />
-                  {error && (
-                    <div className="delete-confirm-modal__error">{error}</div>
-                  )}
-                  <div className="delete-confirm-modal__actions">
-                    <button
-                      type="button"
-                      className="delete-confirm-modal__cancel"
-                      onClick={closeDeleteConfirm}
-                      disabled={deleting}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      className="delete-confirm-modal__confirm"
-                      onClick={handleDelete}
-                      disabled={
-                        deleting || deleteConfirmName !== formData.characterName
-                      }
-                    >
-                      {deleting ? "Deleting..." : "Delete Character"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </form>
-        </div>
+          {showDeleteConfirm && canEdit && (
+            <ConfirmDeleteDialog
+              title="Delete Character"
+              description="This action cannot be undone. This will permanently delete your character and remove them from all linked campaigns."
+              confirmName={formData.characterName}
+              deleting={deleting}
+              error={error}
+              onConfirm={handleDelete}
+              onCancel={closeDeleteConfirm}
+            />
+          )}
+        </form>
       </div>
     </div>
   );

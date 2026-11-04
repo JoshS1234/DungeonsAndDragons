@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { auth } from "../../../firebaseSetup";
-import Header from "../../components/Header/Header";
+import { useCurrentUser } from "../../auth/currentUser";
 import { listMyCampaigns } from "../../services/campaigns";
 import type { Campaign } from "../../services/campaigns";
 import "./Campaigns.scss";
+import { errorMessage } from "../../utils/errors";
 
 const CampaignCard = ({
   campaign,
@@ -78,90 +78,90 @@ const CampaignCard = ({
 );
 
 const Campaigns = () => {
+  const user = useCurrentUser();
   const [ownedCampaigns, setOwnedCampaigns] = useState<Campaign[]>([]);
   const [playerCampaigns, setPlayerCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    listMyCampaigns(auth.currentUser!.uid)
+    listMyCampaigns(user.uid)
       .then(({ running, playing }) => {
         setOwnedCampaigns(running);
         setPlayerCampaigns(playing);
       })
       .catch((err) => {
         console.error("Error fetching campaigns:", err);
-        setError(err.message || "Failed to load campaigns. Please try again.");
+        setError(
+          errorMessage(err, "Failed to load campaigns. Please try again.")
+        );
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [user.uid]);
 
   return (
-    <div className="app">
-      <Header />
-      <div className="page-content">
-        <h2>🎲 Campaigns</h2>
-        <p>Manage your campaigns and adventures</p>
-        <div className="page-content__section">
-          <Link to="/campaigns/create" className="create-campaign-button">
-            Create New Campaign
-          </Link>
+    <div className="page-content">
+      <h2>🗺️ Campaigns</h2>
+      <p>Manage your campaigns and adventures</p>
+      <div className="page-content__section">
+        <Link to="/campaigns/create" className="create-campaign-button">
+          Create New Campaign
+        </Link>
 
-          {error && (
-            <div className="info-card info-card--error">
-              <h3>Error</h3>
-              <p>{error}</p>
-            </div>
-          )}
+        {error && (
+          <div className="info-card info-card--error">
+            <h3>Error</h3>
+            <p>{error}</p>
+          </div>
+        )}
 
-          {loading ? (
-            <div className="info-card">
-              <p>Loading campaigns...</p>
-            </div>
-          ) : ownedCampaigns.length === 0 && playerCampaigns.length === 0 ? (
-            <div className="info-card">
-              <h3>Your Campaigns</h3>
-              <p>
-                No campaigns yet. Create your first campaign to begin your
-                adventure!
-              </p>
-            </div>
-          ) : (
-            <>
-              {/* Owned Campaigns Section */}
-              {ownedCampaigns.length > 0 && (
-                <div className="campaigns-list">
-                  <h3>My Campaigns ({ownedCampaigns.length})</h3>
-                  <div className="campaigns-grid">
-                    {ownedCampaigns.map((campaign) => (
-                      <CampaignCard
-                        key={campaign.id}
-                        campaign={campaign}
-                        isDm={true}
-                      />
-                    ))}
-                  </div>
+        {loading ? (
+          <div className="info-card">
+            <p>Loading campaigns...</p>
+          </div>
+        ) : ownedCampaigns.length === 0 && playerCampaigns.length === 0 ? (
+          <div className="info-card">
+            <h3>Your Campaigns</h3>
+            <p>
+              No campaigns yet. Create your first campaign to begin your
+              adventure!
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Owned Campaigns Section */}
+            {ownedCampaigns.length > 0 && (
+              <div className="campaigns-list">
+                <h3>My Campaigns ({ownedCampaigns.length})</h3>
+                <div className="campaigns-grid">
+                  {ownedCampaigns.map((campaign) => (
+                    <CampaignCard
+                      key={campaign.id}
+                      campaign={campaign}
+                      isDm={true}
+                    />
+                  ))}
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* Player Campaigns Section */}
-              {playerCampaigns.length > 0 && (
-                <div className="campaigns-list">
-                  <h3>Campaigns I'm Playing In ({playerCampaigns.length})</h3>
-                  <div className="campaigns-grid">
-                    {playerCampaigns.map((campaign) => (
-                      <CampaignCard
-                        key={campaign.id}
-                        campaign={campaign}
-                        isDm={false}
-                      />
-                    ))}
-                  </div>
+            {/* Player Campaigns Section */}
+            {playerCampaigns.length > 0 && (
+              <div className="campaigns-list">
+                <h3>Campaigns I'm Playing In ({playerCampaigns.length})</h3>
+                <div className="campaigns-grid">
+                  {playerCampaigns.map((campaign) => (
+                    <CampaignCard
+                      key={campaign.id}
+                      campaign={campaign}
+                      isDm={false}
+                    />
+                  ))}
                 </div>
-              )}
-            </>
-          )}
-        </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

@@ -1,0 +1,98 @@
+.session-log {
+  color: #e0e0e0;
+
+  button {
+    padding: 0.4rem 0.9rem;
+    background: rgba(139, 0, 0, 0.6);
+    color: #fff;
+    border: 1px solid rgba(255, 215, 0, 0.5);
+  }
+
+  &__new {
+    margin-bottom: 1rem;
+  }
+
+  &__list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  &__entry {
+    padding: 0.75rem 1rem;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 215, 0, 0.2);
+    border-radius: 8px;
+
+    h4 {
+      color: #ffd700;
+      margin-bottom: 0.4rem;
+    }
+  }
+
+  &__date {
+    color: #c8c8c8;
+    font-size: 0.85em;
+    font-weight: 400;
+  }
+
+  &__recap,
+  &__notes {
+    white-space: pre-wrap;
+    line-height: 1.5;
+  }
+
+  &__notes {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed rgba(255, 215, 0, 0.3);
+    color: #d0c8a0;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  &__empty {
+    color: #c8c8c8;
+    font-style: italic;
+  }
+
+  &__error {
+    color: #ffaaaa;
+  }
+}
+
+.session-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 8px;
+
+  label {
+    color: #ffd700;
+  }
+
+  input,
+  textarea {
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: 6px;
+    color: #fff;
+    font: inherit;
+    color-scheme: dark;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+}

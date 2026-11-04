@@ -4,18 +4,26 @@ import {
   collection,
   collectionGroup,
   doc,
-  getDoc,
-  getDocs,
   orderBy,
   query,
   serverTimestamp,
   where,
-  writeBatch,
 } from "firebase/firestore";
+import {
+  getDoc,
+  getDocs,
+  onSnapshot,
+  updateDoc,
+  writeBatch,
+} from "./firebaseCalls";
 import { db } from "../../firebaseSetup";
 import { normaliseCharacter } from "../utils/dnd";
 import type { CharacterData } from "../utils/dnd";
 import { getCampaignSummary } from "./campaigns";
+import { deletePortraitFile } from "./portraits";
+
+/** Enforced by the security rules too (see firestore.rules). */
+export const MAX_CAMPAIGNS_PER_CHARACTER = 5;
 
 export interface StoredCharacter {
   id: string;
@@ -89,6 +97,40 @@ export const getCharacter = async (
   };
 };
 
+/**
+ * Live updates for one character. Calls `onChange(null)` if it's deleted.
+ * Returns an unsubscribe function.
+ */
+export const watchCharacter = (
+  characterId: string,
+  onChange: (character: StoredCharacter | null) => void,
+  onError: (error: Error) => void
+) =>
+  onSnapshot(
+    characterRef(characterId),
+    (snapshot) =>
+      onChange(
+        snapshot.exists()
+          ? {
+              id: snapshot.id,
+              userId: snapshot.data().userId,
+              character: normaliseCharacter(snapshot.data()),
+            }
+          : null
+      ),
+    onError
+  );
+
+/** Save a few fields (e.g. HP during play) without touching the rest. */
+export const updateCharacterFields = (
+  characterId: string,
+  fields: Partial<CharacterData>
+) =>
+  updateDoc(characterRef(characterId), {
+    ...fields,
+    updatedAt: serverTimestamp(),
+  });
+
 /** Creates the character and joins every campaign in `campaignIds`. */
 export const createCharacter = async (
   uid: string,
@@ -145,8 +187,12 @@ export const updateCharacter = async (
   await batch.commit();
 };
 
-/** Deletes the character and leaves every campaign it's in. */
+/** Deletes the character (and portrait) and leaves every campaign it's in. */
 export const deleteCharacter = async (characterId: string, uid: string) => {
+  // Before the document goes: the storage rules check it to confirm ownership
+  await deletePortraitFile(characterId).catch((err) =>
+    console.error("Couldn't delete portrait:", err)
+  );
   const campaignIds = await membershipCampaignIds(characterId, uid);
   const batch = writeBatch(db);
   for (const campaignId of campaignIds) {

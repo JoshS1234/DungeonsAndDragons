@@ -1,0 +1,14 @@
+{
+  "name": "billing-cutoff",
+  "private": true,
+  "description": "Disables billing on the Firebase project when its budget is exceeded",
+  "type": "module",
+  "main": "index.js",
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@google-cloud/billing": "^6.1.1",
+    "@google-cloud/functions-framework": "^5.0.5"
+  }
+}

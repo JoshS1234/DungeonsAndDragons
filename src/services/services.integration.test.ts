@@ -18,6 +18,9 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import type { Firestore } from "firebase/firestore";
+import { getBytes, ref, uploadBytes } from "firebase/storage";
+import type { FirebaseStorage } from "firebase/storage";
+import { getModularInstance } from "@firebase/util";
 import {
   afterAll,
   beforeAll,
@@ -32,6 +35,7 @@ import type { CharacterData } from "../utils/dnd";
 import {
   DEFAULT_CAMPAIGN,
   createCampaign,
+  deleteCampaign,
   findJoinableCampaign,
   getCampaign,
   listMyCampaigns,
@@ -46,23 +50,39 @@ import {
   joinCampaign,
   leaveCampaign,
   updateCharacter,
+  updateCharacterFields,
+  watchCharacter,
 } from "./characters";
+import { removePortrait, uploadPortrait } from "./portraits";
+import { resetUsageGuard } from "./usageGuard";
+import { endEncounter, saveEncounter, watchEncounter } from "./encounters";
+import { deleteSession, listSessions, saveSession } from "./sessions";
+import { NEW_ENCOUNTER } from "../utils/encounter";
+import type { Encounter } from "../utils/encounter";
 
-// The services import `db` from firebaseSetup; point it at whichever test
-// user is currently acting.
+// The services import `db` and `storage` from firebaseSetup; point them at
+// whichever test user is currently acting.
 let currentDb: Firestore;
+let currentStorage!: FirebaseStorage;
 vi.mock("../../firebaseSetup", () => ({
   get db() {
     return currentDb;
+  },
+  get storage() {
+    return currentStorage;
   },
 }));
 
 let testEnv: RulesTestEnvironment;
 
 const as = (uid: string) => {
-  currentDb = testEnv
-    .authenticatedContext(uid)
-    .firestore() as unknown as Firestore;
+  const context = testEnv.authenticatedContext(uid);
+  currentDb = context.firestore() as unknown as Firestore;
+  // The test context hands back compat instances; Storage's modular API
+  // needs the underlying modular one
+  currentStorage = getModularInstance(
+    context.storage()
+  ) as unknown as FirebaseStorage;
   return currentDb;
 };
 
@@ -108,11 +128,16 @@ beforeAll(async () => {
     firestore: {
       rules: readFileSync(resolve(__dirname, "../../firestore.rules"), "utf8"),
     },
+    storage: {
+      rules: readFileSync(resolve(__dirname, "../../storage.rules"), "utf8"),
+    },
   });
 });
 
 beforeEach(async () => {
-  await testEnv.clearFirestore();
+  // This suite makes hundreds of calls a minute on purpose
+  resetUsageGuard();
+  await Promise.all([testEnv.clearFirestore(), testEnv.clearStorage()]);
 });
 
 afterAll(async () => {
@@ -266,6 +291,8 @@ describe("characters", () => {
     as("alice");
 
     await removePlayer(campaignId, "bob");
+    // The DM loses access straight away, before Bob's next save
+    await assertFails(getCharacter(characterId));
 
     as("bob");
     expect(await getCharacterCampaigns(characterId, "bob")).toEqual([]);
@@ -283,6 +310,295 @@ describe("characters", () => {
 
     as("alice");
     expect((await getCampaign(campaignId, "alice"))?.players).toEqual([]);
+  });
+});
+
+describe("play mode", () => {
+  it("saves session changes and streams them to campaign-mates", async () => {
+    const { characterId } = await setUpParty();
+
+    as("alice");
+    const seen: number[] = [];
+    const stop = watchCharacter(
+      characterId,
+      (c) => c && seen.push(c.character.currentHitPoints),
+      (err) => {
+        throw err;
+      }
+    );
+
+    as("bob");
+    await updateCharacterFields(characterId, {
+      currentHitPoints: 3,
+      conditions: ["Poisoned"],
+    });
+
+    await vi.waitFor(() => expect(seen).toContain(3));
+    stop();
+  });
+
+  it("stops the DM changing a player's HP", async () => {
+    const { characterId } = await setUpParty();
+    as("alice");
+    await assertFails(
+      updateCharacterFields(characterId, { currentHitPoints: 0 })
+    );
+  });
+});
+
+describe("encounters", () => {
+  const goblin = {
+    id: "g1",
+    name: "Goblin",
+    initiative: 12,
+    kind: "monster" as const,
+    hitPoints: 7,
+    maxHitPoints: 7,
+  };
+
+  it("lets the DM run an encounter that players can watch", async () => {
+    const { campaignId } = await setUpParty();
+    as("alice");
+    await saveEncounter(campaignId, {
+      ...NEW_ENCOUNTER,
+      combatants: [goblin],
+    });
+
+    as("bob");
+    const seen: Array<Encounter | null> = [];
+    const stop = watchEncounter(
+      campaignId,
+      (e) => seen.push(e),
+      (err) => {
+        throw err;
+      }
+    );
+    await vi.waitFor(() =>
+      expect(seen.at(-1)?.combatants[0].name).toBe("Goblin")
+    );
+    stop();
+
+    await assertFails(
+      saveEncounter(campaignId, { ...NEW_ENCOUNTER, round: 99 })
+    );
+    await assertFails(endEncounter(campaignId));
+
+    as("alice");
+    await endEncounter(campaignId);
+  });
+
+  it("hides encounters from people outside the campaign", async () => {
+    const { campaignId } = await setUpParty();
+    as("alice");
+    await saveEncounter(campaignId, NEW_ENCOUNTER);
+
+    const db = as("carol");
+    await assertFails(
+      getDoc(doc(db, "campaigns", campaignId, "encounter", "current"))
+    );
+  });
+
+  it("is removed with the campaign", async () => {
+    const { campaignId } = await setUpParty();
+    as("alice");
+    await saveEncounter(campaignId, NEW_ENCOUNTER);
+    await deleteCampaign(campaignId);
+
+    let exists = true;
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const db = context.firestore() as unknown as Firestore;
+      exists = (
+        await getDoc(doc(db, "campaigns", campaignId, "encounter", "current"))
+      ).exists();
+    });
+    expect(exists).toBe(false);
+  });
+});
+
+describe("session log", () => {
+  const session = {
+    date: "2026-10-08",
+    title: "Into the mists",
+    recap: "The party reached Barovia.",
+    dmNotes: "Strahd is watching",
+  };
+
+  it("shares recaps with players but keeps DM notes private", async () => {
+    const { campaignId } = await setUpParty();
+    as("alice");
+    const id = await saveSession(campaignId, session);
+    expect(await listSessions(campaignId, true)).toEqual([{ id, ...session }]);
+
+    const db = as("bob");
+    expect(await listSessions(campaignId, false)).toEqual([
+      { id, ...session, dmNotes: "" },
+    ]);
+    await assertFails(
+      getDoc(doc(db, "campaigns", campaignId, "sessionNotes", id))
+    );
+    await assertFails(saveSession(campaignId, { ...session, title: "Mine" }));
+    await assertFails(deleteSession(campaignId, id));
+
+    as("carol");
+    await assertFails(listSessions(campaignId, false));
+  });
+
+  it("lets the DM edit and delete sessions", async () => {
+    const { campaignId } = await setUpParty();
+    as("alice");
+    const id = await saveSession(campaignId, session);
+    await saveSession(campaignId, { ...session, id, title: "Renamed" });
+    expect((await listSessions(campaignId, true))[0].title).toBe("Renamed");
+
+    await deleteSession(campaignId, id);
+    expect(await listSessions(campaignId, true)).toEqual([]);
+  });
+
+  it("rejects overlong titles", async () => {
+    const { campaignId } = await setUpParty();
+    as("alice");
+    await assertFails(
+      saveSession(campaignId, { ...session, title: "x".repeat(101) })
+    );
+  });
+
+  it("is removed with the campaign", async () => {
+    const { campaignId } = await setUpParty();
+    as("alice");
+    await saveSession(campaignId, session);
+    await deleteCampaign(campaignId);
+
+    let remaining = -1;
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const db = context.firestore() as unknown as Firestore;
+      remaining = (
+        await getDocs(collection(db, "campaigns", campaignId, "sessions"))
+      ).size;
+    });
+    expect(remaining).toBe(0);
+  });
+});
+
+describe("portraits", () => {
+  const jpeg = new Uint8Array(
+    readFileSync(resolve(__dirname, "../test/portrait.jpg"))
+  );
+  const image = new Blob([jpeg], { type: "image/jpeg" });
+
+  it("lets owners upload a portrait that campaign-mates can view", async () => {
+    const { characterId } = await setUpParty();
+    as("bob");
+    const url = await uploadPortrait(characterId, image);
+    expect(url).toContain(`portraits%2F${characterId}`);
+    expect((await getCharacter(characterId))?.character.portraitUrl).toBe(url);
+
+    as("alice");
+    const bytes = await getBytes(
+      ref(currentStorage, `portraits/${characterId}`)
+    );
+    expect(bytes.byteLength).toBe(jpeg.byteLength);
+  });
+
+  it("stops anyone else changing a character's portrait", async () => {
+    const { characterId } = await setUpParty();
+    as("alice");
+    await assertFails(
+      uploadBytes(ref(currentStorage, `portraits/${characterId}`), image, {
+        contentType: "image/jpeg",
+      })
+    );
+  });
+
+  it("only accepts images", async () => {
+    const { characterId } = await setUpParty();
+    as("bob");
+    await assertFails(
+      uploadBytes(
+        ref(currentStorage, `portraits/${characterId}`),
+        new Blob(["hello"], { type: "text/plain" }),
+        { contentType: "text/plain" }
+      )
+    );
+  });
+
+  it("removes the portrait, including when the character is deleted", async () => {
+    const { characterId } = await setUpParty();
+    as("bob");
+    await uploadPortrait(characterId, image);
+    await removePortrait(characterId);
+    expect((await getCharacter(characterId))?.character.portraitUrl).toBe("");
+
+    await uploadPortrait(characterId, image);
+    await deleteCharacter(characterId, "bob");
+    await expect(
+      getBytes(ref(currentStorage, `portraits/${characterId}`))
+    ).rejects.toMatchObject({ code: "storage/object-not-found" });
+  });
+});
+
+describe("deleting campaigns", () => {
+  it("lets the DM delete a campaign and its memberships", async () => {
+    const { campaignId, characterId } = await setUpParty();
+    as("alice");
+
+    await deleteCampaign(campaignId);
+
+    expect(await getCampaign(campaignId, "alice")).toBeNull();
+    as("bob");
+    expect(await getCharacterCampaigns(characterId, "bob")).toEqual([]);
+    expect((await listMyCampaigns("bob")).playing).toEqual([]);
+  });
+
+  it("stops players deleting the campaign", async () => {
+    const { campaignId } = await setUpParty();
+    as("bob");
+
+    await assertFails(deleteCampaign(campaignId));
+  });
+});
+
+describe("validation", () => {
+  it("rejects overlong names and impossible levels", async () => {
+    const db = as("bob");
+
+    await assertFails(
+      setDoc(doc(db, "characters", "long"), {
+        ...character("x".repeat(101)),
+        userId: "bob",
+      })
+    );
+    await assertFails(
+      setDoc(doc(db, "characters", "level"), {
+        ...character("Ok"),
+        level: 25,
+        userId: "bob",
+      })
+    );
+    await assertSucceeds(
+      setDoc(doc(db, "characters", "fine"), {
+        ...character("Ok"),
+        level: 20,
+        userId: "bob",
+      })
+    );
+  });
+
+  it("rejects a campaign without a name", async () => {
+    as("alice");
+    await assertFails(
+      createCampaign("alice", { ...DEFAULT_CAMPAIGN, campaignName: "" }, "")
+    );
+  });
+
+  it("limits a character to five campaigns", async () => {
+    const db = as("bob");
+    await assertFails(
+      setDoc(doc(db, "characters", "busy"), {
+        ...character("Busy"),
+        campaignIds: ["a", "b", "c", "d", "e", "f"],
+        userId: "bob",
+      })
+    );
   });
 });
 

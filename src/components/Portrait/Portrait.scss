@@ -1,0 +1,78 @@
+.portrait {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid #ffd700;
+  object-fit: cover;
+  background: rgba(0, 0, 0, 0.5);
+
+  &--small {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.1em;
+  }
+
+  &--medium {
+    width: 4rem;
+    height: 4rem;
+    font-size: 1.6em;
+  }
+
+  &--large {
+    width: 8rem;
+    height: 8rem;
+    font-size: 3em;
+  }
+
+  &--placeholder {
+    color: #ffd700;
+    font-family: "Cinzel", "Times New Roman", serif;
+  }
+}
+
+.portrait-upload {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+
+  &__controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__button,
+  button {
+    padding: 0.5rem 1rem;
+    background: rgba(139, 69, 19, 0.8);
+    color: #ffd700;
+    border: 1px solid #ffd700;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+  }
+
+  &__button {
+    position: relative;
+
+    input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+    }
+
+    &:focus-within {
+      outline: 3px solid #ffd700;
+      outline-offset: 2px;
+    }
+  }
+
+  &__error {
+    color: #ffaaaa;
+  }
+}

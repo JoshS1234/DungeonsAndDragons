@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import CharacterFormFields from "./CharacterFormFields";
 import { DEFAULT_CHARACTER } from "../../utils/dnd";
 import type { CharacterData } from "../../utils/dnd";
 
-let latest: CharacterData;
+const onChange = vi.fn<(character: CharacterData) => void>();
+/** The character after the most recent field change. */
+const latest = () => onChange.mock.lastCall![0];
 
 const Harness = ({
   initial = DEFAULT_CHARACTER,
@@ -16,13 +18,14 @@ const Harness = ({
   disabled?: boolean;
 }) => {
   const [character, setCharacter] = useState(initial);
-  latest = character;
   return (
     <CharacterFormFields
       character={character}
-      onFieldChange={(key, value) =>
-        setCharacter((prev) => ({ ...prev, [key]: value }))
-      }
+      onFieldChange={(key, value) => {
+        const next = { ...character, [key]: value };
+        setCharacter(next);
+        onChange(next);
+      }}
       disabled={disabled}
     />
   );
@@ -36,8 +39,8 @@ describe("CharacterFormFields", () => {
     await user.type(screen.getByLabelText("Character Name"), "Bruenor");
     await user.selectOptions(screen.getByLabelText("Class"), "Fighter");
 
-    expect(latest.characterName).toBe("Bruenor");
-    expect(latest.class).toBe("Fighter");
+    expect(latest().characterName).toBe("Bruenor");
+    expect(latest().class).toBe("Fighter");
   });
 
   it("shows the ability modifier for the current score", async () => {
@@ -48,7 +51,7 @@ describe("CharacterFormFields", () => {
     await user.clear(strength);
     await user.type(strength, "17");
 
-    expect(latest.strength).toBe(17);
+    expect(latest().strength).toBe(17);
     expect(strength.parentElement).toHaveTextContent("Modifier: +3");
   });
 
@@ -58,11 +61,11 @@ describe("CharacterFormFields", () => {
 
     await user.click(screen.getByLabelText("Stealth (DEX)"));
     await user.click(screen.getByRole("checkbox", { name: "Wisdom (WIS)" }));
-    expect(latest.skillProficiencies).toEqual(["Stealth"]);
-    expect(latest.savingThrowProficiencies).toEqual(["WIS"]);
+    expect(latest().skillProficiencies).toEqual(["Stealth"]);
+    expect(latest().savingThrowProficiencies).toEqual(["WIS"]);
 
     await user.click(screen.getByLabelText("Stealth (DEX)"));
-    expect(latest.skillProficiencies).toEqual([]);
+    expect(latest().skillProficiencies).toEqual([]);
   });
 
   it("keeps 0 current hit points", () => {
